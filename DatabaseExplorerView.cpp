@@ -15,8 +15,6 @@
 #include "MainFrm.h"
 #include "ChildFrm.h"
 
-#include <algorithm>
-
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -317,9 +315,6 @@ void CDatabaseExplorerView::OnLvnOdcachehint(NMHDR* pNMHDR, LRESULT* pResult)
 
 	if (theApp.m_bVirtualMode)
 	{
-		CString sValue;
-		CDatabaseExplorerDoc* pDoc = GetDocument();
-		CRecordset* pRecordset = pDoc->GetRecordset();
 		LPNMLVCACHEHINT pCacheHint = reinterpret_cast<LPNMLVCACHEHINT>(pNMHDR);
 
 		const DWORD dwToRow = pCacheHint->iTo;
@@ -327,11 +322,16 @@ void CDatabaseExplorerView::OnLvnOdcachehint(NMHDR* pNMHDR, LRESULT* pResult)
 
 		if (dwToRow >= dwFetchedRows)
 		{
+			CString sValue;
+			CDatabaseExplorerDoc* pDoc = GetDocument();
+			CRecordset* pRecordset = pDoc->GetRecordset();
+
 			auto start = std::chrono::high_resolution_clock::now();
+
 			for (DWORD dwRow = dwFetchedRows; dwRow <= dwToRow; ++dwRow)
 			{
 				std::unique_ptr<CDBRecord> record = std::make_unique<CDBRecord>();
-				const short nColCount = pDoc->GetRecordset()->GetODBCFieldCount();
+				const short nColCount = pRecordset->GetODBCFieldCount();
 				for (short nCol = 0; nCol < nColCount; ++nCol)
 				{
 					pRecordset->GetFieldValue(nCol, sValue);

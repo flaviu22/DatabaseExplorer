@@ -39,13 +39,13 @@ public:
 	virtual void Dump(CDumpContext& dc) const;
 #endif
 
-private:
-	std::vector<std::unique_ptr<CDBRecord>> m_arrRows{};
-
 protected:
 	void ExecuteSQL(CDatabaseExplorerDoc* pDoc, const CString& sSQL);
 	void ExecuteSelect(CDatabaseExplorerDoc* pDoc, const CString& sSQL);
 	void DeleteAllColumns();
+
+private:
+	std::vector<std::unique_ptr<CDBRecord>> m_arrRows{};
 
 // Generated message map functions
 protected:
