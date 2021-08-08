@@ -328,16 +328,16 @@ void CDatabaseExplorerView::OnLvnOdcachehint(NMHDR* pNMHDR, LRESULT* pResult)
 
 			auto start = std::chrono::high_resolution_clock::now();
 
-			for (DWORD dwRow = dwFetchedRows; dwRow <= dwToRow; ++dwRow)
+			for (auto dwRow = dwFetchedRows; dwRow <= dwToRow; ++dwRow)
 			{
 				std::unique_ptr<CDBRecord> record = std::make_unique<CDBRecord>();
 				const short nColCount = pRecordset->GetODBCFieldCount();
-				for (short nCol = 0; nCol < nColCount; ++nCol)
+				for (auto nCol = 0; nCol < nColCount; ++nCol)
 				{
 					pRecordset->GetFieldValue(nCol, sValue);
 					record->m_arrValue.push_back(sValue);
 				}
-				m_arrRows.push_back(std::move(record));
+				m_arrRows.emplace_back(std::move(record));
 				pRecordset->MoveNext();
 			}
 			auto end = std::chrono::high_resolution_clock::now();
