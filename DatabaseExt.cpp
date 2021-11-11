@@ -45,7 +45,7 @@ BOOL CDatabaseExt::GetRecordsetV(CTypedPtrArray<CPtrArray, CDBVariant*>& arrResu
 	return GetRecordset(arrResult, sSQL);
 }
 
-BOOL CDatabaseExt::GetRecordsetV(CStringArray& saResult, CString(*FormatData)(const short& nIndex, CDBVariant*), LPCTSTR lpszFormat, ...)
+BOOL CDatabaseExt::GetRecordsetV(CStringArray& saResult, CString(*FormatData)(short nIndex, CDBVariant*), LPCTSTR lpszFormat, ...)
 {
 	CString sSQL;
 	va_list args;
@@ -78,7 +78,7 @@ BOOL CDatabaseExt::GetRecordset(CStringArray& saResult, LPCTSTR lpszSQL/* = NULL
 			{
 				try
 				{
-					recordset->GetFieldValue(i, sTemp);
+					recordset->GetFieldValue(static_cast<short>(i), sTemp);
 				}
 				catch (CDBException* pDBException)
 				{
@@ -131,7 +131,7 @@ BOOL CDatabaseExt::GetRecordset(CTypedPtrArray<CPtrArray, CDBVariant*>& arrResul
 				try
 				{
 					CDBVariant* pDBVariant = new CDBVariant();
-					recordset->GetFieldValue(i, *pDBVariant);
+					recordset->GetFieldValue(static_cast<short>(i), *pDBVariant);
 					arrResult.Add(pDBVariant);
 				}
 				catch (CDBException* pDBException)
@@ -162,7 +162,7 @@ BOOL CDatabaseExt::GetRecordset(CTypedPtrArray<CPtrArray, CDBVariant*>& arrResul
 	return m_sError.IsEmpty();
 }
 
-BOOL CDatabaseExt::GetRecordset(CStringArray& saResult, CString(*FormatData)(const short& nIndex, CDBVariant* pVariant), LPCTSTR lpszSQL/* = NULL*/, DWORD dwRecordsetOptions/* = CRecordset::none*/)
+BOOL CDatabaseExt::GetRecordset(CStringArray& saResult, CString(*FormatData)(short nIndex, CDBVariant* pVariant), LPCTSTR lpszSQL/* = NULL*/, DWORD dwRecordsetOptions/* = CRecordset::none*/)
 {
 	m_nFieldCount = 0;
 	if (! OpenConnection())
@@ -185,7 +185,7 @@ BOOL CDatabaseExt::GetRecordset(CStringArray& saResult, CString(*FormatData)(con
 			{
 				try
 				{
-					recordset->GetFieldValue(i, variant);
+					recordset->GetFieldValue(static_cast<short>(i), variant);
 				}
 				catch (CDBException* pDBException)
 				{
@@ -201,7 +201,7 @@ BOOL CDatabaseExt::GetRecordset(CStringArray& saResult, CString(*FormatData)(con
 					pMemException->Delete();
 					break;
 				}
-				saResult.Add(FormatData(i, &variant));
+				saResult.Add(FormatData(static_cast<short>(i), &variant));
 			}
 			if (m_sError.IsEmpty())
 				recordset->MoveNext();
@@ -269,7 +269,7 @@ BOOL CDatabaseExt::GetRecordsetVector(std::vector<CString>& result, LPCTSTR lpsz
 			{
 				try
 				{
-					recordset->GetFieldValue(i, sTemp);
+					recordset->GetFieldValue(static_cast<short>(i), sTemp);
 				}
 				catch (CDBException* pDBException)
 				{
@@ -323,7 +323,7 @@ BOOL CDatabaseExt::GetRecordsetVector(std::vector<std::string>& result, LPCTSTR 
 			{
 				try
 				{
-					recordset->GetFieldValue(i, sTemp);
+					recordset->GetFieldValue(static_cast<short>(i), sTemp);
 				}
 				catch (CDBException* pDBException)
 				{
@@ -381,7 +381,7 @@ BOOL CDatabaseExt::GetRecordsetVector(std::vector<CDBVariant>& result, LPCTSTR l
 			{
 				try
 				{
-					recordset->GetFieldValue(i, variant);
+					recordset->GetFieldValue(static_cast<short>(i), variant);
 				}
 				catch (CDBException* pDBException)
 				{
@@ -412,7 +412,7 @@ BOOL CDatabaseExt::GetRecordsetVector(std::vector<CDBVariant>& result, LPCTSTR l
 	return m_sError.IsEmpty();
 }
 
-BOOL CDatabaseExt::GetRecordsetVector(std::vector<CString>& result, CString(*FormatData)(const short& nIndex, CDBVariant*), LPCTSTR lpszSQL/* = NULL*/, DWORD dwRecordsetOptions/* = CRecordset::none*/)
+BOOL CDatabaseExt::GetRecordsetVector(std::vector<CString>& result, CString(*FormatData)(short nIndex, CDBVariant*), LPCTSTR lpszSQL/* = NULL*/, DWORD dwRecordsetOptions/* = CRecordset::none*/)
 {
 	m_nFieldCount = 0;
 	if (! OpenConnection())
@@ -435,7 +435,7 @@ BOOL CDatabaseExt::GetRecordsetVector(std::vector<CString>& result, CString(*For
 			{
 				try
 				{
-					recordset->GetFieldValue(i, variant);
+					recordset->GetFieldValue(static_cast<short>(i), variant);
 				}
 				catch (CDBException* pDBException)
 				{
@@ -451,7 +451,7 @@ BOOL CDatabaseExt::GetRecordsetVector(std::vector<CString>& result, CString(*For
 					pMemException->Delete();
 					break;
 				}
-				result.push_back(FormatData(i, &variant));
+				result.push_back(FormatData(static_cast<short>(i), &variant));
 			}
 			if (m_sError.IsEmpty())
 				recordset->MoveNext();
