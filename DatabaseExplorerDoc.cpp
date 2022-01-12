@@ -36,13 +36,15 @@ CDatabaseExplorerDoc::CDatabaseExplorerDoc() noexcept
 {
 	// TODO: add one-time construction code here
 
-	m_pDB = std::make_shared<CDatabaseExt>();
+	m_pDB = std::make_unique<CDatabaseExt>();
 	m_pRecordset = std::make_unique<CRecordset>(m_pDB.get());
 }
 
 CDatabaseExplorerDoc::~CDatabaseExplorerDoc()
 {
 	theApp.WriteProfileInt(_T("Settings"), _T("LogPopulateList"), m_bLogPopulateList);
+	theApp.WriteProfileInt(_T("Settings"), _T("DatabaseType"), static_cast<int>(m_DatabaseType));
+	theApp.WriteProfileString(_T("Settings"), _T("DSNName"), m_sDSNName);
 }
 
 BOOL CDatabaseExplorerDoc::OnNewDocument()
@@ -54,6 +56,11 @@ BOOL CDatabaseExplorerDoc::OnNewDocument()
 	// (SDI documents will reuse this document)
 
 	m_bLogPopulateList = theApp.GetProfileInt(_T("Settings"), _T("LogPopulateList"), m_bLogPopulateList);
+	m_DatabaseType = static_cast<DatabaseType>(theApp.GetProfileInt(_T("Settings"), _T("DatabaseType"), static_cast<int>(DatabaseType::MSSQL)));
+	m_sDSNName = theApp.GetProfileString(_T("Settings"), _T("DSNName"));
+	m_pDB->SetRecordsetType(theApp.GetProfileInt(_T("Settings"), _T("RSType"), CRecordset::dynaset));
+
+	SetConnectionString();
 
 	return TRUE;
 }
@@ -142,6 +149,12 @@ void CDatabaseExplorerDoc::Dump(CDumpContext& dc) const
 
 // CDatabaseExplorerDoc commands
 
+void CDatabaseExplorerDoc::SetConnectionString() const
+{
+	if (m_pDB)
+		m_pDB->SetConnectionString(_T("DSN=") + m_sDSNName + _T(";"));
+}
+
 CString CDatabaseExplorerDoc::InitDatabase()
 {
 	CDatabasePane* pDatabasePane = GetDatabasePane();
@@ -152,9 +165,7 @@ CString CDatabaseExplorerDoc::InitDatabase()
 		{
 			if (m_pRecordset->IsOpen())
 				m_pRecordset->Close();
-			m_pDB->SetReadConectionDataFromRegistry(FALSE);
-			m_pDB->SetDatabase(sDatabase);
-			m_pDB->InitConnectionString();
+			m_pDB->ExecuteV(_T("USE %s;"), sDatabase);
 			return sDatabase;
 		}
 	}
@@ -175,9 +186,7 @@ CChildFrame* CDatabaseExplorerDoc::GetChildFrame() const
 {
 	CMDIFrameWnd* pFrame = static_cast<CMDIFrameWnd*>(AfxGetMainWnd());
 	if (nullptr != pFrame->GetSafeHwnd())
-	{
 		return static_cast<CChildFrame*>(pFrame->MDIGetActive());
-	}
 
 	return nullptr;
 }
@@ -291,22 +300,15 @@ void CDatabaseExplorerDoc::PopulateHeader(CListCtrl& ListCtrl, CRecordset& recor
 	}
 }
 
-BOOL CDatabaseExplorerDoc::PopulateListCtrl(CDatabaseExplorerView* pView, const CString& sSQL)
+BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& sSQL)
 {
 	m_sState.Empty();
 	std::chrono::high_resolution_clock::time_point start, end;
-
-	if (nullptr == pView->GetSafeHwnd())
-	{
-		m_sState.Format(_T("View pointer is null"));
-		return FALSE;
-	}
 
 	if (m_pRecordset->IsOpen())
 		m_pRecordset->Close();
 
 	long nTotalCount = 0;
-	CListCtrl& ListCtrl = pView->GetListCtrl();
 
 	do
 	{
@@ -388,38 +390,44 @@ BOOL CDatabaseExplorerDoc::PopulateListCtrl(CDatabaseExplorerView* pView, const 
 BOOL CDatabaseExplorerDoc::PopulateDatabasePanel(CTreeCtrl& tree)
 {
 	m_sState.Empty();
-
 	tree.DeleteAllItems();
 
-	if (GetDatabaseMSSQL(tree) || GetDatabaseOracle(tree) ||
-		GetDatabaseMySql(tree) || GetDatabasePostgre(tree) ||
-		GetDatabaseInformix(tree) || GetDatabaseMariaDB(tree))
-		return TRUE;
+	switch (m_DatabaseType)
+	{
+	case DatabaseType::SQLITE:
+		return GetSQLiteDatabases(tree);
+	case DatabaseType::ORACLE:
+		return GetOracleDatabases(tree);
+	case DatabaseType::MYSQL:
+	case DatabaseType::MARIADB:
+		return GetMySqlDatabases(tree);
+	case DatabaseType::POSTGRE:
+		return GetPostgreDatabases(tree);
+	case DatabaseType::ACCESS:
+		return GetAccessDatabases(tree);
+	case DatabaseType::MSSQL:
+	default:
+		return GetMSSQLDatabases(tree);
+	}
 
 	return FALSE;
 }
 
-BOOL CDatabaseExplorerDoc::GetDatabaseMSSQL(CTreeCtrl& tree)
+BOOL CDatabaseExplorerDoc::GetMSSQLDatabases(CTreeCtrl& tree)
 {
-	std::vector<std::string> database{};
-	if (! m_pDB->GetRecordsetVector(database, _T("SELECT database_id, name FROM sys.databases ORDER BY 2")))
+	const auto database = m_pDB->GetDataAsStdString(_T("SELECT database_id, name FROM sys.databases ORDER BY 2"));
+	if (! m_pDB->GetError().IsEmpty())
 	{
 		m_sState.Format(_T("%s"), m_pDB->GetError());
 	}
 	else
 	{
-		m_DatabaseType = DatabaseType::MSSQL;
-
-		std::vector<CString> table{};
-
 		for (auto it = database.begin(); it != database.end(); it += 2)
 		{
-			table.clear();
 			HTREEITEM hItem = tree.InsertItem(CString((it + 1)->c_str()), 0, 0);
 			tree.SetItemData(hItem, std::atoi(it->c_str()));
-			if (! m_pDB->GetRecordsetVectorV(table, 
-				_T("SELECT table_name FROM %s.information_schema.tables ORDER BY 1"), CString((it + 1)->c_str()))
-				|| table.empty())
+			std::vector<CString> table = m_pDB->GetDataAsCStringV(_T("SELECT table_name FROM %s.information_schema.tables ORDER BY 1"), CString((it + 1)->c_str()));
+			if (! m_pDB->GetError().IsEmpty() || table.empty())
 				continue;
 			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
 			{
@@ -432,38 +440,71 @@ BOOL CDatabaseExplorerDoc::GetDatabaseMSSQL(CTreeCtrl& tree)
 	return m_sState.IsEmpty();
 }
 
-BOOL CDatabaseExplorerDoc::GetDatabaseOracle(CTreeCtrl& tree)
+BOOL CDatabaseExplorerDoc::GetSQLiteDatabases(CTreeCtrl& tree)
 {
-	m_DatabaseType = DatabaseType::ORACLE;
+	const auto database = m_pDB->GetDataAsStdString(_T("SELECT 1, file FROM pragma_database_list WHERE name='main'"));
+	if (! m_pDB->GetError().IsEmpty())
+	{
+		m_sState.Format(_T("%s"), m_pDB->GetError());
+	}
+	else
+	{
+		for (auto it = database.cbegin(); it != database.cend(); it += 2)
+		{
+			HTREEITEM hItem = tree.InsertItem(CString((it + 1)->c_str()), 0, 0);
+			tree.SetItemData(hItem, std::atoi(it->c_str()));
+			std::vector<CString> table = m_pDB->GetDataAsCString(_T("SELECT tbl_name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY 1"));
+			if (! m_pDB->GetError().IsEmpty() || table.empty())
+				continue;
+			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
+			{
+				HTREEITEM hChild = tree.InsertItem(*it_table, 1, 1, hItem);
+				tree.SetItemData(hChild, 0);
+			}
+		}
+	}
 
 	return m_sState.IsEmpty();
 }
 
-BOOL CDatabaseExplorerDoc::GetDatabaseMySql(CTreeCtrl& tree)
+BOOL CDatabaseExplorerDoc::GetOracleDatabases(CTreeCtrl& tree)
 {
-	m_DatabaseType = DatabaseType::MYSQL;
-
 	return m_sState.IsEmpty();
 }
 
-BOOL CDatabaseExplorerDoc::GetDatabasePostgre(CTreeCtrl& tree)
+BOOL CDatabaseExplorerDoc::GetMySqlDatabases(CTreeCtrl& tree)
 {
-	m_DatabaseType = DatabaseType::POSTGRE;
-
+	const auto database = m_pDB->GetDataAsStdString(_T("SELECT 1, schema_name FROM information_schema.schemata ORDER BY 2"));
+	if (! m_pDB->GetError().IsEmpty())
+	{
+		m_sState.Format(_T("%s"), m_pDB->GetError());
+	}
+	else
+	{
+		for (auto it = database.begin(); it != database.end(); it += 2)
+		{
+			HTREEITEM hItem = tree.InsertItem(CString((it + 1)->c_str()), 0, 0);
+			tree.SetItemData(hItem, std::atoi(it->c_str()));
+			std::vector<CString> table = m_pDB->GetDataAsCStringV(_T("SELECT table_name FROM information_schema.tables WHERE table_schema = '%s' AND table_type = 'BASE TABLE' ORDER BY 1"), CString((it + 1)->c_str()));
+			if (! m_pDB->GetError().IsEmpty() || table.empty())
+				continue;
+			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
+			{
+				HTREEITEM hChild = tree.InsertItem(*it_table, 1, 1, hItem);
+				tree.SetItemData(hChild, 0);
+			}
+		}
+	}
 	return m_sState.IsEmpty();
 }
 
-BOOL CDatabaseExplorerDoc::GetDatabaseInformix(CTreeCtrl& tree)
+BOOL CDatabaseExplorerDoc::GetPostgreDatabases(CTreeCtrl& tree)
 {
-	m_DatabaseType = DatabaseType::INFORMIX;
-
 	return m_sState.IsEmpty();
 }
 
-BOOL CDatabaseExplorerDoc::GetDatabaseMariaDB(CTreeCtrl& tree)
+BOOL CDatabaseExplorerDoc::GetAccessDatabases(CTreeCtrl& tree)
 {
-	m_DatabaseType = DatabaseType::MARIADB;
-
 	return m_sState.IsEmpty();
 }
 
@@ -471,13 +512,17 @@ void CDatabaseExplorerDoc::OnEditDatasource()
 {
 	// TODO: Add your command handler code here
 
-	m_pDB->SetReadConectionDataFromRegistry();
+	CDatabasePane* pDatabasePane = GetDatabasePane();
+	if (nullptr == pDatabasePane->GetSafeHwnd())
+		return;
+
 	CDataSourceDlg dlg(this);
 	if (IDOK == dlg.DoModal())
 	{
+		SetConnectionString();
+		CString sDatabase = pDatabasePane->GetDatabaseSelection();
 		UpdateAllViews(NULL, CDatabaseExplorerApp::UH_POPULATEDATABASEPANEL);
-		UpdateAllViews(NULL, CDatabaseExplorerApp::UH_SELECTDATABASE, reinterpret_cast<CObject*>(const_cast<CString*>(&m_pDB->GetDatabase())));
-		UpdateAllViews(NULL, CDatabaseExplorerApp::UH_INITDATABASE);
+		UpdateAllViews(NULL, CDatabaseExplorerApp::UH_SELECTDATABASE, reinterpret_cast<CObject*>(&sDatabase));
 	}
 }
 
@@ -569,28 +614,41 @@ inline CString CDatabaseExplorerDoc::ConvertDataAsString(const CDBVariant& varia
 
 int CDatabaseExplorerDoc::GetDatabaseCount() const
 {
-	std::vector<CDBVariant> val;
-	if (! m_pDB->GetRecordsetVector(val, _T("SELECT count(*) FROM sys.databases")))
+	CString sSQL;
+	switch (m_DatabaseType)
+	{
+	case DatabaseType::SQLITE:
+		return 1;
+	case DatabaseType::MYSQL:
+		sSQL.Format(_T("SELECT count(*) FROM information_schema.schemata"));
+		break;
+	default:	// DatabaseType::MSSQL
+		sSQL.Format(_T("SELECT count(*) FROM sys.databases"));
+		break;
+	}
+
+	std::vector<std::string> val = m_pDB->GetDataAsStdString(sSQL);
+	if (! m_pDB->GetError().IsEmpty())
 		return -1;
 
 	if (1 == val.size())
-		return static_cast<int>(val.at(0).m_lVal);
+		return std::atoi(val.at(0).c_str());
 
 	return 0;
 }
 
 long CDatabaseExplorerDoc::GetRecordCount(const CString& sSQL)
 {
-	std::vector<CDBVariant> val;
+	std::vector<std::string> val = m_pDB->GetDataAsStdString(PrepareSQLForCountAll(sSQL));
 
-	if (! m_pDB->GetRecordsetVector(val, PrepareSQLForCountAll(sSQL)))
+	if (! m_pDB->GetError().IsEmpty())
 	{
 		m_sState = m_pDB->GetError();
 		return -1;
 	}
 
 	if (1 == val.size())
-		return static_cast<long>(val.at(0).m_lVal);
+		return std::atol((val.at(0).c_str()));
 
 	return 0;
 }

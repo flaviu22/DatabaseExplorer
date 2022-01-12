@@ -2,6 +2,7 @@
 #define AFX_WINDOWSMANAGERDIALOG_H__9417C3AF_FE30_4749_A058_3461CD0BDCC6__INCLUDED_
 
 #include "MainFrm.h"
+#include <memory>
 
 #if _MSC_VER > 1000
 #pragma once
@@ -49,7 +50,7 @@ public:
 
 protected:
 	CListCtrl m_List;
-	CImageList* m_pIL;
+	std::unique_ptr<CImageList> m_pIL{};
 	BOOL m_bAutoCleanup;
 	CMainFrame* m_pFrame;
 

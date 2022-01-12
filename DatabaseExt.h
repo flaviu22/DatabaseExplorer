@@ -26,19 +26,19 @@ protected:
 
 public:
 	int GetFieldCount() const;
-	BOOL GetRecordsetV(CStringArray& saResult, LPCTSTR lpszFormat, ...);
-	BOOL GetRecordsetV(CTypedPtrArray<CPtrArray, CDBVariant*>& arrResult, LPCTSTR lpszFormat, ...);
-	BOOL GetRecordsetV(CStringArray& saResult, CString(*FormatData)(short nIndex, CDBVariant*), LPCTSTR lpszFormat, ...);
-	BOOL GetRecordset(CStringArray& saResult, LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
-	BOOL GetRecordset(CTypedPtrArray<CPtrArray, CDBVariant*>& arrResult, LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
-	BOOL GetRecordset(CStringArray& saResult, CString(*FormatData)(short nIndex, CDBVariant* pVariant), LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
-	BOOL GetRecordsetVectorV(std::vector<CString>& result, LPCTSTR lpszFormat, ...);
-	BOOL GetRecordsetVector(std::vector<CString>& result, LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
-	BOOL GetRecordsetVectorV(std::vector<std::string>& result, LPCTSTR lpszFormat, ...);
-	BOOL GetRecordsetVector(std::vector<std::string>& result, LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
-	BOOL GetRecordsetVectorV(std::vector<CDBVariant>& result, LPCTSTR lpszFormat, ...);
-	BOOL GetRecordsetVector(std::vector<CDBVariant>& result, LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
-	BOOL GetRecordsetVector(std::vector<CString>& result, CString(*FormatData)(short nIndex, CDBVariant*), LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
+	BOOL GetDataV(CStringArray& saResult, LPCTSTR lpszFormat, ...);
+	BOOL GetDataV(CTypedPtrArray<CPtrArray, CDBVariant*>& arrResult, LPCTSTR lpszFormat, ...);
+	BOOL GetDataV(CStringArray& saResult, CString(*FormatData)(short nIndex, CDBVariant*), LPCTSTR lpszFormat, ...);
+	BOOL GetData(CStringArray& saResult, LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
+	BOOL GetData(CTypedPtrArray<CPtrArray, CDBVariant*>& arrResult, LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
+	BOOL GetData(CStringArray& saResult, CString(*FormatData)(short nIndex, CDBVariant* pVariant), LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
+	std::vector<CString> GetDataAsCStringV(LPCTSTR lpszFormat, ...);
+	std::vector<CString> GetDataAsCString(LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
+	std::vector<std::string> GetDataAsStdStringV(LPCTSTR lpszFormat, ...);
+	std::vector<std::string> GetDataAsStdString(LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
+	std::vector<CDBVariant> GetDataAsDBVariantV(LPCTSTR lpszFormat, ...);
+	std::vector<CDBVariant> GetDataAsDBVariant(LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
+	std::vector<CString> GetDataAsCString(CString(*FormatData)(short nIndex, CDBVariant*), LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
 };
 
 #endif // !defined(AFX_DatabaseExt_H__14C57009_F177_4ACF_A3BC_AF52CDCB528F__INCLUDED_)

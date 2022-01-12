@@ -18,18 +18,18 @@ CWindowsManagerDialog::CWindowsManagerDialog(CWnd* pParent/* = NULL*/)
 	: CDialog(CWindowsManagerDialog::IDD, pParent)
 	,m_bAutoCleanup(FALSE)
 	,m_pFrame(NULL)
-	,m_pIL(NULL)
 {
 	//{{AFX_DATA_INIT(CWindowsManagerDialog)
 		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
+
+	m_pIL = std::make_unique<CImageList>();
 }
 
 CWindowsManagerDialog::~CWindowsManagerDialog()
 {
-	if (NULL != m_pIL->GetSafeHandle())
+	if (m_pIL->GetSafeHandle())
 		m_pIL->DeleteImageList();
-	delete m_pIL;
 }
 
 void CWindowsManagerDialog::DoDataExchange(CDataExchange* pDX)
@@ -83,12 +83,9 @@ BOOL CWindowsManagerDialog::OnInitDialog()
 
 	m_List.SetExtendedStyle(LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT);
 
-	if (NULL == m_pIL)
-		m_pIL = new CImageList();
-
 	m_pIL->DeleteImageList();
 	m_pIL->Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1);
-	m_List.SetImageList(m_pIL, LVSIL_SMALL);
+	m_List.SetImageList(m_pIL.get(), LVSIL_SMALL);
 	m_List.SetBkColor(WMD_LISTCOLOR_BKG);
 	m_List.SetTextBkColor(WMD_LISTCOLOR_BKG);
 

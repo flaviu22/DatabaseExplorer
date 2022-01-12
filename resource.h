@@ -38,20 +38,10 @@
 #define IDI_TABLE                       314
 #define IDI_SELECTED                    315
 #define IDC_LIST_FILE                   1000
-#define IDC_EDIT_DSN                    1000
-#define IDC_EDIT_DRIVER                 1001
-#define IDC_EDIT_HOST                   1002
-#define IDC_EDIT_SERVER                 1003
-#define IDC_EDIT_SERVICE                1004
-#define IDC_EDIT_PROTOCOL               1005
-#define IDC_EDIT_DATABASE               1006
-#define IDC_EDIT_USER                   1007
-#define IDC_EDIT_PASSWORD               1008
+#define IDC_COMBO_DSN                   1000
 #define IDC_RADIO_DYNASET               1009
 #define IDC_RADIO_SNAPSHOT              1010
 #define IDC_RADIO_DYNAMIC               1011
-#define IDC_RADIO_YMD                   1012
-#define IDC_RADIO_DMY                   1013
 #define IDC_RADIO_USERDSN               1318
 #define IDC_RADIO_SYSTEMDSN             1319
 #define ID_VIEW_QUERY                   32771
@@ -73,7 +63,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        316
 #define _APS_NEXT_COMMAND_VALUE         32789
-#define _APS_NEXT_CONTROL_VALUE         1000
+#define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           311
 #endif
 #endif

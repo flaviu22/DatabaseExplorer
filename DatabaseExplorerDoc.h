@@ -21,11 +21,12 @@ enum class MessageType
 enum class DatabaseType
 {
 	MSSQL = 1,
+	SQLITE,
 	ORACLE,
 	MYSQL,
+	MARIADB,
 	POSTGRE,
-	INFORMIX,
-	MARIADB
+	ACCESS
 };
 
 class CDatabaseExplorerView;
@@ -39,10 +40,14 @@ protected: // create from serialization only
 // Attributes
 public:
 	CString m_sState;
-	DatabaseType m_DatabaseType{ DatabaseType::MSSQL };
 	inline CDatabaseExt* GetDB() { return m_pDB.get(); }
 	inline CRecordset* GetRecordset() const { return m_pRecordset.get(); }
 	BOOL IsLoggedPopulateList() const { return m_bLogPopulateList; }
+	DatabaseType GetDatabaseType() const { return m_DatabaseType; }
+	void SetDatabaseType(const DatabaseType type) { m_DatabaseType = type; }
+	CString GetDSNName() const { return m_sDSNName; }
+	void SetDSNName(const CString& sName) { m_sDSNName = sName; }
+	void SetConnectionString() const;
 
 // Operations
 public:
@@ -52,7 +57,7 @@ public:
 	CDatabasePane* GetDatabasePane() const;
 	CString GetTimeAsString(const std::chrono::high_resolution_clock::time_point& point1,
 							const std::chrono::high_resolution_clock::time_point& point2) const;
-	BOOL PopulateListCtrl(CDatabaseExplorerView* pView, const CString& sSQL);
+	BOOL PopulateListCtrl(CListCtrl& ListCtrl, const CString& sSQL);
 	BOOL IsSelect(const CString& sQuery) const;
 	BOOL PopulateDatabasePanel(CTreeCtrl& tree);
 	void LogMessage(const CString& sMessage, const MessageType& type);
@@ -79,18 +84,20 @@ public:
 #endif
 
 protected:
-	std::shared_ptr<CDatabaseExt> m_pDB{ nullptr };
+	CString m_sDSNName;
+	std::unique_ptr<CDatabaseExt> m_pDB{ nullptr };
 	std::unique_ptr<CRecordset> m_pRecordset{ nullptr };
+	DatabaseType m_DatabaseType{ DatabaseType::MSSQL };
 
 protected:
 	size_t TokenizeString(const CString& sText, const CString& sToken, std::vector<CString>& result) const;
 	void PopulateHeader(CListCtrl& ListCtrl, CRecordset& recordset);
-	BOOL GetDatabaseMSSQL(CTreeCtrl& tree);
-	BOOL GetDatabaseOracle(CTreeCtrl& tree);
-	BOOL GetDatabaseMySql(CTreeCtrl& tree);
-	BOOL GetDatabasePostgre(CTreeCtrl& tree);
-	BOOL GetDatabaseInformix(CTreeCtrl& tree);
-	BOOL GetDatabaseMariaDB(CTreeCtrl& tree);
+	BOOL GetMSSQLDatabases(CTreeCtrl& tree);
+	BOOL GetSQLiteDatabases(CTreeCtrl& tree);
+	BOOL GetOracleDatabases(CTreeCtrl& tree);
+	BOOL GetMySqlDatabases(CTreeCtrl& tree);
+	BOOL GetPostgreDatabases(CTreeCtrl& tree);
+	BOOL GetAccessDatabases(CTreeCtrl& tree);
 	CString ConvertDataAsString(const CDBVariant& variant);
 	CChildFrame* GetChildFrame() const;
 	CString PrepareSQLForCountAll(const CString& sSQL);

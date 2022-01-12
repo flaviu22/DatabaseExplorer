@@ -42,9 +42,6 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Crypt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DatabaseEx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -55,12 +52,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DataSourceDlg.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EditExt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EditList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MDIChildWndExt.h">
@@ -87,6 +78,15 @@
     <ClInclude Include="DBRecord.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SettingsStoreEx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ComboBoxExt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ComboBoxExtList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DatabaseExplorer.cpp">
@@ -107,9 +107,6 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Crypt.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DatabaseEx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -120,12 +117,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DataSourceDlg.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="EditExt.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="EditList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MDIChildWndExt.cpp">
@@ -147,6 +138,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WindowsManagerDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SettingsStoreEx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ComboBoxExt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ComboBoxExtList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

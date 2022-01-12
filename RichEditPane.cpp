@@ -2,6 +2,10 @@
 #include "DatabaseExplorer.h"
 #include "RichEditPane.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
 IMPLEMENT_DYNAMIC(CRichEditPane, CNonClosableDockablePane)
 
 CRichEditPane::CRichEditPane()

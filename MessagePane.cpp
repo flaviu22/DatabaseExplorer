@@ -1,6 +1,10 @@
 #include "pch.h"
 #include "MessagePane.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
 BEGIN_MESSAGE_MAP(CMessagePane, CRichEditPane)
 	ON_WM_CREATE()
 END_MESSAGE_MAP()

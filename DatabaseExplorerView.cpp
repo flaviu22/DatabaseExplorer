@@ -190,6 +190,8 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 
 	if (CDatabaseExplorerApp::UH_POPULATEDATABASEPANEL == lHint)
 	{
+		GetListCtrl().DeleteAllItems();
+		DeleteAllColumns();
 		CChildFrame* pChild = static_cast<CChildFrame*>(GetParentFrame());
 		if (nullptr != pChild->GetSafeHwnd())
 		{
@@ -221,12 +223,12 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 			const CString sDatabase = pChild->GetDatabasePane()->GetDatabaseSelection();
 			const int nDatabaseCountOffline = pChild->GetDatabasePane()->GetDatabaseCount();
 
-			for (auto it = sql.begin(); it != sql.end(); ++it)
+			for (const auto& it : sql)
 			{
-				if (! pDoc->IsSelect(*it))
-					ExecuteSQL(pDoc, *it);
+				if (! pDoc->IsSelect(it))
+					ExecuteSQL(pDoc, it);
 				else
-					ExecuteSelect(pDoc, *it);
+					ExecuteSelect(pDoc, it);
 			}
 
 			const int nDatabaseCountOnline = pDoc->GetDatabaseCount();
@@ -287,7 +289,7 @@ void CDatabaseExplorerView::ExecuteSelect(CDatabaseExplorerDoc* pDoc, const CStr
 
 	SetRedraw(FALSE);
 	DeleteAllColumns();
-	pDoc->PopulateListCtrl(this, sSQL);
+	pDoc->PopulateListCtrl(GetListCtrl(), sSQL);
 	SetRedraw();
 }
 

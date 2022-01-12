@@ -1,6 +1,10 @@
 #include "pch.h"
 #include "QueryPane.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
 BEGIN_MESSAGE_MAP(CQueryPane, CRichEditPane)
 	//{{AFX_MSG_MAP(CQueryPane)
 	ON_WM_CREATE()

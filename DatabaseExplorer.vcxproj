@@ -189,7 +189,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ChildFrm.h" />
-    <ClInclude Include="Crypt.h" />
+    <ClInclude Include="ComboBoxExt.h" />
+    <ClInclude Include="ComboBoxExtList.h" />
     <ClInclude Include="DatabaseEx.h" />
     <ClInclude Include="DatabaseExplorer.h" />
     <ClInclude Include="DatabaseExplorerDoc.h" />
@@ -198,8 +199,6 @@
     <ClInclude Include="DatabasePane.h" />
     <ClInclude Include="DataSourceDlg.h" />
     <ClInclude Include="DBRecord.h" />
-    <ClInclude Include="EditExt.h" />
-    <ClInclude Include="EditList.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="MDIChildWndExt.h" />
@@ -210,12 +209,14 @@
     <ClInclude Include="QueryPane.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="RichEditPane.h" />
+    <ClInclude Include="SettingsStoreEx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="WindowsManagerDialog.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ChildFrm.cpp" />
-    <ClCompile Include="Crypt.cpp" />
+    <ClCompile Include="ComboBoxExt.cpp" />
+    <ClCompile Include="ComboBoxExtList.cpp" />
     <ClCompile Include="DatabaseEx.cpp" />
     <ClCompile Include="DatabaseExplorer.cpp" />
     <ClCompile Include="DatabaseExplorerDoc.cpp" />
@@ -223,8 +224,6 @@
     <ClCompile Include="DatabaseExt.cpp" />
     <ClCompile Include="DatabasePane.cpp" />
     <ClCompile Include="DataSourceDlg.cpp" />
-    <ClCompile Include="EditExt.cpp" />
-    <ClCompile Include="EditList.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MDIChildWndExt.cpp" />
     <ClCompile Include="MessagePane.cpp" />
@@ -238,6 +237,7 @@
     </ClCompile>
     <ClCompile Include="QueryPane.cpp" />
     <ClCompile Include="RichEditPane.cpp" />
+    <ClCompile Include="SettingsStoreEx.cpp" />
     <ClCompile Include="WindowsManagerDialog.cpp" />
   </ItemGroup>
   <ItemGroup>

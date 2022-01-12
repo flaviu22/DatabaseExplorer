@@ -55,7 +55,6 @@ CDatabaseExplorerApp::CDatabaseExplorerApp() noexcept
 
 CDatabaseExplorerApp theApp;
 
-
 // CDatabaseExplorerApp initialization
 
 BOOL CDatabaseExplorerApp::InitInstance()
@@ -73,7 +72,7 @@ BOOL CDatabaseExplorerApp::InitInstance()
 	CWinAppEx::InitInstance();
 
 	// Initialize OLE libraries
-	if (!AfxOleInit())
+	if (! AfxOleInit())
 	{
 		AfxMessageBox(IDP_OLE_INIT_FAILED);
 		return FALSE;

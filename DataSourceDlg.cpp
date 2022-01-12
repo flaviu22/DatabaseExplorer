@@ -5,18 +5,16 @@
 #include "DatabaseExplorer.h"
 #include "DataSourceDlg.h"
 
-#include "Crypt.h"
 #include "MainFrm.h"
 #include "DatabaseExt.h"
+
+#include "SettingsStoreEx.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
-#define MAX_KEY_LENGTH					255
-#define MAX_VALUE_NAME					16383
 
 /////////////////////////////////////////////////////////////////////////////
 // CDataSourceDlg dialog
@@ -26,15 +24,6 @@ CDataSourceDlg::CDataSourceDlg(CDatabaseExplorerDoc* pDoc, CWnd* pParent /*=NULL
 	,m_pDoc(pDoc)
 {
 	//{{AFX_DATA_INIT(CDataSourceDlg)
-	m_sDSN = _T("");
-	m_sDatabase = _T("");
-	m_sDriver = _T("");
-	m_sHost = _T("");
-	m_sPassword = _T("");
-	m_sProtocol = _T("");
-	m_sServer = _T("");
-	m_sService = _T("");
-	m_sUser = _T("");
 	//}}AFX_DATA_INIT
 
 	m_hIcon = AfxGetApp()->LoadIcon(IDI_DATABASE);
@@ -44,16 +33,7 @@ void CDataSourceDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CDataSourceDlg)
-	DDX_Control(pDX, IDC_EDIT_DSN, m_editDSN);
-	DDX_Text(pDX, IDC_EDIT_DSN, m_sDSN);
-	DDX_Text(pDX, IDC_EDIT_DATABASE, m_sDatabase);
-	DDX_Text(pDX, IDC_EDIT_DRIVER, m_sDriver);
-	DDX_Text(pDX, IDC_EDIT_HOST, m_sHost);
-	DDX_Text(pDX, IDC_EDIT_PASSWORD, m_sPassword);
-	DDX_Text(pDX, IDC_EDIT_PROTOCOL, m_sProtocol);
-	DDX_Text(pDX, IDC_EDIT_SERVER, m_sServer);
-	DDX_Text(pDX, IDC_EDIT_SERVICE, m_sService);
-	DDX_Text(pDX, IDC_EDIT_USER, m_sUser);
+	DDX_Control(pDX, IDC_COMBO_DSN, m_ComboDSN);
 	//}}AFX_DATA_MAP
 }
 
@@ -75,94 +55,36 @@ BOOL CDataSourceDlg::OnInitDialog()
 
 	SetIcon(m_hIcon, FALSE);
 
-	CDatabaseExt* pDB = m_pDoc->GetDB();
+	m_ComboDSN.AdjustDroppedWidth();
+	m_ComboDSN.SetEditTooltip(TRUE, TRUE);
+	m_ComboDSN.SetListTooltip(TRUE, TRUE);
 
-	m_editDSN.SetAutoComplete();
-	const CString sRegistryEntry = pDB->GetRegistryEntry(_T("RegistryEntry"));
-
-	switch(theApp.GetProfileInt(sRegistryEntry, RegistryEntryDSNSource, 0))
+	switch(theApp.GetProfileInt(_T("Settings"), _T("DSNSource"), 0))
 	{
 	case 1:
 		CheckRadioButton(IDC_RADIO_USERDSN, IDC_RADIO_SYSTEMDSN, IDC_RADIO_SYSTEMDSN);
-		m_nDSNSource = 1;
+		PopulateDSN(TRUE);
 		break;
 	default:
 		CheckRadioButton(IDC_RADIO_USERDSN, IDC_RADIO_SYSTEMDSN, IDC_RADIO_USERDSN);
-		m_nDSNSource = 0;
+		PopulateDSN(FALSE);
 		break;
 	}
 
-	switch (theApp.GetProfileInt(sRegistryEntry, pDB->GetRegistryEntry(_T("RSType")), CRecordset::dynaset))
+	switch (theApp.GetProfileInt(_T("Settings"), _T("RSType"), CRecordset::dynaset))
 	{
 	case CRecordset::snapshot:
 		CheckRadioButton(IDC_RADIO_DYNASET, IDC_RADIO_DYNAMIC, IDC_RADIO_SNAPSHOT);
-		m_nRSTypeInit = CRecordset::snapshot;
 		break;
 	case CRecordset::dynamic:
 		CheckRadioButton(IDC_RADIO_DYNASET, IDC_RADIO_DYNAMIC, IDC_RADIO_DYNAMIC);
-		m_nRSTypeInit = CRecordset::dynamic;
 		break;
 	default:
 		CheckRadioButton(IDC_RADIO_DYNASET, IDC_RADIO_DYNAMIC, IDC_RADIO_DYNASET);
-		m_nRSTypeInit = CRecordset::dynaset;
 		break;
 	}
 
-	switch (theApp.GetProfileInt(sRegistryEntry, RegistryEntryDSNFormatDate, 0))
-	{
-	case 1:
-		CheckRadioButton(IDC_RADIO_YMD, IDC_RADIO_DMY, IDC_RADIO_DMY);
-		m_nFormatDateInit = 1;
-		break;
-	default:
-		CheckRadioButton(IDC_RADIO_YMD, IDC_RADIO_DMY, IDC_RADIO_YMD);
-		m_nFormatDateInit = 0;
-		break;
-	}
-
-	pDB->ReadConectionDataFromRegistry();
-
-	m_sDSNInit = m_sDSN = pDB->GetDSN();
-	m_sDriverInit = m_sDriver = pDB->GetDriver();
-	m_sHostInit = m_sHost = pDB->GetHost();
-	m_sServerInit = m_sServer = pDB->GetServer();
-	m_sServiceInit = m_sService = pDB->GetService();
-	m_sProtocolInit = m_sProtocol = pDB->GetProtocol();
-	m_sDatabaseInit = m_sDatabase = pDB->GetDatabase();
-	m_sUserInit = m_sUser = pDB->GetUser();
-
-	HKEY hKey;
-	CCrypt crypt;
-	CString sTemp;
-	LPBYTE lpByte;
-	CByteArray arrBytes;
-	DWORD dwLength, dwType = REG_BINARY;
-	crypt.DeriveKey(g_sAppDSNPasswordKey);
-
-	sTemp.Format(_T("Software\\%s\\%s\\%s\\"), AfxGetApp()->m_pszRegistryKey, AfxGetApp()->m_pszAppName, sRegistryEntry);
-	if(ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, sTemp, 0, KEY_ALL_ACCESS, &hKey))
-	{
-		if(ERROR_SUCCESS == RegQueryValueEx(hKey, pDB->GetRegistryEntry(_T("DSNPass")), NULL, &dwType, NULL, &dwLength))
-		{
-			arrBytes.SetSize(dwLength);
-			lpByte = arrBytes.GetData();
-			RegQueryValueEx(hKey, pDB->GetRegistryEntry(_T("DSNPass")), NULL, &dwType, lpByte, &dwLength);
-			crypt.Decrypt(arrBytes, m_sPassword);
-			m_sPasswordInit = m_sPassword;
-		}
-		RegCloseKey(hKey);
-	}
-
-	m_nDSModel = theApp.GetProfileInt(sRegistryEntry, pDB->GetRegistryEntry(_T("DSNModel")), 0);
-
-	CStringArray saODBC;
-	if(1 == m_nDSNSource)
-		GetKey(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\ODBC\\ODBC.INI\\ODBC Data Sources"), saODBC);
-	else
-		GetKey(HKEY_CURRENT_USER, _T("SOFTWARE\\ODBC\\ODBC.INI\\ODBC Data Sources"), saODBC);
-
-	for(int i = 0;i < saODBC.GetSize();++i)
-		m_editDSN.AddString(saODBC.GetAt(i));
+	m_ComboDSN.SetCurSel(GetDSNIndex(m_pDoc->GetDSNName()));
 
 	UpdateData(FALSE);
 
@@ -170,26 +92,30 @@ BOOL CDataSourceDlg::OnInitDialog()
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
+void CDataSourceDlg::PopulateDSN(const BOOL bSystemDSN)
+{
+	m_ComboDSN.ResetContent();
+
+	CSettingsStoreEx ss(bSystemDSN, TRUE);
+	if (ss.Open(_T("SOFTWARE\\ODBC\\ODBC.INI\\ODBC Data Sources")))
+	{
+#ifdef _UNICODE
+		std::unordered_map<std::wstring, std::wstring> keys;
+#else
+		std::unordered_map<std::string, std::string> keys;
+#endif // _UNICODE
+		ss.EnumValues(keys);
+		for (const auto& it : keys)
+			m_ComboDSN.AddStringWithInfo(it.first.c_str(), it.second.c_str());
+	}
+}
+
 void CDataSourceDlg::OnRadioUserDsn() 
 {
 	// TODO: Add your control notification handler code here
 
-	m_editDSN.RemoveAll();
-
-	CStringArray saODBC;
-	GetKey(HKEY_CURRENT_USER, _T("SOFTWARE\\ODBC\\ODBC.INI\\ODBC Data Sources"), saODBC);
-
-	BOOL bFound = FALSE;
-	for(int i = 0;i < saODBC.GetSize();++i)
-	{
-		m_editDSN.AddString(saODBC.GetAt(i));
-		if(0 == m_sDSN.Compare(saODBC.GetAt(i)))
-			bFound = TRUE;
-	}
-
-	if(! bFound)
-		m_sDSN.Empty();
-
+	m_ComboDSN.SetCurSel(CB_ERR);
+	PopulateDSN(FALSE);
 	UpdateData(FALSE);
 }
 
@@ -197,141 +123,75 @@ void CDataSourceDlg::OnRadioSystemDsn()
 {
 	// TODO: Add your control notification handler code here
 
-	m_editDSN.RemoveAll();
-
-	CStringArray saODBC;
-	GetKey(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\ODBC\\ODBC.INI\\ODBC Data Sources"), saODBC);
-
-	BOOL bFound = FALSE;
-	for(int i = 0;i < saODBC.GetSize();++i)
-	{
-		m_editDSN.AddString(saODBC.GetAt(i));
-		if(0 == m_sDSN.Compare(saODBC.GetAt(i)))
-			bFound = TRUE;
-	}
-
-	if(! bFound)
-		m_sDSN.Empty();
-
+	m_ComboDSN.SetCurSel(CB_ERR);
+	PopulateDSN(TRUE);
 	UpdateData(FALSE);
 }
 
-void CDataSourceDlg::RestoreInitValues()
+int CDataSourceDlg::GetDSNIndex(const CString& sName) const
 {
-	HKEY hKey;
-	CCrypt crypt;
-	CString sTemp;
-	LPBYTE lpByte;
-	DWORD dwLength;
-	CByteArray arrBytes;
-
-	m_pDoc->GetDB()->WriteConectionDataToRegistry(m_sDSNInit, m_sDriverInit, m_sHostInit, 
-												m_sServerInit, m_sServiceInit, m_sProtocolInit, 
-												m_sDatabaseInit, m_sUserInit);
-
-	crypt.DeriveKey(g_sAppDSNPasswordKey);
-	crypt.Encrypt(m_sPasswordInit, arrBytes);
-	lpByte = arrBytes.GetData();
-	dwLength = static_cast<DWORD>(arrBytes.GetSize());
-
-	const CString sRegistryEntry = m_pDoc->GetDB()->GetRegistryEntry(_T("RegistryEntry"));
-	sTemp.Format(_T("Software\\%s\\%s\\%s\\"), AfxGetApp()->m_pszRegistryKey, AfxGetApp()->m_pszAppName, sRegistryEntry);
-	if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, sTemp, 0, KEY_ALL_ACCESS, &hKey))
+	CString sText;
+	for (int i = 0; i < m_ComboDSN.GetCount(); ++i)
 	{
-		RegSetValueEx(hKey, m_pDoc->GetDB()->GetRegistryEntry(_T("DSNPass")), 0, REG_BINARY, lpByte, dwLength);
-		RegCloseKey(hKey);
+		sText.Empty();
+		m_ComboDSN.GetLBText(i, sText);
+		if (sName == sText)
+			return i;
 	}
-	theApp.WriteProfileInt(sRegistryEntry, RegistryEntryDSNSource, m_nDSNSource);
-	theApp.WriteProfileInt(sRegistryEntry, m_pDoc->GetDB()->GetRegistryEntry(_T("DSNModel")), m_nDSModel);
-	theApp.WriteProfileInt(sRegistryEntry, m_pDoc->GetDB()->GetRegistryEntry(_T("RSType")), m_nRSTypeInit);
-	theApp.WriteProfileInt(sRegistryEntry, RegistryEntryDSNFormatDate, m_nFormatDateInit);
-	m_pDoc->GetDB()->InitConnectionString(m_nDSModel);
-	m_pDoc->GetDB()->SetRecordsetType(m_nRSTypeInit);
+
+	return CB_ERR;
 }
 
-void CDataSourceDlg::GetKey(HKEY hKey, LPCTSTR lpSubKey, CStringArray& saResult)
+const CString CDataSourceDlg::GetComboSelection()
 {
-	if (ERROR_SUCCESS != RegOpenKeyEx(hKey, lpSubKey, 0, KEY_READ, &hKey))
-		return;
+	UpdateData();
 
-	TCHAR    achKey[MAX_KEY_LENGTH];	// buffer for subkey name
-	DWORD    cbName;					// size of name string
-	TCHAR    achClass[MAX_PATH] = TEXT("");	// buffer for class name
-	DWORD    cchClassName = MAX_PATH;	// size of class string
-	DWORD    cSubKeys = 0;				// number of subkeys
-	DWORD    cbMaxSubKey;				// longest subkey size
-	DWORD    cchMaxClass;				// longest class string
-	DWORD    cValues;					// number of values for key
-	DWORD    cchMaxValue;				// longest value name
-	DWORD    cbMaxValueData;			// longest value data
-	DWORD    cbSecurityDescriptor;		// size of security descriptor
-	FILETIME ftLastWriteTime;			// last write time
+	CString sText;
+	m_ComboDSN.GetLBText(m_ComboDSN.GetCurSel(), sText);
+	return sText;
+}
 
-	DWORD i, retCode;
+const CString CDataSourceDlg::GetKeyData(const CString& sKeyName) const
+{
+	CString sValue;
+	const BOOL bSystemDSN = (IDC_RADIO_SYSTEMDSN == GetCheckedRadioButton(IDC_RADIO_USERDSN, IDC_RADIO_SYSTEMDSN));
+	CSettingsStoreEx ss(bSystemDSN, TRUE);
 
-	TCHAR  achValue[MAX_VALUE_NAME];
-	DWORD cchValue = MAX_VALUE_NAME;
-
-	// Get the class name and the value count
-	retCode = RegQueryInfoKey(
-		hKey,                    // key handle
-		achClass,                // buffer for class name
-		&cchClassName,           // size of class string
-		NULL,                    // reserved
-		&cSubKeys,               // number of subkeys
-		&cbMaxSubKey,            // longest subkey size
-		&cchMaxClass,            // longest class string
-		&cValues,                // number of values for this key
-		&cchMaxValue,            // longest value name
-		&cbMaxValueData,         // longest value data
-		&cbSecurityDescriptor,   // security descriptor
-		&ftLastWriteTime);       // last write time
-
-	// Enumerate the subkeys, until RegEnumKeyEx fails.
-	if(cSubKeys)
+	if (ss.Open(_T("SOFTWARE\\ODBC\\ODBC.INI\\ODBC Data Sources")))
 	{
-		TRACE(_T("\nNumber of subkeys: %d\n"), cSubKeys);
-		for(i = 0;i < cSubKeys;++i)
-		{
-			cbName = MAX_KEY_LENGTH;
-			retCode = RegEnumKeyEx(hKey, i, 
-				achKey, 
-				&cbName, 
-				NULL, 
-				NULL, 
-				NULL, 
-				&ftLastWriteTime);
-			if(retCode == ERROR_SUCCESS)
-			{
-				TRACE(_T("(%d) %s\n"),i + 1, achKey);
-				saResult.Add(achKey);
-			}
-		}
+#ifdef _UNICODE
+		std::unordered_map<std::wstring, std::wstring> keys;
+#else
+		std::unordered_map<std::string, std::string> keys;
+#endif // _UNICODE
+		ss.EnumValues(keys);
+		const auto found = keys.find(sKeyName.GetString());
+		if (found != keys.end())
+			sValue = found->second.c_str();
 	}
-	// Enumerate the key values.
-	if(cValues)
-	{
-		TRACE(_T("\nNumber of values: %d\n"), cValues);
-		for(i = 0,retCode = ERROR_SUCCESS;i < cValues;++i)
-		{
-			cchValue = MAX_VALUE_NAME;
-			achValue[0] = '\0';
-			retCode = RegEnumValue(hKey, i, 
-				achValue, 
-				&cchValue, 
-				NULL, 
-				NULL, 
-				NULL, 
-				NULL);
-			if(retCode == ERROR_SUCCESS)
-			{
-				TRACE(_T("(%d) %s\n"), i + 1, achValue);
-				saResult.Add(achValue);
-			}
-		}
-	}
+	return sValue;
+}
 
-	RegCloseKey(hKey);
+const DatabaseType CDataSourceDlg::DecodeDatabaseType(CString sData) const
+{
+	sData.MakeLower();
+
+	if (-1 != sData.Find(_T("sql server native")))
+		return DatabaseType::MSSQL;
+
+	if (-1 != sData.Find(_T("sqlite")))
+		return DatabaseType::SQLITE;
+
+	if (-1 != sData.Find(_T("oracle")))
+		return DatabaseType::ORACLE;
+
+	if (-1 != sData.Find(_T("mysql")))
+		return DatabaseType::MYSQL;
+
+	if (-1 != sData.Find(_T("maria")))
+		return DatabaseType::MARIADB;
+
+	return DatabaseType::MSSQL;
 }
 
 void CDataSourceDlg::OnOK() 
@@ -340,107 +200,96 @@ void CDataSourceDlg::OnOK()
 
 	UpdateData();
 
-	BOOL bOK = FALSE;
+	if (m_ComboDSN.GetCurSel() < 0)
+	{
+		MessageBox(_T("Choose a data source name first!"), NULL, MB_ICONERROR);
+		m_ComboDSN.SetFocus();
+		m_ComboDSN.ShowDropDown();
+		return;
+	}
+
 	CDatabaseExt* pDB = m_pDoc->GetDB();
-	CMainFrame* pFrame = (CMainFrame*)AfxGetMainWnd();
 
-	const CString sRegistryEntry = pDB->GetRegistryEntry(_T("RegistryEntry"));
+	pDB->Close();
 
+	int nDSNSource = 0;	// User DSN
 	if (IDC_RADIO_SYSTEMDSN == GetCheckedRadioButton(IDC_RADIO_USERDSN, IDC_RADIO_SYSTEMDSN))
-		theApp.WriteProfileInt(sRegistryEntry, RegistryEntryDSNSource, 1);
-	else
-		theApp.WriteProfileInt(sRegistryEntry, RegistryEntryDSNSource, 0);
+		nDSNSource = 1;
+
+	UINT nRSType = CRecordset::dynaset;
+	const UINT nRSTypeOrg = pDB->GetRecordsetType();
 
 	switch(GetCheckedRadioButton(IDC_RADIO_DYNASET, IDC_RADIO_DYNAMIC))
 	{
 	case IDC_RADIO_SNAPSHOT:
-		pDB->SetRecordsetType(CRecordset::snapshot);
+		nRSType = CRecordset::snapshot;
 		break;
 	case IDC_RADIO_DYNAMIC:
-		pDB->SetRecordsetType(CRecordset::dynamic);
+		nRSType = CRecordset::dynamic;
 		break;
 	default:
-		pDB->SetRecordsetType(CRecordset::dynaset);
+		break;	// CRecordset::dynaset
 	}
 
-	if(IDC_RADIO_DMY == GetCheckedRadioButton(IDC_RADIO_YMD, IDC_RADIO_DMY))
-	{
-		theApp.WriteProfileInt(sRegistryEntry, RegistryEntryDSNFormatDate, 1);
-	}
-	else
-	{
-		theApp.WriteProfileInt(sRegistryEntry, RegistryEntryDSNFormatDate, 0);
-	}
+	pDB->SetConnectionString(_T("DSN=") + GetComboSelection() + _T(";"));
+	pDB->SetRecordsetType(nRSType);
 
-	pDB->WriteConectionDataToRegistry(m_sDSN, m_sDriver, m_sHost,
-												m_sServer, m_sService, m_sProtocol,
-												m_sDatabase, m_sUser);
-
-	HKEY hKey;
-	CCrypt crypt;
-	CString sTemp;
-	LPBYTE lpByte;
-	DWORD dwLength;
-	CByteArray arrBytes;
-
-	crypt.DeriveKey(g_sAppDSNPasswordKey);
-	crypt.Encrypt(m_sPassword, arrBytes);
-	lpByte = arrBytes.GetData();
-	dwLength = static_cast<DWORD>(arrBytes.GetSize());
-
-	sTemp.Format(_T("Software\\%s\\%s\\%s\\"), AfxGetApp()->m_pszRegistryKey, AfxGetApp()->m_pszAppName, sRegistryEntry);
-	if(ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, sTemp, 0, KEY_ALL_ACCESS, &hKey))
-	{
-		RegSetValueEx(hKey, pDB->GetRegistryEntry(_T("DSNPass")), 0, REG_BINARY, lpByte, dwLength);
-		RegCloseKey(hKey);
-
-		pDB->SetPassword(m_sPassword);
-	}
+	const DatabaseType DBType = DecodeDatabaseType(GetKeyData(GetComboSelection()));
 
 	CWaitCursor Wait;
-//	pFrame->Login(NULL);
-	for (int i = 1; i <= 3; ++i)
+
+	switch (DBType)
 	{
-		pDB->InitConnectionString(i);
-///*/////// replace this select with one of yours ////////////////
+	case DatabaseType::SQLITE:
+		pDB->Execute(_T("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"));
+		break;
+	case DatabaseType::MYSQL:
+	case DatabaseType::MARIADB:
+		pDB->Execute(_T("SELECT count(*) FROM information_schema.schemata"));
+		break;
+	default:	// DatabaseType::MSSQL
 		pDB->Execute(_T("SELECT count(*) FROM information_schema.tables"));
-///*//////////////////////////////////////////////////////////////
-		if(pDB->GetError().IsEmpty())
-		{
-			bOK = TRUE;
-			theApp.WriteProfileInt(sRegistryEntry, pDB->GetRegistryEntry(_T("DSNModel")), i);
-			break;
-		}
+		break;
 	}
 
-	if(! bOK)
+	if(! pDB->GetError().IsEmpty())
 	{
-		if(! pDB->GetError().IsEmpty())
-			MessageBox(pDB->GetError(), NULL, MB_ICONERROR);
-		else
-			MessageBox(_T("Setup data source name failed"), NULL, MB_ICONERROR);
-		RestoreInitValues();
+		pDB->SetRecordsetType(nRSTypeOrg);
+		MessageBox(pDB->GetError(), NULL, MB_ICONERROR);
 		return;
 	}
-	else
+
+	switch (DBType)
 	{
-///*/////// replace this select with one of yours ////////////////
-		CStringArray saRes;
-		pDB->GetRecordset(saRes, _T("SELECT count(*) FROM information_schema.tables"));
-///*//////////////////////////////////////////////////////////////
-		if (pDB->GetError().IsEmpty())
-		{
-			pFrame->SetMessageText(_T("You have successfully set up the datasource"));
-		}
-		else
-		{
-			MessageBox(pDB->GetError(), NULL, MB_ICONERROR);
-			RestoreInitValues();
-			return;
-		}
+	case DatabaseType::SQLITE:
+		pDB->GetDataAsStdString(_T("SELECT count(*) FROM sqlite_master"));
+		break;
+	case DatabaseType::MYSQL:
+	case DatabaseType::MARIADB:
+		pDB->GetDataAsStdString(_T("SELECT count(*) FROM information_schema.schemata"));
+		break;
+	default:	// DatabaseType::MSSQL
+		pDB->GetDataAsStdString(_T("SELECT count(*) FROM information_schema.tables"));
+		break;
+	}
+
+	if (! pDB->GetError().IsEmpty())
+	{
+		pDB->SetRecordsetType(nRSTypeOrg);
+		MessageBox(pDB->GetError(), NULL, MB_ICONERROR);
+		return;
 	}
 
 	pDB->Close();
+
+	theApp.WriteProfileInt(_T("Settings"), _T("DSNSource"), nDSNSource);
+	theApp.WriteProfileInt(_T("Settings"), _T("RSType"), nRSType);
+
+	m_pDoc->SetDatabaseType(DBType);
+	m_pDoc->SetDSNName(GetComboSelection());
+
+	CMainFrame* pFrame = static_cast<CMainFrame*>(AfxGetMainWnd());
+	pFrame->SetMessageText(_T("You have successfully set up the datasource"));
 
 	CDialog::OnOK();
 }
