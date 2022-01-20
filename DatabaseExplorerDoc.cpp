@@ -155,6 +155,24 @@ void CDatabaseExplorerDoc::SetConnectionString() const
 		m_pDB->SetConnectionString(_T("DSN=") + m_sDSNName + _T(";"));
 }
 
+const CString CDatabaseExplorerDoc::DecodePostGreDatabase(const CString& sConnectionString) const
+{
+	CString sRet(_T("postgres"));
+	CString sConn(sConnectionString);
+	sConn.MakeLower();
+	const CString sSearch(_T("database="));
+	int nIndex1 = sConn.Find(sSearch);
+	if (nIndex1 > 0)
+	{
+		nIndex1 += sSearch.GetLength();
+		const int nIndex2 = sConn.Find(';', nIndex1);
+		if (nIndex2 > nIndex1)
+			sRet = sConnectionString.Mid(nIndex1, nIndex2 - nIndex1);
+	}
+
+	return sRet;
+}
+
 CString CDatabaseExplorerDoc::InitDatabase()
 {
 	CDatabasePane* pDatabasePane = GetDatabasePane();
@@ -403,8 +421,6 @@ BOOL CDatabaseExplorerDoc::PopulateDatabasePanel(CTreeCtrl& tree)
 		return GetMySqlDatabases(tree);
 	case DatabaseType::POSTGRE:
 		return GetPostgreDatabases(tree);
-	case DatabaseType::ACCESS:
-		return GetAccessDatabases(tree);
 	case DatabaseType::MSSQL:
 	default:
 		return GetMSSQLDatabases(tree);
@@ -500,11 +516,30 @@ BOOL CDatabaseExplorerDoc::GetMySqlDatabases(CTreeCtrl& tree)
 
 BOOL CDatabaseExplorerDoc::GetPostgreDatabases(CTreeCtrl& tree)
 {
-	return m_sState.IsEmpty();
-}
-
-BOOL CDatabaseExplorerDoc::GetAccessDatabases(CTreeCtrl& tree)
-{
+	const auto database = m_pDB->GetDataAsStdStringV(_T("SELECT 1, datname FROM pg_database WHERE datistemplate = false ORDER BY 2"));
+	if (! m_pDB->GetError().IsEmpty())
+	{
+		m_sState.Format(_T("%s"), m_pDB->GetError());
+	}
+	else
+	{
+		SetPostgreDB(DecodePostGreDatabase(m_pDB->GetConnect()));
+		for (auto it = database.begin(); it != database.end(); it += 2)
+		{
+			HTREEITEM hItem = tree.InsertItem(CString((it + 1)->c_str()), 0, 0);
+			tree.SetItemData(hItem, std::atoi(it->c_str()));
+			if (m_sPostgreDB != CString((it + 1)->c_str()))
+				continue;
+			std::vector<CString> table = m_pDB->GetDataAsCString(_T("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema' ORDER BY 1"));
+			if (! m_pDB->GetError().IsEmpty() || table.empty())
+				continue;
+			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
+			{
+				HTREEITEM hChild = tree.InsertItem(*it_table, 1, 1, hItem);
+				tree.SetItemData(hChild, 0);
+			}
+		}
+	}
 	return m_sState.IsEmpty();
 }
 
@@ -617,13 +652,23 @@ int CDatabaseExplorerDoc::GetDatabaseCount() const
 	CString sSQL;
 	switch (m_DatabaseType)
 	{
+	case DatabaseType::MSSQL:
+		sSQL.Format(_T("SELECT count(*) FROM sys.databases"));
+		break;
 	case DatabaseType::SQLITE:
 		return 1;
 	case DatabaseType::MYSQL:
+	case DatabaseType::MARIADB:
 		sSQL.Format(_T("SELECT count(*) FROM information_schema.schemata"));
 		break;
-	default:	// DatabaseType::MSSQL
-		sSQL.Format(_T("SELECT count(*) FROM sys.databases"));
+	case DatabaseType::POSTGRE:
+		sSQL.Format(_T("SELECT count(*) FROM pg_database"));
+		break;
+	case DatabaseType::ORACLE:
+		sSQL.Format(_T("SELECT count(*) FROM information_schema"));
+		break;
+	default:
+		sSQL.Format(_T("SELECT 0"));
 		break;
 	}
 
@@ -707,4 +752,89 @@ CString CDatabaseExplorerDoc::PrepareSQLForCountAll(const CString& sSQL)
 	}
 
 	return sSQLNew;
+}
+
+CString CDatabaseExplorerDoc::GetText(CHeaderCtrl& header, int nItem) const
+{
+	HD_ITEM hdi = { 0 };
+	hdi.mask = HDI_TEXT;
+	std::vector<wchar_t> text(127);
+	hdi.pszText = text.data();
+	hdi.cchTextMax = text.size();
+	header.GetItem(nItem, &hdi);
+	return hdi.pszText;
+}
+
+std::vector<CString> CDatabaseExplorerDoc::GetHeaderItems(CListCtrl& ListCtrl)
+{
+	std::vector<CString> items;
+
+	CHeaderCtrl* pHeader = ListCtrl.GetHeaderCtrl();
+	if (pHeader)
+	{
+		const int nCount = pHeader->GetItemCount();
+		for (int i = 0; i < nCount; ++i)
+			items.push_back(GetText(*pHeader, i));
+	}
+
+	return items;
+}
+// write first line with the header items
+void CDatabaseExplorerDoc::WriteHeaderLine(CListCtrl& ListCtrl, CStdioFile& file, const CString& sSeparator)
+{
+	CString sLine;
+	const auto header_items = GetHeaderItems(ListCtrl);
+	for (auto& it = header_items.cbegin(); it != header_items.end(); ++it)
+	{
+		if (it != header_items.end() - 1)
+			sLine.AppendFormat(_T("%s%s"), *it, sSeparator);
+		else
+			sLine.AppendFormat(_T("%s"), *it);
+	}
+	sLine.AppendFormat(_T("\n"));
+	file.WriteString(sLine);
+}
+// write every line with the list items
+void CDatabaseExplorerDoc::WriteListLines(CListCtrl& ListCtrl, CStdioFile& file, const CString& sSeparator)
+{
+	CString sLine;
+	const int nCount = ListCtrl.GetItemCount();
+	const int nHeaderCount = ListCtrl.GetHeaderCtrl()->GetItemCount();
+
+	for (int i = 0; i < nCount; ++i)
+	{
+		sLine.Empty();
+		for (int c = 0; c < nHeaderCount; ++c)
+		{
+			if (c < nHeaderCount - 1)
+				sLine.AppendFormat(_T("%s%s"), ListCtrl.GetItemText(i, c), sSeparator);
+			else
+				sLine.AppendFormat(_T("%s"), ListCtrl.GetItemText(i, c));
+		}
+		sLine.AppendFormat(_T("\n"));
+		file.WriteString(sLine);
+	}
+}
+
+BOOL CDatabaseExplorerDoc::SaveListContentToCSV(CListCtrl& ListCtrl, const CString& sPathName)
+{
+	m_sState.Empty();
+
+	const CString sSeparator = AfxGetApp()->GetProfileString(_T("Settings"), _T("CSVSeparator"), _T(","));
+
+	do
+	{
+		CStdioFile file;
+		CFileException ex;
+		if (! file.Open(sPathName, CFile::modeCreate | CFile::modeReadWrite, &ex))
+		{
+			ex.GetErrorMessage(m_sState.GetBuffer(_MAX_PATH), MAX_PATH);
+			m_sState.ReleaseBuffer();
+			break;
+		}
+		WriteHeaderLine(ListCtrl, file, sSeparator);
+		WriteListLines(ListCtrl, file, sSeparator);
+	} while (FALSE);
+
+	return m_sState.IsEmpty();
 }

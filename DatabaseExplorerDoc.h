@@ -26,7 +26,7 @@ enum class DatabaseType
 	MYSQL,
 	MARIADB,
 	POSTGRE,
-	ACCESS
+	UNKNOWN
 };
 
 class CDatabaseExplorerView;
@@ -48,6 +48,9 @@ public:
 	CString GetDSNName() const { return m_sDSNName; }
 	void SetDSNName(const CString& sName) { m_sDSNName = sName; }
 	void SetConnectionString() const;
+	CString GetPostgreDB() const { return m_sPostgreDB; }
+	void SetPostgreDB(const CString& sName) { m_sPostgreDB = sName; }
+	const CString DecodePostGreDatabase(const CString& sConnectionString) const;
 
 // Operations
 public:
@@ -65,6 +68,7 @@ public:
 	CString InitDatabase();
 	long GetRecordCount(const CString& sSQL);
 	int GetDatabaseCount() const;
+	BOOL SaveListContentToCSV(CListCtrl& ListCtrl, const CString& sPathName);
 
 // Overrides
 public:
@@ -85,6 +89,7 @@ public:
 
 protected:
 	CString m_sDSNName;
+	CString m_sPostgreDB{ _T("postgres") };
 	std::unique_ptr<CDatabaseExt> m_pDB{ nullptr };
 	std::unique_ptr<CRecordset> m_pRecordset{ nullptr };
 	DatabaseType m_DatabaseType{ DatabaseType::MSSQL };
@@ -97,10 +102,13 @@ protected:
 	BOOL GetOracleDatabases(CTreeCtrl& tree);
 	BOOL GetMySqlDatabases(CTreeCtrl& tree);
 	BOOL GetPostgreDatabases(CTreeCtrl& tree);
-	BOOL GetAccessDatabases(CTreeCtrl& tree);
 	CString ConvertDataAsString(const CDBVariant& variant);
 	CChildFrame* GetChildFrame() const;
 	CString PrepareSQLForCountAll(const CString& sSQL);
+	std::vector<CString> GetHeaderItems(CListCtrl& ListCtrl);
+	void WriteHeaderLine(CListCtrl& ListCtrl, CStdioFile& file, const CString& sSeparator);
+	void WriteListLines(CListCtrl& ListCtrl, CStdioFile& file, const CString& sSeparator);
+	CString GetText(CHeaderCtrl& header, int nItem) const;
 
 private:
 	BOOL m_bLogPopulateList{ TRUE };

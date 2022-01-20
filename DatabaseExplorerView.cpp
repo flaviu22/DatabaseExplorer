@@ -14,6 +14,7 @@
 
 #include "MainFrm.h"
 #include "ChildFrm.h"
+#include "FileDialogEx.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -34,6 +35,10 @@ BEGIN_MESSAGE_MAP(CDatabaseExplorerView, CListView)
 	ON_MESSAGE(WMU_POSTINIT, &CDatabaseExplorerView::OnPostInit)
 	ON_NOTIFY_REFLECT(LVN_GETDISPINFO, &CDatabaseExplorerView::OnLvnGetdispinfo)
 	ON_NOTIFY_REFLECT(LVN_ODCACHEHINT, &CDatabaseExplorerView::OnLvnOdcachehint)
+	ON_COMMAND(ID_FILE_SAVE, &CDatabaseExplorerView::OnFileSave)
+	ON_COMMAND(ID_FILE_SAVE_AS, &CDatabaseExplorerView::OnFileSave)
+	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE, &CDatabaseExplorerView::OnUpdateFileSave)
+	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE_AS, &CDatabaseExplorerView::OnUpdateFileSave)
 END_MESSAGE_MAP()
 
 // CDatabaseExplorerView construction/destruction
@@ -176,7 +181,12 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 	{
 		const CString sDatabase = pDoc->InitDatabase();
 		if (! sDatabase.IsEmpty())
-			pDoc->LogMessage(sDatabase + _T(" database is selected"), MessageType::info);
+		{
+			if (DatabaseType::POSTGRE != pDoc->GetDatabaseType())
+				pDoc->LogMessage(sDatabase + _T(" database is selected"), MessageType::info);
+			else
+				pDoc->LogMessage(pDoc->GetPostgreDB() + _T(" database is selected"), MessageType::info);
+		}
 
 		return;
 	}
@@ -349,4 +359,38 @@ void CDatabaseExplorerView::OnLvnOdcachehint(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 
 	*pResult = 0;
+}
+
+void CDatabaseExplorerView::OnFileSave()
+{
+	// TODO: Add your command handler code here
+
+	CDatabaseExplorerDoc* pDoc = GetDocument();
+
+	if (theApp.m_bVirtualMode)
+	{
+		pDoc->LogMessage(_T("Saving list data is available in non virtual mode only"), MessageType::error);
+		return;
+	}
+
+	CFileDialogEx fde(FALSE, nullptr, nullptr, OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT,
+		_T("CSV files (*.csv)|*.csv|All Files (*.*)|*.*||"));
+
+	if (IDOK != fde.DoModal())
+		return;
+
+	CString sPathName = fde.GetPathName();	// if the use didn't put the extension
+	if (sPathName.Find('.') < sPathName.GetLength() - 5)
+		sPathName.AppendFormat(_T(".csv"));	// put .csv extension
+
+	CWaitCursor wait;
+	if (! pDoc->SaveListContentToCSV(GetListCtrl(), sPathName))
+		pDoc->LogMessage(pDoc->m_sState, MessageType::error);
+}
+
+void CDatabaseExplorerView::OnUpdateFileSave(CCmdUI* pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
+
+	pCmdUI->Enable(GetListCtrl().GetItemCount() > 0);
 }

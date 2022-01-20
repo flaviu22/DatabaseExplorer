@@ -87,6 +87,9 @@
     <ClInclude Include="ComboBoxExtList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FileDialogEx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DatabaseExplorer.cpp">
@@ -147,6 +150,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ComboBoxExtList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FileDialogEx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -27,10 +27,8 @@ protected:
 public:
 	int GetFieldCount() const;
 	BOOL GetDataV(CStringArray& saResult, LPCTSTR lpszFormat, ...);
-	BOOL GetDataV(CTypedPtrArray<CPtrArray, CDBVariant*>& arrResult, LPCTSTR lpszFormat, ...);
 	BOOL GetDataV(CStringArray& saResult, CString(*FormatData)(short nIndex, CDBVariant*), LPCTSTR lpszFormat, ...);
 	BOOL GetData(CStringArray& saResult, LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
-	BOOL GetData(CTypedPtrArray<CPtrArray, CDBVariant*>& arrResult, LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
 	BOOL GetData(CStringArray& saResult, CString(*FormatData)(short nIndex, CDBVariant* pVariant), LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);
 	std::vector<CString> GetDataAsCStringV(LPCTSTR lpszFormat, ...);
 	std::vector<CString> GetDataAsCString(LPCTSTR lpszSQL = NULL, DWORD dwRecordsetOptions = CRecordset::none);

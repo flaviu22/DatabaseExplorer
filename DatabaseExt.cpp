@@ -35,16 +35,6 @@ BOOL CDatabaseExt::GetDataV(CStringArray& saResult, LPCTSTR lpszFormat, ...)
 	return GetData(saResult, sSQL);
 }
 
-BOOL CDatabaseExt::GetDataV(CTypedPtrArray<CPtrArray, CDBVariant*>& arrResult, LPCTSTR lpszFormat, ...)
-{
-	CString sSQL;
-	va_list args;
-	va_start(args, lpszFormat);
-	sSQL.FormatV(lpszFormat, args);
-
-	return GetData(arrResult, sSQL);
-}
-
 BOOL CDatabaseExt::GetDataV(CStringArray& saResult, CString(*FormatData)(short nIndex, CDBVariant*), LPCTSTR lpszFormat, ...)
 {
 	CString sSQL;
@@ -95,59 +85,6 @@ BOOL CDatabaseExt::GetData(CStringArray& saResult, LPCTSTR lpszSQL/* = NULL*/, D
 					break;
 				}
 				saResult.Add(sTemp);
-			}
-			if (m_sError.IsEmpty())
-				recordset->MoveNext();
-			else
-				break;
-		}
-
-		recordset->Close();
-
-	} while (FALSE);
-
-	return m_sError.IsEmpty();
-}
-
-BOOL CDatabaseExt::GetData(CTypedPtrArray<CPtrArray, CDBVariant*>& arrResult, LPCTSTR lpszSQL/* = NULL*/, DWORD dwRecordsetOptions/* = CRecordset::none*/)
-{
-	m_nFieldCount = 0;
-	if (! OpenConnection())
-		return FALSE;
-
-	std::unique_ptr<CRecordset> recordset = std::make_unique<CRecordset>(this);
-
-	do
-	{
-		if (! OpenRecordset(recordset.get(), lpszSQL, dwRecordsetOptions))
-			break;
-
-		m_nFieldCount = recordset->GetODBCFieldCount();
-
-		while (! recordset->IsEOF())
-		{
-			for (int i = 0; i < m_nFieldCount; ++i)
-			{
-				try
-				{
-					CDBVariant* pDBVariant = new CDBVariant();
-					recordset->GetFieldValue(static_cast<short>(i), *pDBVariant);
-					arrResult.Add(pDBVariant);
-				}
-				catch (CDBException* pDBException)
-				{
-					pDBException->GetErrorMessage(m_sError.GetBuffer(_MAX_PATH), _MAX_PATH);
-					m_sError.ReleaseBuffer();
-					pDBException->Delete();
-					break;
-				}
-				catch (CMemoryException* pMemException)
-				{
-					pMemException->GetErrorMessage(m_sError.GetBuffer(_MAX_PATH), _MAX_PATH);
-					m_sError.ReleaseBuffer();
-					pMemException->Delete();
-					break;
-				}
 			}
 			if (m_sError.IsEmpty())
 				recordset->MoveNext();

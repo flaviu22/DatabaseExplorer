@@ -35,7 +35,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_COMMAND(ID_EDIT_SELECTALL, &CMainFrame::OnEditSelectall)
 	ON_COMMAND(ID_EDIT_SELECTLINE, &CMainFrame::OnEditSelectline)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, &CMainFrame::OnUpdateEdit)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, &CMainFrame::OnUpdateEdit)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, &CMainFrame::OnUpdateCopy)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, &CMainFrame::OnUpdateEdit)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, &CMainFrame::OnUpdateEdit)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, &CMainFrame::OnUpdateEdit)
@@ -358,7 +358,11 @@ void CMainFrame::OnEditCopy()
 	CChildFrame* pChild = static_cast<CChildFrame*>(MDIGetActive(&bMaximized));
 	if (nullptr != pChild->GetSafeHwnd())
 	{
-		pChild->GetQueryPane()->GetRichEditCtrl()->Copy();
+		CWnd* pWnd = GetFocus();
+		if (pWnd == pChild->GetQueryPane()->GetRichEditCtrl())
+			pChild->GetQueryPane()->GetRichEditCtrl()->Copy();
+		if (pWnd == pChild->GetMessagePane()->GetRichEditCtrl())
+			pChild->GetMessagePane()->GetRichEditCtrl()->Copy();
 	}
 }
 
@@ -436,6 +440,19 @@ void CMainFrame::OnUpdateEdit(CCmdUI* pCmdUI)
 
 	pCmdUI->Enable(nullptr != pWnd && nullptr != pChild && 
 		pWnd == pChild->GetQueryPane()->GetRichEditCtrl());
+}
+
+void CMainFrame::OnUpdateCopy(CCmdUI* pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
+
+	CWnd* pWnd = GetFocus();
+	BOOL bMaximized = FALSE;
+	CChildFrame* pChild = static_cast<CChildFrame*>(MDIGetActive(&bMaximized));
+
+	pCmdUI->Enable(nullptr != pWnd && nullptr != pChild &&
+		(pWnd == pChild->GetQueryPane()->GetRichEditCtrl() ||
+		pWnd == pChild->GetMessagePane()->GetRichEditCtrl()));
 }
 
 void CMainFrame::OnViewVirtualmode()

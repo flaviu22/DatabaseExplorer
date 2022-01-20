@@ -56,6 +56,8 @@ protected:
 	afx_msg LRESULT OnPostInit(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnLvnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnLvnOdcachehint(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnFileSave();
+	afx_msg void OnUpdateFileSave(CCmdUI* pCmdUI);
 	DECLARE_MESSAGE_MAP()
 };
 

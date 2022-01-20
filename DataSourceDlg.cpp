@@ -191,7 +191,10 @@ const DatabaseType CDataSourceDlg::DecodeDatabaseType(CString sData) const
 	if (-1 != sData.Find(_T("maria")))
 		return DatabaseType::MARIADB;
 
-	return DatabaseType::MSSQL;
+	if (-1 != sData.Find(_T("postgre")))
+		return DatabaseType::POSTGRE;
+
+	return DatabaseType::UNKNOWN;
 }
 
 void CDataSourceDlg::OnOK() 
@@ -240,6 +243,12 @@ void CDataSourceDlg::OnOK()
 
 	switch (DBType)
 	{
+	case DatabaseType::MSSQL:
+		pDB->Execute(_T("SELECT count(*) FROM information_schema.tables"));
+		break;
+	case DatabaseType::ORACLE:
+		pDB->Execute(_T("SELECT count(*) FROM system_information"));
+		break;
 	case DatabaseType::SQLITE:
 		pDB->Execute(_T("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"));
 		break;
@@ -247,9 +256,13 @@ void CDataSourceDlg::OnOK()
 	case DatabaseType::MARIADB:
 		pDB->Execute(_T("SELECT count(*) FROM information_schema.schemata"));
 		break;
-	default:	// DatabaseType::MSSQL
-		pDB->Execute(_T("SELECT count(*) FROM information_schema.tables"));
+	case DatabaseType::POSTGRE:
+		pDB->Execute(_T("SELECT count(*) FROM pg_database"));
+		m_pDoc->SetPostgreDB(m_pDoc->DecodePostGreDatabase(pDB->GetConnect()));
 		break;
+	default:
+		MessageBox(_T("This version of application is supporting:\n\tMicrosoft SQL\n\tOracle\n\tSQLite\n\tMySQL\n\tMariaDB\n\tPostgreSQL\nFor other type of databases contact the developer"), nullptr, MB_ICONERROR);
+		return;
 	}
 
 	if(! pDB->GetError().IsEmpty())
@@ -261,6 +274,12 @@ void CDataSourceDlg::OnOK()
 
 	switch (DBType)
 	{
+	case DatabaseType::MSSQL:
+		pDB->GetDataAsStdString(_T("SELECT count(*) FROM information_schema.tables"));
+		break;
+	case DatabaseType::ORACLE:
+		pDB->GetDataAsStdString(_T("SELECT count(*) FROM information_schema"));
+		break;
 	case DatabaseType::SQLITE:
 		pDB->GetDataAsStdString(_T("SELECT count(*) FROM sqlite_master"));
 		break;
@@ -268,8 +287,11 @@ void CDataSourceDlg::OnOK()
 	case DatabaseType::MARIADB:
 		pDB->GetDataAsStdString(_T("SELECT count(*) FROM information_schema.schemata"));
 		break;
-	default:	// DatabaseType::MSSQL
-		pDB->GetDataAsStdString(_T("SELECT count(*) FROM information_schema.tables"));
+	case DatabaseType::POSTGRE:
+		pDB->GetDataAsStdString(_T("SELECT count(*) FROM pg_database"));
+		break;
+	default:
+		pDB->SetError(_T("Unsupported database type"));
 		break;
 	}
 

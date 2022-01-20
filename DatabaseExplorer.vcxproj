@@ -199,6 +199,7 @@
     <ClInclude Include="DatabasePane.h" />
     <ClInclude Include="DataSourceDlg.h" />
     <ClInclude Include="DBRecord.h" />
+    <ClInclude Include="FileDialogEx.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="MDIChildWndExt.h" />
@@ -224,6 +225,7 @@
     <ClCompile Include="DatabaseExt.cpp" />
     <ClCompile Include="DatabasePane.cpp" />
     <ClCompile Include="DataSourceDlg.cpp" />
+    <ClCompile Include="FileDialogEx.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MDIChildWndExt.cpp" />
     <ClCompile Include="MessagePane.cpp" />

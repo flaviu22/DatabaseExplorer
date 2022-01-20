@@ -58,6 +58,7 @@ protected:
 	afx_msg void OnEditSelectall();
 	afx_msg void OnEditSelectline();
 	afx_msg void OnUpdateEdit(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateCopy(CCmdUI* pCmdUI);
 	afx_msg void OnViewVirtualmode();
 	afx_msg void OnUpdateViewVirtualmode(CCmdUI* pCmdUI);
 	DECLARE_MESSAGE_MAP()
