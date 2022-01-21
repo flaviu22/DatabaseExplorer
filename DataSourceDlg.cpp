@@ -9,12 +9,35 @@
 #include "DatabaseExt.h"
 
 #include "SettingsStoreEx.h"
+#include "PasswordDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+
+/////////////////////////////////////////////////////////////////////////////
+// COraclePasswordHandler class
+
+COraclePasswordHandler::COraclePasswordHandler(BOOL bAdmin, const CString& sDSN, const BOOL bSetDelete)
+{
+	m_bAdmin = bAdmin;
+	m_sDSN = sDSN;
+	m_bDeletePassword = bSetDelete;
+}
+
+COraclePasswordHandler::~COraclePasswordHandler()
+{
+	if (m_bDeletePassword)
+	{
+		CString sPath;
+		sPath.Format(_T("SOFTWARE\\ODBC\\ODBC.INI\\%s"), m_sDSN);
+		CSettingsStore ss(m_bAdmin, FALSE);
+		if (ss.Open(sPath))
+			ss.Write(_T("Password"), _T(""));	// reset password
+	}
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // CDataSourceDlg dialog
@@ -84,7 +107,7 @@ BOOL CDataSourceDlg::OnInitDialog()
 		break;
 	}
 
-	m_ComboDSN.SetCurSel(GetDSNIndex(m_pDoc->GetDSNName()));
+	m_ComboDSN.SetCurSel(GetDSNIndex(m_pDoc->GetDSN()));
 
 	UpdateData(FALSE);
 
@@ -239,63 +262,54 @@ void CDataSourceDlg::OnOK()
 
 	const DatabaseType DBType = DecodeDatabaseType(GetKeyData(GetComboSelection()));
 
+	if (DatabaseType::ORACLE == DBType)
+	{
+		CPasswordDlg dlg(static_cast<BOOL>(nDSNSource), GetComboSelection());
+		if (IDOK != dlg.DoModal())
+			return;
+	}
+
+	COraclePasswordHandler OraclePassword(static_cast<BOOL>(nDSNSource), GetComboSelection(), DatabaseType::ORACLE == DBType);
+
 	CWaitCursor Wait;
 
 	switch (DBType)
 	{
 	case DatabaseType::MSSQL:
-		pDB->Execute(_T("SELECT count(*) FROM information_schema.tables"));
+		if (! pDB->Execute(_T("SELECT count(*) FROM information_schema.tables")))
+			break;
+		pDB->GetDataAsStdString(_T("SELECT count(*) FROM information_schema.tables"));
 		break;
 	case DatabaseType::ORACLE:
-		pDB->Execute(_T("SELECT count(*) FROM system_information"));
+		if (! pDB->Execute(_T("SELECT count(*) FROM GLOBAL_NAME")))
+			break;
+		pDB->GetDataAsStdString(_T("SELECT count(*) FROM GLOBAL_NAME"));
 		break;
 	case DatabaseType::SQLITE:
-		pDB->Execute(_T("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"));
+		if (! pDB->Execute(_T("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")))
+			break;
+		pDB->GetDataAsStdString(_T("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"));
 		break;
 	case DatabaseType::MYSQL:
 	case DatabaseType::MARIADB:
-		pDB->Execute(_T("SELECT count(*) FROM information_schema.schemata"));
+		if (! pDB->Execute(_T("SELECT count(*) FROM information_schema.schemata")))
+			break;
+		pDB->GetDataAsStdString(_T("SELECT count(*) FROM information_schema.schemata"));
 		break;
 	case DatabaseType::POSTGRE:
-		pDB->Execute(_T("SELECT count(*) FROM pg_database"));
+		if (! pDB->Execute(_T("SELECT count(*) FROM pg_database")))
+			break;
+		pDB->GetDataAsStdString(_T("SELECT count(*) FROM pg_database"));
+		if (! pDB->GetError().IsEmpty())
+			break;
 		m_pDoc->SetPostgreDB(m_pDoc->DecodePostGreDatabase(pDB->GetConnect()));
 		break;
 	default:
-		MessageBox(_T("This version of application is supporting:\n\tMicrosoft SQL\n\tOracle\n\tSQLite\n\tMySQL\n\tMariaDB\n\tPostgreSQL\nFor other type of databases contact the developer"), nullptr, MB_ICONERROR);
+		MessageBox(_T("This version of application is supporting:\n\tMicrosoft SQL\n\tOracle\n\tSQLite\n\tMySQL\n\tMariaDB\n\tPostgreSQL\nFor other type of databases contact the developer"), nullptr, MB_ICONWARNING);
 		return;
 	}
 
 	if(! pDB->GetError().IsEmpty())
-	{
-		pDB->SetRecordsetType(nRSTypeOrg);
-		MessageBox(pDB->GetError(), NULL, MB_ICONERROR);
-		return;
-	}
-
-	switch (DBType)
-	{
-	case DatabaseType::MSSQL:
-		pDB->GetDataAsStdString(_T("SELECT count(*) FROM information_schema.tables"));
-		break;
-	case DatabaseType::ORACLE:
-		pDB->GetDataAsStdString(_T("SELECT count(*) FROM information_schema"));
-		break;
-	case DatabaseType::SQLITE:
-		pDB->GetDataAsStdString(_T("SELECT count(*) FROM sqlite_master"));
-		break;
-	case DatabaseType::MYSQL:
-	case DatabaseType::MARIADB:
-		pDB->GetDataAsStdString(_T("SELECT count(*) FROM information_schema.schemata"));
-		break;
-	case DatabaseType::POSTGRE:
-		pDB->GetDataAsStdString(_T("SELECT count(*) FROM pg_database"));
-		break;
-	default:
-		pDB->SetError(_T("Unsupported database type"));
-		break;
-	}
-
-	if (! pDB->GetError().IsEmpty())
 	{
 		pDB->SetRecordsetType(nRSTypeOrg);
 		MessageBox(pDB->GetError(), NULL, MB_ICONERROR);
@@ -308,10 +322,13 @@ void CDataSourceDlg::OnOK()
 	theApp.WriteProfileInt(_T("Settings"), _T("RSType"), nRSType);
 
 	m_pDoc->SetDatabaseType(DBType);
-	m_pDoc->SetDSNName(GetComboSelection());
+	m_pDoc->SetDSN(GetComboSelection());
 
 	CMainFrame* pFrame = static_cast<CMainFrame*>(AfxGetMainWnd());
 	pFrame->SetMessageText(_T("You have successfully set up the datasource"));
+
+	if (OraclePassword.IsPasswordForDelete())
+		OraclePassword.SetDeletePassword(FALSE);
 
 	CDialog::OnOK();
 }

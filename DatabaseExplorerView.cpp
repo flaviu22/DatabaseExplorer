@@ -230,19 +230,23 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 				return;
 			}
 
+			BOOL bIsTableOperation = FALSE;
+			BOOL bIsDatabaseOperation = FALSE;
 			const CString sDatabase = pChild->GetDatabasePane()->GetDatabaseSelection();
-			const int nDatabaseCountOffline = pChild->GetDatabasePane()->GetDatabaseCount();
 
 			for (const auto& it : sql)
 			{
+				if (! bIsTableOperation && pDoc->IsTableOperation(it))
+					bIsTableOperation = TRUE;
+				if (! bIsDatabaseOperation && pDoc->IsDatabaseOperation(it))
+					bIsDatabaseOperation = TRUE;
 				if (! pDoc->IsSelect(it))
 					ExecuteSQL(pDoc, it);
 				else
 					ExecuteSelect(pDoc, it);
 			}
 
-			const int nDatabaseCountOnline = pDoc->GetDatabaseCount();
-			if (nDatabaseCountOffline != nDatabaseCountOnline)
+			if (bIsTableOperation || bIsDatabaseOperation)
 			{
 				pDoc->PopulateDatabasePanel(*pChild->GetDatabasePane()->GetTreeCtrl());
 				pDoc->GetDatabasePane()->SetItemAsDatabase(sDatabase);

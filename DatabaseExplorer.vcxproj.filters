@@ -90,6 +90,9 @@
     <ClInclude Include="FileDialogEx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PasswordDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DatabaseExplorer.cpp">
@@ -155,6 +158,9 @@
     <ClCompile Include="FileDialogEx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PasswordDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DatabaseExplorer.rc">
@@ -168,9 +174,6 @@
     <Image Include="res\DatabaseExplorer.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\Toolbar.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="res\Table.ico">
       <Filter>Resource Files</Filter>
     </Image>
@@ -180,7 +183,7 @@
     <Image Include="res\Database.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\Toolbar256.bmp">
+    <Image Include="res\key.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

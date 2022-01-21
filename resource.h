@@ -37,8 +37,14 @@
 #define IDI_DATABASE                    312
 #define IDI_TABLE                       314
 #define IDI_SELECTED                    315
+#define IDD_DIALOG_PASSWORD             316
+#define IDI_ICON1                       318
+#define IDI_KEY                         318
 #define IDC_LIST_FILE                   1000
 #define IDC_COMBO_DSN                   1000
+#define IDC_EDIT1                       1001
+#define IDC_EDIT                        1001
+#define IDC_EDIT_PASS                   1002
 #define IDC_RADIO_DYNASET               1009
 #define IDC_RADIO_SNAPSHOT              1010
 #define IDC_RADIO_DYNAMIC               1011
@@ -62,9 +68,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        316
+#define _APS_NEXT_RESOURCE_VALUE        319
 #define _APS_NEXT_COMMAND_VALUE         32790
-#define _APS_NEXT_CONTROL_VALUE         1001
+#define _APS_NEXT_CONTROL_VALUE         1003
 #define _APS_NEXT_SYMED_VALUE           311
 #endif
 #endif

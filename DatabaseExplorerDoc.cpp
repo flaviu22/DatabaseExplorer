@@ -44,7 +44,7 @@ CDatabaseExplorerDoc::~CDatabaseExplorerDoc()
 {
 	theApp.WriteProfileInt(_T("Settings"), _T("LogPopulateList"), m_bLogPopulateList);
 	theApp.WriteProfileInt(_T("Settings"), _T("DatabaseType"), static_cast<int>(m_DatabaseType));
-	theApp.WriteProfileString(_T("Settings"), _T("DSNName"), m_sDSNName);
+	theApp.WriteProfileString(_T("Settings"), _T("DSN"), m_sDSN);
 }
 
 BOOL CDatabaseExplorerDoc::OnNewDocument()
@@ -57,7 +57,7 @@ BOOL CDatabaseExplorerDoc::OnNewDocument()
 
 	m_bLogPopulateList = theApp.GetProfileInt(_T("Settings"), _T("LogPopulateList"), m_bLogPopulateList);
 	m_DatabaseType = static_cast<DatabaseType>(theApp.GetProfileInt(_T("Settings"), _T("DatabaseType"), static_cast<int>(DatabaseType::MSSQL)));
-	m_sDSNName = theApp.GetProfileString(_T("Settings"), _T("DSNName"));
+	m_sDSN = theApp.GetProfileString(_T("Settings"), _T("DSN"));
 	m_pDB->SetRecordsetType(theApp.GetProfileInt(_T("Settings"), _T("RSType"), CRecordset::dynaset));
 
 	SetConnectionString();
@@ -152,7 +152,7 @@ void CDatabaseExplorerDoc::Dump(CDumpContext& dc) const
 void CDatabaseExplorerDoc::SetConnectionString() const
 {
 	if (m_pDB)
-		m_pDB->SetConnectionString(_T("DSN=") + m_sDSNName + _T(";"));
+		m_pDB->SetConnectionString(_T("DSN=") + m_sDSN + _T(";"));
 }
 
 const CString CDatabaseExplorerDoc::DecodePostGreDatabase(const CString& sConnectionString) const
@@ -191,13 +191,28 @@ CString CDatabaseExplorerDoc::InitDatabase()
 	return _T("");
 }
 
-BOOL CDatabaseExplorerDoc::IsSelect(const CString& sQuery) const
+BOOL CDatabaseExplorerDoc::IsSelect(CString sQuery) const
 {
-	CString sTemp(sQuery);
-	sTemp.MakeLower();
-	sTemp.TrimLeft();
+	sQuery.MakeLower();
+	sQuery.TrimLeft();
 
-	return (0 == sTemp.Find(_T("select")));
+	return (0 == sQuery.Find(_T("select")));
+}
+
+BOOL CDatabaseExplorerDoc::IsTableOperation(CString sQuery) const
+{
+	sQuery.MakeLower();
+	sQuery.TrimLeft();
+
+	return (-1 != sQuery.Find(_T(" table")));
+}
+
+BOOL CDatabaseExplorerDoc::IsDatabaseOperation(CString sQuery) const
+{
+	sQuery.MakeLower();
+	sQuery.TrimLeft();
+
+	return (-1 != sQuery.Find(_T(" database")));
 }
 
 CChildFrame* CDatabaseExplorerDoc::GetChildFrame() const
@@ -456,6 +471,33 @@ BOOL CDatabaseExplorerDoc::GetMSSQLDatabases(CTreeCtrl& tree)
 	return m_sState.IsEmpty();
 }
 
+BOOL CDatabaseExplorerDoc::GetOracleDatabases(CTreeCtrl& tree)
+{
+	const auto database = m_pDB->GetDataAsStdString(_T("SELECT 1, global_name FROM global_name ORDER BY 2"));
+	if (! m_pDB->GetError().IsEmpty())
+	{
+		m_sState.Format(_T("%s"), m_pDB->GetError());
+	}
+	else
+	{
+		const CString sUserID = GetOracleUserID(TRUE);
+		for (auto it = database.begin(); it != database.end(); it += 2)
+		{
+			HTREEITEM hItem = tree.InsertItem(CString((it + 1)->c_str()), 0, 0);
+			tree.SetItemData(hItem, std::atoi(it->c_str()));
+			std::vector<CString> table = m_pDB->GetDataAsCStringV(_T("SELECT table_name FROM dba_tables WHERE owner = '%s' AND tablespace_name = '%s' ORDER BY 1"), sUserID, sUserID);
+			if (! m_pDB->GetError().IsEmpty() || table.empty())
+				continue;
+			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
+			{
+				HTREEITEM hChild = tree.InsertItem(*it_table, 1, 1, hItem);
+				tree.SetItemData(hChild, 0);
+			}
+		}
+	}
+	return m_sState.IsEmpty();
+}
+
 BOOL CDatabaseExplorerDoc::GetSQLiteDatabases(CTreeCtrl& tree)
 {
 	const auto database = m_pDB->GetDataAsStdString(_T("SELECT 1, file FROM pragma_database_list WHERE name='main'"));
@@ -480,11 +522,6 @@ BOOL CDatabaseExplorerDoc::GetSQLiteDatabases(CTreeCtrl& tree)
 		}
 	}
 
-	return m_sState.IsEmpty();
-}
-
-BOOL CDatabaseExplorerDoc::GetOracleDatabases(CTreeCtrl& tree)
-{
 	return m_sState.IsEmpty();
 }
 
@@ -655,6 +692,9 @@ int CDatabaseExplorerDoc::GetDatabaseCount() const
 	case DatabaseType::MSSQL:
 		sSQL.Format(_T("SELECT count(*) FROM sys.databases"));
 		break;
+	case DatabaseType::ORACLE:
+		sSQL.Format(_T("SELECT count(*) FROM GLOBAL_NAME"));
+		break;
 	case DatabaseType::SQLITE:
 		return 1;
 	case DatabaseType::MYSQL:
@@ -663,9 +703,6 @@ int CDatabaseExplorerDoc::GetDatabaseCount() const
 		break;
 	case DatabaseType::POSTGRE:
 		sSQL.Format(_T("SELECT count(*) FROM pg_database"));
-		break;
-	case DatabaseType::ORACLE:
-		sSQL.Format(_T("SELECT count(*) FROM information_schema"));
 		break;
 	default:
 		sSQL.Format(_T("SELECT 0"));
@@ -837,4 +874,18 @@ BOOL CDatabaseExplorerDoc::SaveListContentToCSV(CListCtrl& ListCtrl, const CStri
 	} while (FALSE);
 
 	return m_sState.IsEmpty();
+}
+
+CString CDatabaseExplorerDoc::GetOracleUserID(const BOOL bMakeUpper/* = FALSE*/) const
+{
+	CString sUserID, sPath;
+	sPath.Format(_T("SOFTWARE\\ODBC\\ODBC.INI\\%s"), m_sDSN);
+	CSettingsStore ss(static_cast<BOOL>(theApp.GetProfileInt(_T("Settings"), _T("DSNSource"), 0)), TRUE);
+	if (ss.Open(sPath))
+		ss.Read(_T("UserID"), sUserID);
+
+	if (bMakeUpper)
+		return sUserID.MakeUpper();
+
+	return sUserID;
 }

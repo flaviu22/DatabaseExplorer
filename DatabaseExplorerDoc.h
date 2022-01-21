@@ -45,8 +45,8 @@ public:
 	BOOL IsLoggedPopulateList() const { return m_bLogPopulateList; }
 	DatabaseType GetDatabaseType() const { return m_DatabaseType; }
 	void SetDatabaseType(const DatabaseType type) { m_DatabaseType = type; }
-	CString GetDSNName() const { return m_sDSNName; }
-	void SetDSNName(const CString& sName) { m_sDSNName = sName; }
+	CString GetDSN() const { return m_sDSN; }
+	void SetDSN(const CString& sName) { m_sDSN = sName; }
 	void SetConnectionString() const;
 	CString GetPostgreDB() const { return m_sPostgreDB; }
 	void SetPostgreDB(const CString& sName) { m_sPostgreDB = sName; }
@@ -61,7 +61,9 @@ public:
 	CString GetTimeAsString(const std::chrono::high_resolution_clock::time_point& point1,
 							const std::chrono::high_resolution_clock::time_point& point2) const;
 	BOOL PopulateListCtrl(CListCtrl& ListCtrl, const CString& sSQL);
-	BOOL IsSelect(const CString& sQuery) const;
+	BOOL IsSelect(CString sQuery) const;
+	BOOL IsTableOperation(CString sQuery) const;
+	BOOL IsDatabaseOperation(CString sQuery) const;
 	BOOL PopulateDatabasePanel(CTreeCtrl& tree);
 	void LogMessage(const CString& sMessage, const MessageType& type);
 	BOOL RunSQL(const CString sSQL);
@@ -88,7 +90,7 @@ public:
 #endif
 
 protected:
-	CString m_sDSNName;
+	CString m_sDSN;
 	CString m_sPostgreDB{ _T("postgres") };
 	std::unique_ptr<CDatabaseExt> m_pDB{ nullptr };
 	std::unique_ptr<CRecordset> m_pRecordset{ nullptr };
@@ -98,8 +100,8 @@ protected:
 	size_t TokenizeString(const CString& sText, const CString& sToken, std::vector<CString>& result) const;
 	void PopulateHeader(CListCtrl& ListCtrl, CRecordset& recordset);
 	BOOL GetMSSQLDatabases(CTreeCtrl& tree);
-	BOOL GetSQLiteDatabases(CTreeCtrl& tree);
 	BOOL GetOracleDatabases(CTreeCtrl& tree);
+	BOOL GetSQLiteDatabases(CTreeCtrl& tree);
 	BOOL GetMySqlDatabases(CTreeCtrl& tree);
 	BOOL GetPostgreDatabases(CTreeCtrl& tree);
 	CString ConvertDataAsString(const CDBVariant& variant);
@@ -109,6 +111,7 @@ protected:
 	void WriteHeaderLine(CListCtrl& ListCtrl, CStdioFile& file, const CString& sSeparator);
 	void WriteListLines(CListCtrl& ListCtrl, CStdioFile& file, const CString& sSeparator);
 	CString GetText(CHeaderCtrl& header, int nItem) const;
+	CString GetOracleUserID(const BOOL bMakeUpper = FALSE) const;
 
 private:
 	BOOL m_bLogPopulateList{ TRUE };

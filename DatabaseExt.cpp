@@ -69,6 +69,7 @@ BOOL CDatabaseExt::GetData(CStringArray& saResult, LPCTSTR lpszSQL/* = NULL*/, D
 				try
 				{
 					recordset->GetFieldValue(static_cast<short>(i), sTemp);
+					saResult.Add(sTemp);
 				}
 				catch (CDBException* pDBException)
 				{
@@ -84,7 +85,6 @@ BOOL CDatabaseExt::GetData(CStringArray& saResult, LPCTSTR lpszSQL/* = NULL*/, D
 					pMemException->Delete();
 					break;
 				}
-				saResult.Add(sTemp);
 			}
 			if (m_sError.IsEmpty())
 				recordset->MoveNext();
@@ -123,6 +123,7 @@ BOOL CDatabaseExt::GetData(CStringArray& saResult, CString(*FormatData)(short nI
 				try
 				{
 					recordset->GetFieldValue(static_cast<short>(i), variant);
+					saResult.Add(FormatData(static_cast<short>(i), &variant));
 				}
 				catch (CDBException* pDBException)
 				{
@@ -138,7 +139,6 @@ BOOL CDatabaseExt::GetData(CStringArray& saResult, CString(*FormatData)(short nI
 					pMemException->Delete();
 					break;
 				}
-				saResult.Add(FormatData(static_cast<short>(i), &variant));
 			}
 			if (m_sError.IsEmpty())
 				recordset->MoveNext();
@@ -209,6 +209,7 @@ std::vector<CString> CDatabaseExt::GetDataAsCString(LPCTSTR lpszSQL/* = NULL*/, 
 				try
 				{
 					recordset->GetFieldValue(static_cast<short>(i), sTemp);
+					result.push_back(sTemp);
 				}
 				catch (CDBException* pDBException)
 				{
@@ -224,7 +225,6 @@ std::vector<CString> CDatabaseExt::GetDataAsCString(LPCTSTR lpszSQL/* = NULL*/, 
 					pMemException->Delete();
 					break;
 				}
-				result.push_back(sTemp);
 			}
 			if (m_sError.IsEmpty())
 				recordset->MoveNext();
@@ -265,6 +265,11 @@ std::vector<std::string> CDatabaseExt::GetDataAsStdString(LPCTSTR lpszSQL/* = NU
 				try
 				{
 					recordset->GetFieldValue(static_cast<short>(i), sTemp);
+#ifdef _UNICODE
+					result.push_back(std::string(CW2A(sTemp.GetString(), CP_UTF8), sTemp.GetLength()));
+#else
+					result.push_back(std::string(sTemp.GetString(), sTemp.GetLength()));
+#endif
 				}
 				catch (CDBException* pDBException)
 				{
@@ -280,11 +285,6 @@ std::vector<std::string> CDatabaseExt::GetDataAsStdString(LPCTSTR lpszSQL/* = NU
 					pMemException->Delete();
 					break;
 				}
-#ifdef _UNICODE
-				result.push_back(std::string(CW2A(sTemp.GetString(), CP_UTF8), sTemp.GetLength()));
-#else
-				result.push_back(std::string(sTemp.GetString(), sTemp.GetLength()));
-#endif
 			}
 			if (m_sError.IsEmpty())
 				recordset->MoveNext();
@@ -325,6 +325,7 @@ std::vector<CDBVariant> CDatabaseExt::GetDataAsDBVariant(LPCTSTR lpszSQL/* = NUL
 				try
 				{
 					recordset->GetFieldValue(static_cast<short>(i), variant);
+					result.push_back(variant);
 				}
 				catch (CDBException* pDBException)
 				{
@@ -340,7 +341,6 @@ std::vector<CDBVariant> CDatabaseExt::GetDataAsDBVariant(LPCTSTR lpszSQL/* = NUL
 					pMemException->Delete();
 					break;
 				}
-				result.push_back(variant);
 			}
 			if (m_sError.IsEmpty())
 				recordset->MoveNext();
@@ -381,6 +381,7 @@ std::vector<CString> CDatabaseExt::GetDataAsCString(CString(*FormatData)(short n
 				try
 				{
 					recordset->GetFieldValue(static_cast<short>(i), variant);
+					result.push_back(FormatData(static_cast<short>(i), &variant));
 				}
 				catch (CDBException* pDBException)
 				{
@@ -396,7 +397,6 @@ std::vector<CString> CDatabaseExt::GetDataAsCString(CString(*FormatData)(short n
 					pMemException->Delete();
 					break;
 				}
-				result.push_back(FormatData(static_cast<short>(i), &variant));
 			}
 			if (m_sError.IsEmpty())
 				recordset->MoveNext();

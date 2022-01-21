@@ -11,6 +11,30 @@
 //
 
 /////////////////////////////////////////////////////////////////////////////
+// COraclePasswordHandler class
+
+class COraclePasswordHandler
+{
+public:
+	COraclePasswordHandler(BOOL bAdmin, const CString& sDSN, const BOOL bSetDelete);
+	~COraclePasswordHandler();
+
+	COraclePasswordHandler(const COraclePasswordHandler& rhs) = delete;
+	COraclePasswordHandler& operator=(const COraclePasswordHandler& rhs) = delete;
+	COraclePasswordHandler(COraclePasswordHandler&& rhs) = delete;
+	COraclePasswordHandler& operator=(COraclePasswordHandler&& rhs) = delete;
+
+public:
+	BOOL IsPasswordForDelete() const { return m_bDeletePassword; }
+	void SetDeletePassword(const BOOL bSetDelete) { m_bDeletePassword = bSetDelete; }
+
+private:
+	BOOL m_bAdmin{ FALSE };
+	CString m_sDSN;
+	BOOL m_bDeletePassword{ TRUE };
+};
+
+/////////////////////////////////////////////////////////////////////////////
 // CDataSourceDlg dialog
 
 class CDataSourceDlg : public CDialog

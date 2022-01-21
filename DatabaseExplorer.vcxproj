@@ -206,6 +206,7 @@
     <ClInclude Include="MessagePane.h" />
     <ClInclude Include="NonClosableDockablePane.h" />
     <ClInclude Include="PaneTreeCtrl.h" />
+    <ClInclude Include="PasswordDlg.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="QueryPane.h" />
     <ClInclude Include="Resource.h" />
@@ -231,6 +232,7 @@
     <ClCompile Include="MessagePane.cpp" />
     <ClCompile Include="NonClosableDockablePane.cpp" />
     <ClCompile Include="PaneTreeCtrl.cpp" />
+    <ClCompile Include="PasswordDlg.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -249,10 +251,9 @@
     <Image Include="res\Database.ico" />
     <Image Include="res\DatabaseExplorer.ico" />
     <Image Include="res\DatabaseExplorerDoc.ico" />
+    <Image Include="res\key.ico" />
     <Image Include="res\selected.ico" />
     <Image Include="res\Table.ico" />
-    <Image Include="res\Toolbar.bmp" />
-    <Image Include="res\Toolbar256.bmp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\DatabaseExplorer.rc2" />
