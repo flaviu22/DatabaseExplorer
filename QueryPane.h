@@ -19,6 +19,7 @@ protected:
 protected:
 	//{{AFX_MSG(CQueryPane)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnDestroy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

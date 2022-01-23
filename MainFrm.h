@@ -25,6 +25,7 @@ public:
 
 private:
 	void OnInitData();
+	BOOL IsCharsSelected(CRichEditCtrl* pRichEdit) const;
 
 // Implementation
 public:
@@ -38,6 +39,7 @@ protected:  // control bar embedded members
 	CMFCMenuBar       m_wndMenuBar;
 	CMFCStatusBar     m_wndStatusBar;
 	CTypedPtrArray<CPtrArray, CMDIChildWnd*> m_arrChild;
+	CWnd* m_pWndFocus{ nullptr };
 
 // Generated message map functions
 protected:
@@ -58,8 +60,10 @@ protected:
 	afx_msg void OnEditSelectall();
 	afx_msg void OnEditSelectline();
 	afx_msg void OnUpdateEdit(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateCut(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateCopy(CCmdUI* pCmdUI);
 	afx_msg void OnViewVirtualmode();
 	afx_msg void OnUpdateViewVirtualmode(CCmdUI* pCmdUI);
+	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	DECLARE_MESSAGE_MAP()
 };

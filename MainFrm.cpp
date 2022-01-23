@@ -27,6 +27,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_MESSAGE(WMU_CHILDFRAMEACTIVATE, &CMainFrame::OnChildFrameActivate)
 	ON_MESSAGE(WMU_CHILDFRAMEACTIVATED, &CMainFrame::OnChildFrameActivated)
 	ON_WM_TIMER()
+	ON_WM_ACTIVATE()
 	ON_COMMAND(ID_EDIT_CUT, &CMainFrame::OnEditCut)
 	ON_COMMAND(ID_EDIT_COPY, &CMainFrame::OnEditCopy)
 	ON_COMMAND(ID_EDIT_PASTE, &CMainFrame::OnEditPaste)
@@ -34,7 +35,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_COMMAND(ID_EDIT_REDO, &CMainFrame::OnEditRedo)
 	ON_COMMAND(ID_EDIT_SELECTALL, &CMainFrame::OnEditSelectall)
 	ON_COMMAND(ID_EDIT_SELECTLINE, &CMainFrame::OnEditSelectline)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, &CMainFrame::OnUpdateEdit)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, &CMainFrame::OnUpdateCut)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, &CMainFrame::OnUpdateCopy)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, &CMainFrame::OnUpdateEdit)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, &CMainFrame::OnUpdateEdit)
@@ -80,7 +81,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndMenuBar.SetPaneStyle(m_wndMenuBar.GetPaneStyle() | CBRS_SIZE_DYNAMIC | CBRS_TOOLTIPS | CBRS_FLYBY);
 	// prevent the menu bar from taking the focus on activation
 	CMFCPopupMenu::SetForceMenuFocus(FALSE);
-	if (!m_wndStatusBar.Create(this))
+	if (! m_wndStatusBar.Create(this))
 	{
 		TRACE0("Failed to create status bar\n");
 		return -1;      // fail to create
@@ -130,7 +131,6 @@ void CMainFrame::Dump(CDumpContext& dc) const
 	CMDIFrameWndEx::Dump(dc);
 }
 #endif //_DEBUG
-
 
 // CMainFrame message handlers
 
@@ -228,15 +228,11 @@ void CMainFrame::OnUpdateApplicationLook(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetRadio(theApp.m_nAppLook == pCmdUI->m_nID);
 }
-
+// base class does the real work
 BOOL CMainFrame::LoadFrame(UINT nIDResource, DWORD dwDefaultStyle, CWnd* pParentWnd, CCreateContext* pContext)
 {
-	// base class does the real work
-
-	if (!CMDIFrameWndEx::LoadFrame(nIDResource, dwDefaultStyle, pParentWnd, pContext))
-	{
+	if (! CMDIFrameWndEx::LoadFrame(nIDResource, dwDefaultStyle, pParentWnd, pContext))
 		return FALSE;
-	}
 
 	return TRUE;
 }
@@ -336,6 +332,18 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 		KillTimer(nIDEvent);
 		PostMessage(WM_SETMESSAGESTRING, AFX_IDS_IDLEMESSAGE, 0);
 	}
+}
+
+void CMainFrame::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
+{
+	CMDIFrameWndEx::OnActivate(nState, pWndOther, bMinimized);
+
+	// TODO: Add your message handler code here
+
+	if (! nState)
+		m_pWndFocus = GetFocus();
+	else if (nullptr != m_pWndFocus)
+		m_pWndFocus->SetFocus();
 }
 
 void CMainFrame::OnEditCut()
@@ -442,17 +450,64 @@ void CMainFrame::OnUpdateEdit(CCmdUI* pCmdUI)
 		pWnd == pChild->GetQueryPane()->GetRichEditCtrl());
 }
 
+void CMainFrame::OnUpdateCut(CCmdUI* pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
+
+	BOOL bEnable = FALSE;
+	CWnd* pWnd = GetFocus();
+	BOOL bMaximized = FALSE;
+	CRichEditCtrl* pRichEdit = nullptr;
+	CChildFrame* pChild = static_cast<CChildFrame*>(MDIGetActive(&bMaximized));
+
+	do
+	{
+		if (nullptr == pWnd)
+			break;
+		if (nullptr == pChild)
+			break;
+		if (pWnd == pChild->GetQueryPane()->GetRichEditCtrl())
+			pRichEdit = pChild->GetQueryPane()->GetRichEditCtrl();
+		bEnable = IsCharsSelected(pRichEdit);
+	} while (FALSE);
+
+	pCmdUI->Enable(bEnable);
+}
+
 void CMainFrame::OnUpdateCopy(CCmdUI* pCmdUI)
 {
 	// TODO: Add your command update UI handler code here
 
+	BOOL bEnable = FALSE;
 	CWnd* pWnd = GetFocus();
 	BOOL bMaximized = FALSE;
+	long nStart = 0, nEnd = 0;
+	CRichEditCtrl* pRichEdit = nullptr;
 	CChildFrame* pChild = static_cast<CChildFrame*>(MDIGetActive(&bMaximized));
 
-	pCmdUI->Enable(nullptr != pWnd && nullptr != pChild &&
-		(pWnd == pChild->GetQueryPane()->GetRichEditCtrl() ||
-		pWnd == pChild->GetMessagePane()->GetRichEditCtrl()));
+	do
+	{
+		if (nullptr == pWnd)
+			break;
+		if (nullptr == pChild)
+			break;
+		if (pWnd == pChild->GetQueryPane()->GetRichEditCtrl())
+			pRichEdit = pChild->GetQueryPane()->GetRichEditCtrl();
+		if (pWnd == pChild->GetMessagePane()->GetRichEditCtrl())
+			pRichEdit = pChild->GetMessagePane()->GetRichEditCtrl();
+		bEnable = IsCharsSelected(pRichEdit);
+	} while (FALSE);
+
+	pCmdUI->Enable(bEnable);
+}
+
+BOOL CMainFrame::IsCharsSelected(CRichEditCtrl* pRichEdit) const
+{
+	if (nullptr == pRichEdit->GetSafeHwnd())
+		return FALSE;
+	long nStart = 0, nEnd = 0;
+	pRichEdit->GetSel(nStart, nEnd);
+	return (nStart != nEnd);
 }
 
 void CMainFrame::OnViewVirtualmode()

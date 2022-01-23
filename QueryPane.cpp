@@ -8,6 +8,7 @@
 BEGIN_MESSAGE_MAP(CQueryPane, CRichEditPane)
 	//{{AFX_MSG_MAP(CQueryPane)
 	ON_WM_CREATE()
+	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -30,7 +31,25 @@ int CQueryPane::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	m_pRichEditCtrl->PostMessage(EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_SCROLLEVENTS | ENM_KEYEVENTS);
 
+	const DWORD dwNominator = static_cast<DWORD>(AfxGetApp()->GetProfileInt(_T("Settings"), _T("QueryPaneZoomNominator"), 0));
+	const DWORD dwDenominator = static_cast<DWORD>(AfxGetApp()->GetProfileInt(_T("Settings"), _T("QueryPaneZoomDenominator"), 0));
+	if (dwNominator > 0 || dwDenominator > 0)
+		::PostMessage(m_pRichEditCtrl->GetSafeHwnd(), EM_SETZOOM, static_cast<WPARAM>(dwNominator), static_cast<LPARAM>(dwDenominator));
+
 	return 0;
+}
+
+void CQueryPane::OnDestroy()
+{
+	CRichEditPane::OnDestroy();
+
+	// TODO: Add your message handler code here
+
+	DWORD dwNominator = NULL;
+	DWORD dwDenominator = NULL;
+	::SendMessage(m_pRichEditCtrl->GetSafeHwnd(), EM_GETZOOM, reinterpret_cast<WPARAM>(&dwNominator), reinterpret_cast<LPARAM>(&dwDenominator));
+	AfxGetApp()->WriteProfileInt(_T("Settings"), _T("QueryPaneZoomNominator"), static_cast<int>(dwNominator));
+	AfxGetApp()->WriteProfileInt(_T("Settings"), _T("QueryPaneZoomDenominator"), static_cast<int>(dwDenominator));
 }
 
 CString CQueryPane::GetSelText() const

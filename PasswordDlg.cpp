@@ -10,7 +10,7 @@ void CPasswordDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CPasswordDlg)
-	DDX_Text(pDX, IDC_EDIT_PASS, m_sPassword);
+	DDX_Text(pDX, IDC_EDIT_PASS, m_sPass);
 	//}}AFX_DATA_MAP
 }
 
@@ -28,6 +28,7 @@ CPasswordDlg::CPasswordDlg(BOOL bAdmin, const CString& sDSN, CWnd* pParent/* = n
 {
 	m_bAdmin = bAdmin;
 	m_sDSN = sDSN;
+	m_sPass = _T("");
 }
 
 CPasswordDlg::~CPasswordDlg()
@@ -58,12 +59,6 @@ void CPasswordDlg::OnOK()
 	// TODO: Add extra validation here
 
 	UpdateData();
-	if (m_sPassword.IsEmpty())
-	{
-		MessageBox(_T("You must enter the password !"), NULL, MB_ICONERROR);
-		GetDlgItem(IDC_EDIT_PASS)->SetFocus();
-		return;
-	}
 
 	CString sPath;
 	sPath.Format(_T("SOFTWARE\\ODBC\\ODBC.INI\\%s"), m_sDSN);
@@ -75,7 +70,7 @@ void CPasswordDlg::OnOK()
 		return;
 	}
 
-	if (! ss.Write(_T("Password"), m_sPassword))
+	if (! ss.Write(_T("Password"), m_sPass))
 	{
 
 		MessageBox(_T("The password could not been saved !"), NULL, MB_ICONERROR);

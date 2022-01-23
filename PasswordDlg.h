@@ -21,13 +21,12 @@ protected:
 
 // Dialog Data
 	enum { IDD = IDD_DIALOG_PASSWORD };
-	CString	m_sPassword;
+	CString	m_sPass;
 
 protected:
 	HICON m_hIcon{ nullptr };
 	BOOL m_bAdmin{ FALSE };
 	CString m_sDSN;
-
 
 protected:
 	// Generated message map functions
