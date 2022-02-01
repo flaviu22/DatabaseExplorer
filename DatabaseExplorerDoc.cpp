@@ -863,7 +863,7 @@ BOOL CDatabaseExplorerDoc::SaveListContentToCSV(CListCtrl& ListCtrl, const CStri
 	{
 		CStdioFile file;
 		CFileException ex;
-		if (! file.Open(sPathName, CFile::modeCreate | CFile::modeReadWrite, &ex))
+		if (! file.Open(sPathName, CFile::modeCreate | CFile::modeReadWrite | CFile::typeText, &ex))
 		{
 			ex.GetErrorMessage(m_sState.GetBuffer(_MAX_PATH), MAX_PATH);
 			m_sState.ReleaseBuffer();
