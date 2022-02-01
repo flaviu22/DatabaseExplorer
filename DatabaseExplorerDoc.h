@@ -21,8 +21,8 @@ enum class MessageType
 enum class DatabaseType
 {
 	MSSQL = 1,
-	SQLITE,
 	ORACLE,
+	SQLITE,
 	MYSQL,
 	MARIADB,
 	POSTGRE,
