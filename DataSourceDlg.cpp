@@ -202,11 +202,11 @@ const DatabaseType CDataSourceDlg::DecodeDatabaseType(CString sData) const
 	if (-1 != sData.Find(_T("sql server native")))
 		return DatabaseType::MSSQL;
 
-	if (-1 != sData.Find(_T("sqlite")))
-		return DatabaseType::SQLITE;
-
 	if (-1 != sData.Find(_T("oracle")))
 		return DatabaseType::ORACLE;
+
+	if (-1 != sData.Find(_T("sqlite")))
+		return DatabaseType::SQLITE;
 
 	if (-1 != sData.Find(_T("mysql")))
 		return DatabaseType::MYSQL;
