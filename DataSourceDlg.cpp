@@ -199,7 +199,7 @@ const DatabaseType CDataSourceDlg::DecodeDatabaseType(CString sData) const
 {
 	sData.MakeLower();
 
-	if (-1 != sData.Find(_T("sql server native")))
+	if (-1 != sData.Find(_T("sql server")))
 		return DatabaseType::MSSQL;
 
 	if (-1 != sData.Find(_T("oracle")))
