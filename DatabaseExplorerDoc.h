@@ -113,7 +113,7 @@ protected:
 	CString GetText(CHeaderCtrl& header, int nItem) const;
 	CString GetOracleUserID(const BOOL bMakeUpper = FALSE) const;
 
-	inline CString GetDataAsString(const CDBVariant& variant)
+	inline CString GetDataAsCString(const CDBVariant& variant)
 	{
 		CString sRet;
 
