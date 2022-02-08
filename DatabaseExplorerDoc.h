@@ -113,6 +113,40 @@ protected:
 	CString GetText(CHeaderCtrl& header, int nItem) const;
 	CString GetOracleUserID(const BOOL bMakeUpper = FALSE) const;
 
+	inline CString GetDataAsString(const CDBVariant& variant)
+	{
+		CString sRet;
+
+		switch (variant.m_dwType)
+		{
+		case DBVT_LONG:
+			sRet.Format(_T("%d"), variant.m_lVal);
+			break;
+		case DBVT_DOUBLE:
+			sRet.Format(_T("%.2f"), variant.m_dblVal);
+			break;
+		case DBVT_DATE:
+			{
+				COleDateTime date(variant.m_pdate->year, variant.m_pdate->month,
+					variant.m_pdate->day, variant.m_pdate->hour,
+					variant.m_pdate->minute, variant.m_pdate->second);
+				sRet = date.Format();
+			}
+			break;
+		case DBVT_STRING:
+		case DBVT_ASTRING:
+			sRet = *variant.m_pstring;
+			break;
+		case DBVT_WSTRING:
+			sRet = CString(*variant.m_pstringW);
+			break;
+		default:
+			break;
+		}
+
+		return sRet;
+	}
+
 private:
 	BOOL m_bLogPopulateList{ TRUE };
 

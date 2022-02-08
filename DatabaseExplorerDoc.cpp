@@ -379,20 +379,28 @@ BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& 
 		}
 		else	// not in virtual mode
 		{
-			int nRow = 0;
-			CString sValue;
-			while (! m_pRecordset->IsEOF())
+			try
 			{
-				for (int i = 0; i < m_pRecordset->GetODBCFieldCount(); ++i)
+				int nRow = 0;
+				CDBVariant var;
+				while (! m_pRecordset->IsEOF())
 				{
-					m_pRecordset->GetFieldValue(i, sValue);
-					if (0 == i)
-						ListCtrl.InsertItem(nRow, sValue);
-					else
-						ListCtrl.SetItemText(nRow, i, sValue);
+					for (int i = 0; i < m_pRecordset->GetODBCFieldCount(); ++i)
+					{
+						m_pRecordset->GetFieldValue(i, var);
+						if (0 == i)
+							ListCtrl.InsertItem(nRow, GetDataAsString(var));
+						else
+							ListCtrl.SetItemText(nRow, i, GetDataAsString(var));
+					}
+					m_pRecordset->MoveNext();
+					nRow++;
 				}
-				m_pRecordset->MoveNext();
-				nRow++;
+			}
+			catch (CDBException* pException)
+			{
+				pException->GetErrorMessage(m_sState.GetBuffer(_MAX_PATH), _MAX_PATH);
+				m_sState.ReleaseBuffer();
 			}
 		}
 
