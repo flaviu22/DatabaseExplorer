@@ -385,6 +385,8 @@ BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& 
 			{
 				for (int i = 0; i < m_pRecordset->GetODBCFieldCount(); ++i)
 				{
+//					CString s;
+//					m_pRecordset->GetFieldValue(i, s);
 					m_pRecordset->GetFieldValue(i, var);
 					if (0 == i)
 						ListCtrl.InsertItem(nRow, ConvertToCString(var));

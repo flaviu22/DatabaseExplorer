@@ -120,10 +120,10 @@ protected:
 		switch (variant.m_dwType)
 		{
 		case DBVT_LONG:
-			sRet.Format(_T("%d"), variant.m_lVal);
+			sRet = std::to_string(variant.m_lVal).c_str();
 			break;
 		case DBVT_DOUBLE:
-			sRet.Format(_T("%.2f"), variant.m_dblVal);
+			sRet = std::to_string(variant.m_dblVal).c_str();
 			break;
 		case DBVT_DATE:
 			{
@@ -134,11 +134,13 @@ protected:
 			}
 			break;
 		case DBVT_STRING:
+			sRet = variant.m_pstring->GetString();
+			break;
 		case DBVT_ASTRING:
-			sRet = *variant.m_pstring;
+			sRet = variant.m_pstringA->GetString();
 			break;
 		case DBVT_WSTRING:
-			sRet = CString(*variant.m_pstringW);
+			sRet = variant.m_pstringW->GetString();
 			break;
 		default:
 			break;
