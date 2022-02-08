@@ -387,9 +387,9 @@ BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& 
 				{
 					m_pRecordset->GetFieldValue(i, var);
 					if (0 == i)
-						ListCtrl.InsertItem(nRow, GetDataAsCString(var));
+						ListCtrl.InsertItem(nRow, ConvertToCString(var));
 					else
-						ListCtrl.SetItemText(nRow, i, GetDataAsCString(var));
+						ListCtrl.SetItemText(nRow, i, ConvertToCString(var));
 				}
 				m_pRecordset->MoveNext();
 				nRow++;
