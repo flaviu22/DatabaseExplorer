@@ -16,7 +16,6 @@ public:
 	CString GetSelection() const;
 	CString GetDatabaseSelection() const;
 	void SetItemAsDatabase(const CString& sDatabase);
-	int GetDatabaseCount();
 
 public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);

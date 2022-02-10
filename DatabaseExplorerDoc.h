@@ -29,6 +29,16 @@ enum class DatabaseType
 	UNKNOWN
 };
 
+class CRaiiSupport
+{
+public:
+	CRaiiSupport(BOOL& bFlag);
+	~CRaiiSupport();
+
+private:
+	BOOL& m_bFlag;
+};
+
 class CDatabaseExplorerView;
 
 class CDatabaseExplorerDoc : public CDocument
@@ -104,7 +114,6 @@ protected:
 	BOOL GetSQLiteDatabases(CTreeCtrl& tree);
 	BOOL GetMySqlDatabases(CTreeCtrl& tree);
 	BOOL GetPostgreDatabases(CTreeCtrl& tree);
-	CString ConvertDataAsString(const CDBVariant& variant);
 	CChildFrame* GetChildFrame() const;
 	CString PrepareSQLForCountAll(const CString& sSQL);
 	std::vector<CString> GetHeaderItems(CListCtrl& ListCtrl);

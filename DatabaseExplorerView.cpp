@@ -39,6 +39,7 @@ BEGIN_MESSAGE_MAP(CDatabaseExplorerView, CListView)
 	ON_COMMAND(ID_FILE_SAVE_AS, &CDatabaseExplorerView::OnFileSave)
 	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE, &CDatabaseExplorerView::OnUpdateFileSave)
 	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE_AS, &CDatabaseExplorerView::OnUpdateFileSave)
+	ON_MESSAGE(WMU_ISPOPULATEMODE, &CDatabaseExplorerView::OnIsPopulateMode)
 END_MESSAGE_MAP()
 
 // CDatabaseExplorerView construction/destruction
@@ -200,6 +201,8 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 
 	if (CDatabaseExplorerApp::UH_POPULATEDATABASEPANEL == lHint)
 	{
+		m_bPopulateMode = TRUE;
+		CRaiiSupport raiis(m_bPopulateMode);
 		GetListCtrl().DeleteAllItems();
 		DeleteAllColumns();
 		CChildFrame* pChild = static_cast<CChildFrame*>(GetParentFrame());
@@ -397,4 +400,9 @@ void CDatabaseExplorerView::OnUpdateFileSave(CCmdUI* pCmdUI)
 	// TODO: Add your command update UI handler code here
 
 	pCmdUI->Enable(GetListCtrl().GetItemCount() > 0);
+}
+
+LRESULT CDatabaseExplorerView::OnIsPopulateMode(WPARAM wParam, LPARAM lParam)
+{
+	return static_cast<LRESULT>(m_bPopulateMode);
 }

@@ -6,6 +6,7 @@
 #include "DatabaseExplorer.h"
 
 #include "ChildFrm.h"
+//#include "DatabaseExplorerView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -22,6 +23,7 @@ BEGIN_MESSAGE_MAP(CChildFrame, CMDIChildWndExt)
 	ON_COMMAND(ID_VIEW_MESSAGE, &CChildFrame::OnViewMessage)
 	ON_COMMAND(ID_VIEW_DATABASE, &CChildFrame::OnViewDatabase)
 	ON_MESSAGE(WMU_POSTINIT, &CChildFrame::OnPostInit)
+	ON_MESSAGE(WMU_ISPOPULATEMODE, &CChildFrame::OnIsPopulateMode)
 END_MESSAGE_MAP()
 
 // CChildFrame construction/destruction
@@ -201,4 +203,9 @@ LRESULT CChildFrame::OnPostInit(WPARAM wParam, LPARAM lParam)
 		GetActiveDocument()->UpdateAllViews(nullptr, CDatabaseExplorerApp::UH_LISTTABLE, reinterpret_cast<CObject*>(&m_pDatabasePane->GetSelection()));
 
 	return 1;
+}
+
+LRESULT CChildFrame::OnIsPopulateMode(WPARAM wParam, LPARAM lParam)
+{
+	return ::SendMessage(GetActiveView()->GetSafeHwnd(), WMU_ISPOPULATEMODE, 0, 0);
 }

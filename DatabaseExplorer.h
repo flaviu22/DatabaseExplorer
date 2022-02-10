@@ -12,6 +12,7 @@
 #define WMU_CHILDFRAMEREMOVED				(WM_APP + 41)
 #define WMU_CHILDFRAMEACTIVATE				(WM_APP + 42)
 #define WMU_CHILDFRAMEACTIVATED				(WM_APP + 43)
+#define WMU_ISPOPULATEMODE					(WM_APP + 44)
 #define WMU_POSTINIT						(WM_APP + 80)
 
 // CDatabaseExplorerApp:

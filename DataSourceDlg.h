@@ -9,6 +9,28 @@
 #endif // _MSC_VER > 1000
 // DataSourceDlg.h : header file
 //
+/////////////////////////////////////////////////////////////////////////////
+// CRestoreDSN class
+
+class CRestoreConnectionSettings
+{
+public:
+	CRestoreConnectionSettings(CDatabaseExplorerDoc* pDoc);
+	~CRestoreConnectionSettings();
+	CRestoreConnectionSettings(const CRestoreConnectionSettings& rhs) = delete;
+	CRestoreConnectionSettings& operator=(const CRestoreConnectionSettings& rhs) = delete;
+	CRestoreConnectionSettings(CRestoreConnectionSettings&& rhs) = delete;
+	CRestoreConnectionSettings& operator=(CRestoreConnectionSettings&& rhs) = delete;
+
+public:
+	void GiveUpRestoreDSNOrg() { m_bRestore = FALSE; }
+
+private:
+	CString m_sDSN;
+	BOOL m_bRestore{ TRUE };
+	UINT m_nRSType{ CRecordset::dynaset };
+	CDatabaseExplorerDoc* m_pDoc{ nullptr };
+};
 
 /////////////////////////////////////////////////////////////////////////////
 // COraclePasswordHandler class
@@ -25,8 +47,7 @@ public:
 	COraclePasswordHandler& operator=(COraclePasswordHandler&& rhs) = delete;
 
 public:
-	BOOL IsPasswordForDelete() const { return m_bDeletePassword; }
-	void SetDeletePassword(const BOOL bSetDelete) { m_bDeletePassword = bSetDelete; }
+	void GiveUpDeletePassword() { m_bDeletePassword = FALSE; }
 
 private:
 	BOOL m_bAdmin{ FALSE };
@@ -67,6 +88,11 @@ private:
 protected:
 	HICON m_hIcon;
 	CDatabaseExplorerDoc* m_pDoc;
+
+protected:
+	int GetSelectedDSNSource() const;
+	UINT GetSelectedRSType() const;
+	CString Test(CDatabaseExt* pDB, const DatabaseType DBType) const;
 
 protected:
 	// Generated message map functions

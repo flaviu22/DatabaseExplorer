@@ -18,8 +18,10 @@ constexpr int UpdateFrameText = 3;
 enum class Color
 {
 	black = RGB(0, 0, 0),
-	red = RGB(250, 0, 0)
+	red = RGB(250, 7, 7)
 };
+
+class CDatabaseExplorerView;
 
 class CChildFrame : public CMDIChildWndExt
 {
@@ -69,6 +71,7 @@ protected:
 	afx_msg void OnViewMessage();
 	afx_msg void OnViewDatabase();
 	afx_msg LRESULT OnPostInit(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnIsPopulateMode(WPARAM wParam, LPARAM lParam);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

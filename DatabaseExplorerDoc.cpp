@@ -20,6 +20,20 @@
 #define new DEBUG_NEW
 #endif
 
+////////////////
+// CRaiiSupport
+
+CRaiiSupport::CRaiiSupport(BOOL& bFlag)
+	:m_bFlag(bFlag)
+{
+	TRACE("&&&&%d\n", m_bFlag);
+}
+
+CRaiiSupport::~CRaiiSupport()
+{
+	m_bFlag = ! m_bFlag;
+}
+
 // CDatabaseExplorerDoc
 
 IMPLEMENT_DYNCREATE(CDatabaseExplorerDoc, CDocument)
@@ -385,8 +399,6 @@ BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& 
 			{
 				for (int i = 0; i < m_pRecordset->GetODBCFieldCount(); ++i)
 				{
-//					CString s;
-//					m_pRecordset->GetFieldValue(i, s);
 					m_pRecordset->GetFieldValue(i, var);
 					if (0 == i)
 						ListCtrl.InsertItem(nRow, ConvertToCString(var));
@@ -463,10 +475,7 @@ BOOL CDatabaseExplorerDoc::GetMSSQLDatabases(CTreeCtrl& tree)
 			if (! m_pDB->GetError().IsEmpty() || table.empty())
 				continue;
 			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
-			{
-				HTREEITEM hChild = tree.InsertItem(*it_table, 1, 1, hItem);
-				tree.SetItemData(hChild, 0);
-			}
+				tree.SetItemData(tree.InsertItem(*it_table, 1, 1, hItem), 0);
 		}
 	}
 
@@ -491,10 +500,7 @@ BOOL CDatabaseExplorerDoc::GetOracleDatabases(CTreeCtrl& tree)
 			if (! m_pDB->GetError().IsEmpty() || table.empty())
 				continue;
 			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
-			{
-				HTREEITEM hChild = tree.InsertItem(*it_table, 1, 1, hItem);
-				tree.SetItemData(hChild, 0);
-			}
+				tree.SetItemData(tree.InsertItem(*it_table, 1, 1, hItem), 0);
 		}
 	}
 	return m_sState.IsEmpty();
@@ -517,10 +523,7 @@ BOOL CDatabaseExplorerDoc::GetSQLiteDatabases(CTreeCtrl& tree)
 			if (! m_pDB->GetError().IsEmpty() || table.empty())
 				continue;
 			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
-			{
-				HTREEITEM hChild = tree.InsertItem(*it_table, 1, 1, hItem);
-				tree.SetItemData(hChild, 0);
-			}
+				tree.SetItemData(tree.InsertItem(*it_table, 1, 1, hItem), 0);
 		}
 	}
 
@@ -544,10 +547,7 @@ BOOL CDatabaseExplorerDoc::GetMySqlDatabases(CTreeCtrl& tree)
 			if (! m_pDB->GetError().IsEmpty() || table.empty())
 				continue;
 			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
-			{
-				HTREEITEM hChild = tree.InsertItem(*it_table, 1, 1, hItem);
-				tree.SetItemData(hChild, 0);
-			}
+				tree.SetItemData(tree.InsertItem(*it_table, 1, 1, hItem), 0);
 		}
 	}
 	return m_sState.IsEmpty();
@@ -573,10 +573,7 @@ BOOL CDatabaseExplorerDoc::GetPostgreDatabases(CTreeCtrl& tree)
 			if (! m_pDB->GetError().IsEmpty() || table.empty())
 				continue;
 			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
-			{
-				HTREEITEM hChild = tree.InsertItem(*it_table, 1, 1, hItem);
-				tree.SetItemData(hChild, 0);
-			}
+				tree.SetItemData(tree.InsertItem(*it_table, 1, 1, hItem), 0);
 		}
 	}
 	return m_sState.IsEmpty();
@@ -591,13 +588,14 @@ void CDatabaseExplorerDoc::OnEditDatasource()
 		return;
 
 	CDataSourceDlg dlg(this);
-	if (IDOK == dlg.DoModal())
-	{
-		SetConnectionString();
-		CString sDatabase = pDatabasePane->GetDatabaseSelection();
+	const int nRet = dlg.DoModal();
+
+	SetConnectionString();
+	CString sDatabase = pDatabasePane->GetDatabaseSelection();
+	if (IDOK == nRet)
 		UpdateAllViews(NULL, CDatabaseExplorerApp::UH_POPULATEDATABASEPANEL);
-		UpdateAllViews(NULL, CDatabaseExplorerApp::UH_SELECTDATABASE, reinterpret_cast<CObject*>(&sDatabase));
-	}
+	UpdateAllViews(NULL, CDatabaseExplorerApp::UH_SELECTDATABASE, reinterpret_cast<CObject*>(&sDatabase));
+	UpdateAllViews(NULL, CDatabaseExplorerApp::UH_INITDATABASE);
 }
 
 void CDatabaseExplorerDoc::OnLogPopulateList()
@@ -650,40 +648,6 @@ BOOL CDatabaseExplorerDoc::RunSQL(const CString sSQL)
 		LogMessage(m_sState, MessageType::error);
 
 	return m_sState.IsEmpty();
-}
-
-inline CString CDatabaseExplorerDoc::ConvertDataAsString(const CDBVariant& variant)
-{
-	CString sRet;
-
-	switch (variant.m_dwType)
-	{
-	case DBVT_LONG:
-		sRet.Format(_T("%d"), variant.m_lVal);
-		break;
-	case DBVT_DOUBLE:
-		sRet.Format(_T("%.2f"), variant.m_dblVal);
-		break;
-	case DBVT_DATE:
-		{
-			COleDateTime date(variant.m_pdate->year, variant.m_pdate->month,
-				variant.m_pdate->day, variant.m_pdate->hour,
-				variant.m_pdate->minute, variant.m_pdate->second);
-			sRet = date.Format();
-		}
-		break;
-	case DBVT_STRING:
-	case DBVT_ASTRING:
-		sRet = *variant.m_pstring;
-		break;
-	case DBVT_WSTRING:
-		sRet = CString(*variant.m_pstringW);
-		break;
-	default:
-		break;
-	}
-
-	return sRet;
 }
 
 int CDatabaseExplorerDoc::GetDatabaseCount() const

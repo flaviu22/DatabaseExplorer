@@ -2,7 +2,8 @@
 #include "DatabaseExplorer.h"
 #include "DatabasePane.h"
 
-#include "ChildFrm.h"
+#include "DatabaseExplorerDoc.h"
+#include "DatabaseExplorerView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -123,6 +124,29 @@ BOOL CDatabasePane::PreTranslateMessage(MSG* pMsg)
 	return CNonClosableDockablePane::PreTranslateMessage(pMsg);
 }
 
+LRESULT CDatabasePane::OnPostInit(WPARAM wParam, LPARAM lParam)
+{
+	if (DoListTable == wParam)
+	{
+		HTREEITEM hItemSel = m_pTreeCtrl->GetSelectedItem();
+		if (nullptr != hItemSel && 0 == m_pTreeCtrl->GetItemData(hItemSel))
+		{
+			HTREEITEM hParent = m_pTreeCtrl->GetParentItem(hItemSel);
+			if (nullptr != hParent)
+			{
+				if (m_hItemSelected != hParent)
+				{
+					SetItemAsDatabase(m_hItemSelected, hParent);
+					::PostMessage(GetOwner()->GetSafeHwnd(), WMU_POSTINIT, DoInitDatabase, 0);
+				}
+				::PostMessage(GetOwner()->GetSafeHwnd(), WMU_POSTINIT, DoListTable, 0);
+			}
+		}
+	}
+
+	return 1;
+}
+
 CString CDatabasePane::GetSelection() const
 {
 	HTREEITEM hItem = m_pTreeCtrl->GetSelectedItem();
@@ -134,7 +158,7 @@ CString CDatabasePane::GetSelection() const
 
 CString CDatabasePane::GetDatabaseSelection() const
 {
-	if (nullptr != m_hItemSelected)
+	if (nullptr != m_hItemSelected && m_pTreeCtrl->GetItemData(m_hItemSelected) > 0)
 		return m_pTreeCtrl->GetItemText(m_hItemSelected);
 
 	return _T("");
@@ -145,8 +169,9 @@ void CDatabasePane::SetItemAsDatabase(const CString& sDatabase)
 	HTREEITEM hItem = m_pTreeCtrl->GetRootItem();
 	while (nullptr != hItem)
 	{
-		if (0 == sDatabase.CompareNoCase(m_pTreeCtrl->GetItemText(hItem)) && hItem != m_hItemSelected)
+		if (0 == sDatabase.CompareNoCase(m_pTreeCtrl->GetItemText(hItem)))
 		{
+			m_pTreeCtrl->SelectItem(hItem);
 			SetItemAsDatabase(m_hItemSelected, hItem);
 			break;
 		}
@@ -156,9 +181,12 @@ void CDatabasePane::SetItemAsDatabase(const CString& sDatabase)
 
 void CDatabasePane::SetItemAsDatabase(const HTREEITEM& hItemOld, const HTREEITEM& hItemNew)
 {
-	m_pTreeCtrl->SetItemState(hItemOld, INDEXTOOVERLAYMASK(0), TVIS_OVERLAYMASK);
-	m_pTreeCtrl->SetItemState(hItemNew, INDEXTOOVERLAYMASK(1), TVIS_OVERLAYMASK);
-	m_hItemSelected = hItemNew;
+	if (m_hItemSelected != hItemNew)
+	{
+		m_pTreeCtrl->SetItemState(hItemOld, INDEXTOOVERLAYMASK(0), TVIS_OVERLAYMASK);
+		m_pTreeCtrl->SetItemState(hItemNew, INDEXTOOVERLAYMASK(1), TVIS_OVERLAYMASK);
+		m_hItemSelected = hItemNew;
+	}
 }
 
 void CDatabasePane::OnTvnSelchangedTree(NMHDR* pNMHDR, LRESULT* pResult)
@@ -166,13 +194,20 @@ void CDatabasePane::OnTvnSelchangedTree(NMHDR* pNMHDR, LRESULT* pResult)
 	LPNMTREEVIEW pNMTreeView = reinterpret_cast<LPNMTREEVIEW>(pNMHDR);
 	// TODO: Add your control notification handler code here
 
-	if (m_pTreeCtrl->GetItemData(pNMTreeView->itemNew.hItem) > 0)
-	{
-		SetItemAsDatabase(m_hItemSelected, pNMTreeView->itemNew.hItem);
-		::PostMessage(GetOwner()->GetSafeHwnd(), WMU_POSTINIT, DoInitDatabase, 0);
-	}
-
 	*pResult = 0;
+
+	if (::SendMessage(GetParentFrame()->GetSafeHwnd(), WMU_ISPOPULATEMODE, 0, 0))
+	{
+		m_hItemSelected = nullptr;
+	}
+	else
+	{
+		if (m_pTreeCtrl->GetItemData(pNMTreeView->itemNew.hItem) > 0)
+		{
+			SetItemAsDatabase(m_hItemSelected, pNMTreeView->itemNew.hItem);
+			::PostMessage(GetOwner()->GetSafeHwnd(), WMU_POSTINIT, DoInitDatabase, 0);
+		}
+	}
 }
 
 void CDatabasePane::OnNMDblclkTree(NMHDR* pNMHDR, LRESULT* pResult)
@@ -201,40 +236,4 @@ void CDatabasePane::OnNMDblclkTree(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 
 	*pResult = 0;
-}
-
-LRESULT CDatabasePane::OnPostInit(WPARAM wParam, LPARAM lParam)
-{
-	if (DoListTable == wParam)
-	{
-		HTREEITEM hItemSel = m_pTreeCtrl->GetSelectedItem();
-		if (nullptr != hItemSel && 0 == m_pTreeCtrl->GetItemData(hItemSel))
-		{
-			HTREEITEM hParent = m_pTreeCtrl->GetParentItem(hItemSel);
-			if (nullptr != hParent)
-			{
-				if (m_hItemSelected != hParent)
-				{
-					SetItemAsDatabase(m_hItemSelected, hParent);
-					::PostMessage(GetOwner()->GetSafeHwnd(), WMU_POSTINIT, DoInitDatabase, 0);
-				}
-				::PostMessage(GetOwner()->GetSafeHwnd(), WMU_POSTINIT, DoListTable, 0);
-			}
-		}
-	}
-
-	return 1;
-}
-
-int CDatabasePane::GetDatabaseCount()
-{
-	int nCount = 0;
-	HTREEITEM hItem = m_pTreeCtrl->GetRootItem();
-	while (nullptr != hItem)
-	{
-		nCount++;
-		hItem = m_pTreeCtrl->GetNextItem(hItem, TVGN_NEXT);
-	}
-
-	return nCount;
 }

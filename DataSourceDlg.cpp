@@ -18,6 +18,25 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
+// CRestoreDSN class
+
+CRestoreConnectionSettings::CRestoreConnectionSettings(CDatabaseExplorerDoc* pDoc)
+	:m_pDoc(pDoc)
+{
+	m_sDSN = m_pDoc->GetDSN();
+	m_nRSType = m_pDoc->GetDB()->GetRecordsetType();
+}
+
+CRestoreConnectionSettings::~CRestoreConnectionSettings()
+{
+	if (m_bRestore)
+	{
+		m_pDoc->SetDSN(m_sDSN);
+		m_pDoc->GetDB()->SetRecordsetType(m_nRSType);
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // COraclePasswordHandler class
 
 COraclePasswordHandler::COraclePasswordHandler(BOOL bAdmin, const CString& sDSN, const BOOL bSetDelete)
@@ -220,32 +239,20 @@ const DatabaseType CDataSourceDlg::DecodeDatabaseType(CString sData) const
 	return DatabaseType::UNKNOWN;
 }
 
-void CDataSourceDlg::OnOK() 
+int CDataSourceDlg::GetSelectedDSNSource() const
 {
-	// TODO: Add extra validation here
-
-	UpdateData();
-
-	if (m_ComboDSN.GetCurSel() < 0)
-	{
-		MessageBox(_T("Choose a data source name first!"), NULL, MB_ICONERROR);
-		m_ComboDSN.SetFocus();
-		m_ComboDSN.ShowDropDown();
-		return;
-	}
-
-	CDatabaseExt* pDB = m_pDoc->GetDB();
-
-	pDB->Close();
-
 	int nDSNSource = 0;	// User DSN
 	if (IDC_RADIO_SYSTEMDSN == GetCheckedRadioButton(IDC_RADIO_USERDSN, IDC_RADIO_SYSTEMDSN))
 		nDSNSource = 1;
 
-	UINT nRSType = CRecordset::dynaset;
-	const UINT nRSTypeOrg = pDB->GetRecordsetType();
+	return nDSNSource;
+}
 
-	switch(GetCheckedRadioButton(IDC_RADIO_DYNASET, IDC_RADIO_DYNAMIC))
+UINT CDataSourceDlg::GetSelectedRSType() const
+{
+	UINT nRSType = CRecordset::dynaset;
+
+	switch (GetCheckedRadioButton(IDC_RADIO_DYNASET, IDC_RADIO_DYNAMIC))
 	{
 	case IDC_RADIO_SNAPSHOT:
 		nRSType = CRecordset::snapshot;
@@ -257,22 +264,11 @@ void CDataSourceDlg::OnOK()
 		break;	// CRecordset::dynaset
 	}
 
-	pDB->SetConnectionString(_T("DSN=") + GetComboSelection() + _T(";"));
-	pDB->SetRecordsetType(nRSType);
+	return nRSType;
+}
 
-	const DatabaseType DBType = DecodeDatabaseType(GetKeyData(GetComboSelection()));
-
-	if (DatabaseType::ORACLE == DBType)
-	{
-		CPasswordDlg dlg(static_cast<BOOL>(nDSNSource), GetComboSelection());
-		if (IDOK != dlg.DoModal())
-			return;
-	}
-
-	COraclePasswordHandler OraclePassword(static_cast<BOOL>(nDSNSource), GetComboSelection(), DatabaseType::ORACLE == DBType);
-
-	CWaitCursor Wait;
-
+CString CDataSourceDlg::Test(CDatabaseExt* pDB, const DatabaseType DBType) const
+{
 	switch (DBType)
 	{
 	case DatabaseType::MSSQL:
@@ -305,18 +301,56 @@ void CDataSourceDlg::OnOK()
 		m_pDoc->SetPostgreDB(m_pDoc->DecodePostGreDatabase(pDB->GetConnect()));
 		break;
 	default:
-		MessageBox(_T("This version of application is supporting:\n\tMicrosoft SQL\n\tOracle\n\tSQLite\n\tMySQL\n\tMariaDB\n\tPostgreSQL\nFor other type of databases contact the developer"), nullptr, MB_ICONWARNING);
-		return;
-	}
-
-	if(! pDB->GetError().IsEmpty())
-	{
-		pDB->SetRecordsetType(nRSTypeOrg);
-		MessageBox(pDB->GetError(), NULL, MB_ICONERROR);
-		return;
+		pDB->SetError(_T("This version of application is supporting:\n\tMicrosoft SQL\n\tOracle\n\tSQLite\n\tMySQL\n\tMariaDB\n\tPostgreSQL\nFor other type of databases contact the developer"));
 	}
 
 	pDB->Close();
+
+	return pDB->GetError();
+}
+
+void CDataSourceDlg::OnOK() 
+{
+	// TODO: Add extra validation here
+
+	UpdateData();
+
+	if (m_ComboDSN.GetCurSel() < 0)
+	{
+		MessageBox(_T("Choose a data source name first!"), NULL, MB_ICONERROR);
+		m_ComboDSN.SetFocus();
+		m_ComboDSN.ShowDropDown();
+		return;
+	}
+
+	CRestoreConnectionSettings rcs(m_pDoc);
+
+	const int nDSNSource = GetSelectedDSNSource();
+	const UINT nRSType = GetSelectedRSType();
+
+	CDatabaseExt* pDB = m_pDoc->GetDB();
+	pDB->Close();
+	pDB->SetConnectionString(_T("DSN=") + GetComboSelection() + _T(";"));
+	pDB->SetRecordsetType(nRSType);
+
+	const DatabaseType DBType = DecodeDatabaseType(GetKeyData(GetComboSelection()));
+
+	if (DatabaseType::ORACLE == DBType)
+	{
+		CPasswordDlg dlg(static_cast<BOOL>(nDSNSource), GetComboSelection());
+		if (IDOK != dlg.DoModal())
+			return;
+	}
+
+	COraclePasswordHandler OraclePassword(static_cast<BOOL>(nDSNSource), GetComboSelection(), DatabaseType::ORACLE == DBType);
+
+	CWaitCursor Wait;
+	const CString sError = Test(pDB, DBType);
+	if(! sError.IsEmpty())
+	{
+		MessageBox(sError, NULL, MB_ICONERROR);
+		return;
+	}
 
 	theApp.WriteProfileInt(_T("Settings"), _T("DSNSource"), nDSNSource);
 	theApp.WriteProfileInt(_T("Settings"), _T("RSType"), nRSType);
@@ -327,8 +361,8 @@ void CDataSourceDlg::OnOK()
 	CMainFrame* pFrame = static_cast<CMainFrame*>(AfxGetMainWnd());
 	pFrame->SetMessageText(_T("You have successfully set up the datasource"));
 
-	if (OraclePassword.IsPasswordForDelete())
-		OraclePassword.SetDeletePassword(FALSE);
+	rcs.GiveUpRestoreDSNOrg();		// everything is ok
+	OraclePassword.GiveUpDeletePassword();
 
 	CDialog::OnOK();
 }

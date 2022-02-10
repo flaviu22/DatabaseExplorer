@@ -16,6 +16,7 @@ protected: // create from serialization only
 // Attributes
 public:
 	CDatabaseExplorerDoc* GetDocument() const;
+	BOOL GetPopulateMode() const { return m_bPopulateMode; }
 
 // Operations
 public:
@@ -45,6 +46,7 @@ protected:
 	void DeleteAllColumns();
 
 private:
+	BOOL m_bPopulateMode{ FALSE };
 	std::vector<std::unique_ptr<CDBRecord>> m_arrRows{};
 
 // Generated message map functions
@@ -58,6 +60,7 @@ protected:
 	afx_msg void OnLvnOdcachehint(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnFileSave();
 	afx_msg void OnUpdateFileSave(CCmdUI* pCmdUI);
+	afx_msg LRESULT OnIsPopulateMode(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 
