@@ -25,10 +25,7 @@
 IMPLEMENT_DYNCREATE(CDatabaseExplorerView, CListView)
 
 BEGIN_MESSAGE_MAP(CDatabaseExplorerView, CListView)
-	// Standard printing commands
-	ON_COMMAND(ID_FILE_PRINT, &CListView::OnFilePrint)
-	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CListView::OnFilePrint)
-	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CDatabaseExplorerView::OnFilePrintPreview)
+	ON_WM_TIMER()
 	ON_WM_CONTEXTMENU()
 	ON_WM_RBUTTONUP()
 	ON_COMMAND(ID_EDIT_RUN, &CDatabaseExplorerView::OnEditRun)
@@ -40,6 +37,10 @@ BEGIN_MESSAGE_MAP(CDatabaseExplorerView, CListView)
 	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE, &CDatabaseExplorerView::OnUpdateFileSave)
 	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE_AS, &CDatabaseExplorerView::OnUpdateFileSave)
 	ON_MESSAGE(WMU_ISPOPULATEMODE, &CDatabaseExplorerView::OnIsPopulateMode)
+	// Standard printing commands
+	ON_COMMAND(ID_FILE_PRINT, &CListView::OnFilePrint)
+	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CListView::OnFilePrint)
+	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CDatabaseExplorerView::OnFilePrintPreview)
 END_MESSAGE_MAP()
 
 // CDatabaseExplorerView construction/destruction
@@ -162,6 +163,19 @@ LRESULT CDatabaseExplorerView::OnPostInit(WPARAM wParam, LPARAM lParam)
 	return 1;
 }
 
+void CDatabaseExplorerView::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO: Add your message handler code here and/or call default
+
+	if (ID_TIMER_DBDISCONNECT == nIDEvent)
+	{
+		KillTimer(nIDEvent);
+		GetDocument()->GetDB()->Close();
+	}
+
+	CListView::OnTimer(nIDEvent);
+}
+
 void CDatabaseExplorerView::OnEditRun()
 {
 	// TODO: Add your command handler code here
@@ -177,6 +191,9 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 	// TODO: Add your specialized code here and/or call the base class
 
 	CDatabaseExplorerDoc* pDoc = GetDocument();
+
+	if (lHint)
+		SetTimer(ID_TIMER_DBDISCONNECT, 33 * TIME_ONEMINUTE, nullptr);
 
 	if (CDatabaseExplorerApp::UH_INITDATABASE == lHint)
 	{
@@ -202,7 +219,7 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 	if (CDatabaseExplorerApp::UH_POPULATEDATABASEPANEL == lHint)
 	{
 		m_bPopulateMode = TRUE;
-		CRaiiSupport raiis(m_bPopulateMode);
+		CRaiiSupport rs(m_bPopulateMode);
 		GetListCtrl().DeleteAllItems();
 		DeleteAllColumns();
 		CChildFrame* pChild = static_cast<CChildFrame*>(GetParentFrame());

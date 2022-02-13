@@ -34,6 +34,7 @@
 #define IDS_EDIT_MENU                   306
 #define IDD_DIALOG_WINDOWSMANAGER       310
 #define ID_TIMER_RESETSTATUSBAR         310
+#define ID_TIMER_DBDISCONNECT           311
 #define IDI_DATABASE                    312
 #define IDI_TABLE                       314
 #define IDI_SELECTED                    315
@@ -71,6 +72,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        319
 #define _APS_NEXT_COMMAND_VALUE         32790
 #define _APS_NEXT_CONTROL_VALUE         1003
-#define _APS_NEXT_SYMED_VALUE           311
+#define _APS_NEXT_SYMED_VALUE           312
 #endif
 #endif

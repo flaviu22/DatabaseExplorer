@@ -26,7 +26,6 @@
 CRaiiSupport::CRaiiSupport(BOOL& bFlag)
 	:m_bFlag(bFlag)
 {
-	TRACE("&&&&%d\n", m_bFlag);
 }
 
 CRaiiSupport::~CRaiiSupport()

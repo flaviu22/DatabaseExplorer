@@ -15,6 +15,8 @@
 #define WMU_ISPOPULATEMODE					(WM_APP + 44)
 #define WMU_POSTINIT						(WM_APP + 80)
 
+#define TIME_ONEMINUTE						(60 * 1000)
+
 // CDatabaseExplorerApp:
 // See DatabaseExplorer.cpp for the implementation of this class
 //

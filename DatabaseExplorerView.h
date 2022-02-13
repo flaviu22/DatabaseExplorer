@@ -51,6 +51,7 @@ private:
 
 // Generated message map functions
 protected:
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnFilePrintPreview();
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);

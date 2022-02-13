@@ -35,6 +35,11 @@ public:
 	CRaiiSupport(BOOL& bFlag);
 	~CRaiiSupport();
 
+	CRaiiSupport(const CRaiiSupport& rhs) = delete;
+	CRaiiSupport& operator=(const CRaiiSupport& rhs) = delete;
+	CRaiiSupport(CRaiiSupport&& rhs) = delete;
+	CRaiiSupport* operator=(CRaiiSupport&& rhs) = delete;
+
 private:
 	BOOL& m_bFlag;
 };
