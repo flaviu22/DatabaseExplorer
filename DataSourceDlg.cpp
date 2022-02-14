@@ -37,16 +37,16 @@ CRestoreConnectionSettings::~CRestoreConnectionSettings()
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// COraclePasswordHandler class
+// CPasswordHandler class
 
-COraclePasswordHandler::COraclePasswordHandler(BOOL bAdmin, const CString& sDSN, const BOOL bSetDelete)
+CPasswordHandler::CPasswordHandler(BOOL bAdmin, const CString& sDSN, const BOOL bSetDelete)
 {
 	m_bAdmin = bAdmin;
 	m_sDSN = sDSN;
 	m_bDeletePassword = bSetDelete;
 }
 
-COraclePasswordHandler::~COraclePasswordHandler()
+CPasswordHandler::~CPasswordHandler()
 {
 	if (m_bDeletePassword)
 	{
@@ -184,9 +184,22 @@ int CDataSourceDlg::GetDSNIndex(const CString& sName) const
 	return CB_ERR;
 }
 
-const CString CDataSourceDlg::GetComboSelection()
+CString CDataSourceDlg::GetMsSQLAuthenticationRequiredUser(const CString& sDSN) const
 {
-	UpdateData();
+	CString sUser, sPath;
+	const BOOL bSystemDSN = (IDC_RADIO_SYSTEMDSN == GetCheckedRadioButton(IDC_RADIO_USERDSN, IDC_RADIO_SYSTEMDSN));
+	CSettingsStoreEx ss(bSystemDSN, TRUE);
+	sPath.Format(_T("SOFTWARE\\ODBC\\ODBC.INI\\%s"), sDSN);
+	if (ss.Open(sPath))
+		ss.Read(_T("LastUser"), sUser);
+
+	return sUser;
+}
+
+const CString CDataSourceDlg::GetComboSelection(const BOOL bUpdateData/* = FALSE*/)
+{
+	if (bUpdateData)
+		UpdateData();
 
 	CString sText;
 	m_ComboDSN.GetLBText(m_ComboDSN.GetCurSel(), sText);
@@ -267,7 +280,7 @@ UINT CDataSourceDlg::GetSelectedRSType() const
 	return nRSType;
 }
 
-CString CDataSourceDlg::Test(CDatabaseExt* pDB, const DatabaseType DBType) const
+void CDataSourceDlg::Test(CDatabaseExt* pDB, const DatabaseType DBType) const
 {
 	switch (DBType)
 	{
@@ -305,8 +318,6 @@ CString CDataSourceDlg::Test(CDatabaseExt* pDB, const DatabaseType DBType) const
 	}
 
 	pDB->Close();
-
-	return pDB->GetError();
 }
 
 void CDataSourceDlg::OnOK() 
@@ -324,45 +335,53 @@ void CDataSourceDlg::OnOK()
 	}
 
 	CRestoreConnectionSettings rcs(m_pDoc);
-
 	const int nDSNSource = GetSelectedDSNSource();
 	const UINT nRSType = GetSelectedRSType();
+	const CString sSelectedDSN = GetComboSelection();
+	const DatabaseType DBType = DecodeDatabaseType(GetKeyData(sSelectedDSN));
 
 	CDatabaseExt* pDB = m_pDoc->GetDB();
 	pDB->Close();
-	pDB->SetConnectionString(_T("DSN=") + GetComboSelection() + _T(";"));
-	pDB->SetRecordsetType(nRSType);
 
-	const DatabaseType DBType = DecodeDatabaseType(GetKeyData(GetComboSelection()));
+	CString sMsSQLAuthenticationUser;
+	if (DatabaseType::MSSQL == DBType)
+		sMsSQLAuthenticationUser = GetMsSQLAuthenticationRequiredUser(sSelectedDSN);
 
-	if (DatabaseType::ORACLE == DBType)
+	CString sSuffix;
+	if (DatabaseType::ORACLE == DBType || 
+		(DatabaseType::MSSQL == DBType && ! sMsSQLAuthenticationUser.IsEmpty()))
 	{
-		CPasswordDlg dlg(static_cast<BOOL>(nDSNSource), GetComboSelection());
+		CPasswordDlg dlg(static_cast<BOOL>(nDSNSource), sSelectedDSN);
 		if (IDOK != dlg.DoModal())
 			return;
+		sSuffix.Format(_T("UID=%s;PWD=%s;"), sMsSQLAuthenticationUser, dlg.GetPassword());
 	}
+	// only for this temporary connection
+	pDB->SetConnectionString(_T("DSN=") + sSelectedDSN + _T(";") + sSuffix);
+	pDB->SetRecordsetType(nRSType);
 
-	COraclePasswordHandler OraclePassword(static_cast<BOOL>(nDSNSource), GetComboSelection(), DatabaseType::ORACLE == DBType);
+	CPasswordHandler ph(static_cast<BOOL>(nDSNSource), sSelectedDSN, DatabaseType::ORACLE == DBType);
 
 	CWaitCursor Wait;
-	const CString sError = Test(pDB, DBType);
-	if(! sError.IsEmpty())
+	Test(pDB, DBType);
+	if(! pDB->GetError().IsEmpty())
 	{
-		MessageBox(sError, NULL, MB_ICONERROR);
+		MessageBox(pDB->GetError(), NULL, MB_ICONERROR);
 		return;
 	}
-
+	// save DSNSource and recordset type into registry
 	theApp.WriteProfileInt(_T("Settings"), _T("DSNSource"), nDSNSource);
 	theApp.WriteProfileInt(_T("Settings"), _T("RSType"), nRSType);
-
+	// setup document data
 	m_pDoc->SetDatabaseType(DBType);
-	m_pDoc->SetDSN(GetComboSelection());
-
+	m_pDoc->SetDSN(sSelectedDSN);
+	m_pDoc->SetMsSqlAuthenticationRequired(! sSuffix.IsEmpty());
+	// give feedback to user
 	CMainFrame* pFrame = static_cast<CMainFrame*>(AfxGetMainWnd());
 	pFrame->SetMessageText(_T("You have successfully set up the datasource"));
-
-	rcs.GiveUpRestoreDSNOrg();		// everything is ok
-	OraclePassword.GiveUpDeletePassword();
+	// everything is ok
+	rcs.GiveUpRestoreDSNOrg();
+	ph.GiveUpDeletePassword();
 
 	CDialog::OnOK();
 }

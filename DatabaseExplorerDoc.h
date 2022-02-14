@@ -66,6 +66,7 @@ public:
 	CString GetPostgreDB() const { return m_sPostgreDB; }
 	void SetPostgreDB(const CString& sName) { m_sPostgreDB = sName; }
 	const CString DecodePostGreDatabase(const CString& sConnectionString) const;
+	void SetMsSqlAuthenticationRequired(const BOOL bSet) { m_bMsSqlAuthenticationRequired = bSet; }
 
 // Operations
 public:
@@ -110,6 +111,7 @@ protected:
 	std::unique_ptr<CDatabaseExt> m_pDB{ nullptr };
 	std::unique_ptr<CRecordset> m_pRecordset{ nullptr };
 	DatabaseType m_DatabaseType{ DatabaseType::MSSQL };
+	BOOL m_bMsSqlAuthenticationRequired{ FALSE };
 
 protected:
 	size_t TokenizeString(const CString& sText, const CString& sToken, std::vector<CString>& result) const;
@@ -126,6 +128,7 @@ protected:
 	void WriteListLines(CListCtrl& ListCtrl, CStdioFile& file, const CString& sSeparator);
 	CString GetText(CHeaderCtrl& header, int nItem) const;
 	CString GetOracleUserID(const BOOL bMakeUpper = FALSE) const;
+	std::pair<CString, CString> GetMsSqlAuthenticationCredential() const;
 
 	inline CString ConvertToCString(const CDBVariant& variant)
 	{

@@ -65,5 +65,6 @@ protected:
 	afx_msg void OnViewVirtualmode();
 	afx_msg void OnUpdateViewVirtualmode(CCmdUI* pCmdUI);
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
+	afx_msg LRESULT OnGetTabToolTip(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };

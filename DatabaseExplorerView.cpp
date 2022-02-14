@@ -193,7 +193,7 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 	CDatabaseExplorerDoc* pDoc = GetDocument();
 
 	if (lHint)
-		SetTimer(ID_TIMER_DBDISCONNECT, 33 * TIME_ONEMINUTE, nullptr);
+		SetTimer(ID_TIMER_DBDISCONNECT, 30 * TIME_ONEMINUTE, nullptr);
 
 	if (CDatabaseExplorerApp::UH_INITDATABASE == lHint)
 	{

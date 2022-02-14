@@ -58,6 +58,7 @@ CDatabaseExplorerDoc::~CDatabaseExplorerDoc()
 	theApp.WriteProfileInt(_T("Settings"), _T("LogPopulateList"), m_bLogPopulateList);
 	theApp.WriteProfileInt(_T("Settings"), _T("DatabaseType"), static_cast<int>(m_DatabaseType));
 	theApp.WriteProfileString(_T("Settings"), _T("DSN"), m_sDSN);
+	theApp.WriteProfileInt(_T("Settings"), _T("MsSqlAuthenticationRequired"), m_bMsSqlAuthenticationRequired);
 }
 
 BOOL CDatabaseExplorerDoc::OnNewDocument()
@@ -72,6 +73,7 @@ BOOL CDatabaseExplorerDoc::OnNewDocument()
 	m_DatabaseType = static_cast<DatabaseType>(theApp.GetProfileInt(_T("Settings"), _T("DatabaseType"), static_cast<int>(DatabaseType::MSSQL)));
 	m_sDSN = theApp.GetProfileString(_T("Settings"), _T("DSN"));
 	m_pDB->SetRecordsetType(theApp.GetProfileInt(_T("Settings"), _T("RSType"), CRecordset::dynaset));
+	m_bMsSqlAuthenticationRequired = theApp.GetProfileInt(_T("Settings"), _T("MsSqlAuthenticationRequired"), m_bMsSqlAuthenticationRequired);
 
 	SetConnectionString();
 
@@ -165,7 +167,19 @@ void CDatabaseExplorerDoc::Dump(CDumpContext& dc) const
 void CDatabaseExplorerDoc::SetConnectionString() const
 {
 	if (m_pDB)
-		m_pDB->SetConnectionString(_T("DSN=") + m_sDSN + _T(";"));
+	{
+		if (! m_bMsSqlAuthenticationRequired)
+		{
+			m_pDB->SetConnectionString(_T("DSN=") + m_sDSN + _T(";"));
+		}
+		else
+		{
+			const auto credential = GetMsSqlAuthenticationCredential();
+			m_pDB->SetConnectionString(_T("DSN=") + m_sDSN + 
+										_T(";UID=") + credential.first + 
+										_T(";PWD=") + credential.second + _T(";"));
+		}
+	}
 }
 
 const CString CDatabaseExplorerDoc::DecodePostGreDatabase(const CString& sConnectionString) const
@@ -853,4 +867,21 @@ CString CDatabaseExplorerDoc::GetOracleUserID(const BOOL bMakeUpper/* = FALSE*/)
 		return sUserID.MakeUpper();
 
 	return sUserID;
+}
+
+std::pair<CString, CString> CDatabaseExplorerDoc::GetMsSqlAuthenticationCredential() const
+{
+	CString sPath;
+	std::pair<CString, CString> credential;
+	sPath.Format(_T("SOFTWARE\\ODBC\\ODBC.INI\\%s"), m_sDSN);
+	CSettingsStore ss(static_cast<BOOL>(theApp.GetProfileInt(_T("Settings"), _T("DSNSource"), 0)), TRUE);
+	if (ss.Open(sPath))
+	{
+		CString sUser, sPass;
+		ss.Read(_T("LastUser"), sUser);
+		ss.Read(_T("Password"), sPass);
+		credential.first = sUser;
+		credential.second = sPass;
+	}
+	return credential;
 }

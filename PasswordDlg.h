@@ -9,6 +9,7 @@ class CPasswordDlg : public CDialogEx
 public:
 	CPasswordDlg(BOOL bAdmin, const CString& sDSN, CWnd* pParent = nullptr);   // standard constructor
 	virtual ~CPasswordDlg();
+	CString GetPassword() const { return m_sPass; }
 
 // Overrides
 	// ClassWizard generated virtual function overrides

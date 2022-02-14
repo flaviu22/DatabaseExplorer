@@ -33,18 +33,18 @@ private:
 };
 
 /////////////////////////////////////////////////////////////////////////////
-// COraclePasswordHandler class
+// CPasswordHandler class
 
-class COraclePasswordHandler
+class CPasswordHandler
 {
 public:
-	COraclePasswordHandler(BOOL bAdmin, const CString& sDSN, const BOOL bSetDelete);
-	~COraclePasswordHandler();
+	CPasswordHandler(BOOL bAdmin, const CString& sDSN, const BOOL bSetDelete);
+	~CPasswordHandler();
 
-	COraclePasswordHandler(const COraclePasswordHandler& rhs) = delete;
-	COraclePasswordHandler& operator=(const COraclePasswordHandler& rhs) = delete;
-	COraclePasswordHandler(COraclePasswordHandler&& rhs) = delete;
-	COraclePasswordHandler& operator=(COraclePasswordHandler&& rhs) = delete;
+	CPasswordHandler(const CPasswordHandler& rhs) = delete;
+	CPasswordHandler& operator=(const CPasswordHandler& rhs) = delete;
+	CPasswordHandler(CPasswordHandler&& rhs) = delete;
+	CPasswordHandler& operator=(CPasswordHandler&& rhs) = delete;
 
 public:
 	void GiveUpDeletePassword() { m_bDeletePassword = FALSE; }
@@ -74,8 +74,9 @@ private:
 	const CString GetKeyData(const CString& sKeyName) const;
 	const DatabaseType DecodeDatabaseType(CString sData) const;
 	void PopulateDSN(const BOOL bSystemDSN);
-	const CString GetComboSelection();
+	const CString GetComboSelection(const BOOL bUpdateData = FALSE);
 	int GetDSNIndex(const CString& sName) const;
+	CString GetMsSQLAuthenticationRequiredUser(const CString& sDSN) const;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -92,7 +93,7 @@ protected:
 protected:
 	int GetSelectedDSNSource() const;
 	UINT GetSelectedRSType() const;
-	CString Test(CDatabaseExt* pDB, const DatabaseType DBType) const;
+	void Test(CDatabaseExt* pDB, const DatabaseType DBType) const;
 
 protected:
 	// Generated message map functions

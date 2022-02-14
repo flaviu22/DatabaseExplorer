@@ -8,6 +8,7 @@
 #include "MainFrm.h"
 #include "WindowsManagerDialog.h"
 #include "ChildFrm.h"
+#include "DatabaseExplorerDoc.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -44,6 +45,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECTLINE, &CMainFrame::OnUpdateEdit)
 	ON_COMMAND(ID_VIEW_VIRTUALMODE, &CMainFrame::OnViewVirtualmode)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_VIRTUALMODE, &CMainFrame::OnUpdateViewVirtualmode)
+	ON_REGISTERED_MESSAGE(AFX_WM_ON_GET_TAB_TOOLTIP, &CMainFrame::OnGetTabToolTip)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -240,7 +242,7 @@ BOOL CMainFrame::LoadFrame(UINT nIDResource, DWORD dwDefaultStyle, CWnd* pParent
 void CMainFrame::OnInitData()
 {
 	EnableMDITabs(TRUE, TRUE, CMFCBaseTabCtrl::LOCATION_TOP, TRUE, 
-					CMFCTabCtrl::STYLE_3D_SCROLLED, FALSE, FALSE);
+					CMFCTabCtrl::STYLE_3D_SCROLLED, TRUE, TRUE);
 
 	CMFCTabCtrl& MFCTabCtrl = GetMDITabs();
 	MFCTabCtrl.SetTabBorderSize(0);
@@ -344,6 +346,30 @@ void CMainFrame::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 		m_pWndFocus = GetFocus();
 	else if (nullptr != m_pWndFocus)
 		m_pWndFocus->SetFocus();
+}
+
+LRESULT CMainFrame::OnGetTabToolTip(WPARAM wParam, LPARAM lParam)
+{
+	CMFCTabToolTipInfo* pInfo = (CMFCTabToolTipInfo*)lParam;
+	ASSERT(nullptr != pInfo);
+
+	if (pInfo)
+	{
+		CMFCBaseTabCtrl* tabControl = pInfo->m_pTabWnd;
+		ASSERT_VALID(tabControl);
+		if (tabControl->IsMDITab())
+		{
+			CWnd* tabPaneWnd = tabControl->GetTabWndNoWrapper(pInfo->m_nTabIndex);
+			if (tabPaneWnd->IsKindOf(RUNTIME_CLASS(CChildFrame)))
+			{
+				CChildFrame* pChild = STATIC_DOWNCAST(CChildFrame, tabPaneWnd);
+				CDatabaseExplorerDoc* pDoc = static_cast<CDatabaseExplorerDoc*>(pChild->GetActiveDocument());
+				pInfo->m_strText = pDoc->GetDSN();
+			}
+		}
+	}
+
+	return 0;
 }
 
 void CMainFrame::OnEditCut()
