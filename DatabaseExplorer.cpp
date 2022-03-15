@@ -262,11 +262,14 @@ std::vector<std::wstring> CDatabaseExplorerApp::GetBackupFiles() const
 
 void CDatabaseExplorerApp::UpdateBackupFiles()
 {
-	const CString sBackupPath = theApp.GetAppPath() + _T("Backup");
-	if (! PathIsDirectory(sBackupPath))
-		CreateDirectory(sBackupPath, NULL);
-
 	auto docdata = GetDocumentsData();
+	if (docdata.size() > 0)
+	{
+		const CString sBackupPath = theApp.GetAppPath() + _T("Backup");
+		if (! PathIsDirectory(sBackupPath))
+			CreateDirectory(sBackupPath, NULL);
+	}
+
 	RemoveOldBackup(docdata);
 	SaveNewBackup(std::move(docdata));
 }
