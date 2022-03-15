@@ -53,8 +53,9 @@ CDatabaseExplorerDoc::CDatabaseExplorerDoc() noexcept
 	m_pRecordset = std::make_unique<CRecordset>(m_pDB.get());
 
 	m_bLogPopulateList = theApp.GetProfileInt(_T("Settings"), _T("LogPopulateList"), m_bLogPopulateList);
-	m_DatabaseType = static_cast<DatabaseType>(theApp.GetProfileInt(_T("Settings"), _T("DatabaseType"), static_cast<int>(DatabaseType::MSSQL)));
+
 	SetDSN(theApp.GetProfileString(_T("Settings"), _T("DSN")));
+	m_DatabaseType = static_cast<DatabaseType>(theApp.GetProfileInt(_T("Settings"), _T("DatabaseType"), static_cast<int>(DatabaseType::MSSQL)));
 	m_pDB->SetRecordsetType(theApp.GetProfileInt(_T("Settings"), _T("RSType"), CRecordset::dynaset));
 	m_bMsSqlAuthenticationRequired = theApp.GetProfileInt(_T("Settings"), _T("MsSqlAuthenticationRequired"), m_bMsSqlAuthenticationRequired);
 }
@@ -87,9 +88,10 @@ BOOL CDatabaseExplorerDoc::OnOpenDocument(LPCTSTR lpszPathName)
 
 	// TODO: Add your specialized code here and/or call the base class
 
-	SetDSN(GetFileNameFrom(lpszPathName));
-	m_DatabaseType = static_cast<DatabaseType>(LOWORD(theApp.GetProfileInt(_T("Backup"), m_DSN.first, static_cast<int>(m_DatabaseType))));
-	m_pDB->SetRecordsetType(HIWORD(theApp.GetProfileInt(_T("Backup"), m_DSN.first, CRecordset::dynaset)));
+	SetDSN(theApp.GetFileNameFrom(lpszPathName));
+	m_DatabaseType = static_cast<DatabaseType>(theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("DBType"), static_cast<int>(m_DatabaseType)));
+	m_pDB->SetRecordsetType(theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("RsType"), CRecordset::dynaset));
+	m_bMsSqlAuthenticationRequired = theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("MsSqlAuthRequired"), m_bMsSqlAuthenticationRequired);
 	SetConnectionString();
 
 	return TRUE;
@@ -930,14 +932,6 @@ std::pair<CString, CString> CDatabaseExplorerDoc::GetMsSqlAuthenticationCredenti
 		credential.second = sPass;
 	}
 	return credential;
-}
-
-CString CDatabaseExplorerDoc::GetFileNameFrom(const CString& sPath) const
-{
-	CString sFile;
-	_wsplitpath(sPath, NULL, NULL, sFile.GetBuffer(_MAX_PATH), NULL);
-	sFile.ReleaseBuffer();
-	return sFile;
 }
 
 BOOL CDatabaseExplorerDoc::HasValidDocumentTitle(const CString& sTitle) const

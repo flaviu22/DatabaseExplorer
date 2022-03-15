@@ -217,25 +217,6 @@ void CDatabaseExplorerApp::SaveCustomState()
 
 // CDatabaseExplorerApp message handlers
 
-int CDatabaseExplorerApp::GetOpenDocumentCount() const
-{
-	int nCount = 0;
-	POSITION pos = GetFirstDocTemplatePosition();
-	while (NULL != pos)
-	{
-		CDocTemplate* pDocTemplate = static_cast<CDocTemplate*>(GetNextDocTemplate(pos));
-		POSITION posDoc = pDocTemplate->GetFirstDocPosition();
-		while (NULL != posDoc)
-		{
-			CDocument* pDoc = pDocTemplate->GetNextDoc(posDoc);
-			if (NULL != pDoc)
-				nCount++;
-		}
-	}
-
-	return nCount;
-}
-
 CString CDatabaseExplorerApp::GetAppPath() const
 {
 	CString sFullPath;
@@ -249,6 +230,14 @@ CString CDatabaseExplorerApp::GetAppPath() const
 	sPath.Format(_T("%s%s"), sDrive, sFolder);
 
 	return sPath;
+}
+
+CString CDatabaseExplorerApp::GetFileNameFrom(const CString& sPath) const
+{
+	CString sFile;
+	_wsplitpath(sPath, NULL, NULL, sFile.GetBuffer(_MAX_PATH), NULL);
+	sFile.ReleaseBuffer();
+	return sFile;
 }
 
 std::vector<std::wstring> CDatabaseExplorerApp::GetBackupFiles() const
@@ -299,6 +288,7 @@ std::unordered_map<std::wstring, SDocData> CDatabaseExplorerApp::GetDocumentsDat
 				docdata.emplace(pDoc->GetDSN().first,
 						SDocData(pDoc->GetDatabaseType(),
 						pDoc->GetDB()->GetRecordsetType(),
+						pDoc->GetMsSqlAuthenticationRequired(),
 						pDoc->GetDocumentQueries()));
 			}
 		}
@@ -309,6 +299,7 @@ std::unordered_map<std::wstring, SDocData> CDatabaseExplorerApp::GetDocumentsDat
 
 void CDatabaseExplorerApp::RemoveOldBackup(const std::unordered_map<std::wstring, SDocData>& docdata)
 {
+	CString sKey;
 	const auto data = GetBackupFiles();
 	for (const auto& it : data)
 	{
@@ -316,18 +307,28 @@ void CDatabaseExplorerApp::RemoveOldBackup(const std::unordered_map<std::wstring
 		{
 			if (FileExist(it.c_str()))
 				DeleteFile(it.c_str());
-			WriteProfileString(_T("Backup"), it.c_str(), nullptr);
+			sKey.Format(_T("%sDBType"), GetFileNameFrom(it.c_str()));
+			WriteProfileString(_T("Backup"), sKey, nullptr);
+			sKey.Format(_T("%sRsType"), GetFileNameFrom(it.c_str()));
+			WriteProfileString(_T("Backup"), sKey, nullptr);
+			sKey.Format(_T("%sMsSqlAuthRequired"), GetFileNameFrom(it.c_str()));
+			WriteProfileString(_T("Backup"), sKey, nullptr);
 		}
 	}
 }
 
 void CDatabaseExplorerApp::SaveNewBackup(std::unordered_map<std::wstring, SDocData>&& docdata)
 {
+	CString sKey;
 	for (auto it : docdata)
 	{
 		SaveQueries(it.first, std::move(it.second.m_queries));
-		WriteProfileInt(_T("Backup"), it.first.c_str(), 
-			MAKEWPARAM(static_cast<int>(it.second.m_DBType), it.second.m_nRecordsetType));
+		sKey.Format(_T("%sDBType"), it.first.c_str());
+		WriteProfileInt(_T("Backup"), sKey, static_cast<int>(it.second.m_DBType));
+		sKey.Format(_T("%sRsType"), it.first.c_str());
+		WriteProfileInt(_T("Backup"), sKey, it.second.m_nRecordsetType);
+		sKey.Format(_T("%sMsSqlAuthRequired"), it.first.c_str());
+		WriteProfileInt(_T("Backup"), sKey, it.second.m_bMsSqlAuthenticationRequired);
 	}
 }
 

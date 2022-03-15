@@ -58,8 +58,8 @@ public:
 	virtual void PreLoadState();
 	virtual void LoadCustomState();
 	virtual void SaveCustomState();
-	int GetOpenDocumentCount() const;
 	CString GetAppPath() const;
+	CString GetFileNameFrom(const CString& sPath) const;
 	void UpdateBackupFiles();
 #ifdef _UNICODE
 	BOOL FileExist(const CString sFilePath) const { return (-1 != _waccess(sFilePath, 0)); }

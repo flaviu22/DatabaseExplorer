@@ -51,10 +51,12 @@ struct SDocData
 	DatabaseType m_DBType{ DatabaseType::MSSQL };
 	UINT m_nRecordsetType{ AFX_DB_USE_DEFAULT_TYPE };
 	std::set<CString> m_queries{};
+	BOOL m_bMsSqlAuthenticationRequired{ FALSE };
 
-	SDocData(DatabaseType DBType, UINT nRecordsetType, std::set<CString>&& queries)
+	SDocData(DatabaseType DBType, UINT nRecordsetType, BOOL bMsSqlAuthenticationRequired, std::set<CString>&& queries)
 		:m_DBType(DBType)
 		,m_nRecordsetType(nRecordsetType)
+		,m_bMsSqlAuthenticationRequired(bMsSqlAuthenticationRequired)
 		,m_queries(std::move(queries))
 	{}
 	SDocData(const SDocData& rhs) = default;
@@ -82,6 +84,7 @@ public:
 	CString GetPostgreDB() const { return m_sPostgreDB; }
 	void SetPostgreDB(const CString& sName) { m_sPostgreDB = sName; }
 	const CString DecodePostGreDatabase(const CString& sConnectionString) const;
+	BOOL GetMsSqlAuthenticationRequired() const { return m_bMsSqlAuthenticationRequired; }
 	void SetMsSqlAuthenticationRequired(const BOOL bSet) { m_bMsSqlAuthenticationRequired = bSet; }
 
 // Operations
@@ -195,7 +198,6 @@ private:
 	BOOL m_bLogPopulateList{ TRUE };
 
 private:
-	CString GetFileNameFrom(const CString& sPath) const;
 	void GetQueries(CRichEditCtrl* pRichEdit, std::set<CString>& queries) const;
 	std::vector<CString> GetQueries(const CString& sFile) const;
 
