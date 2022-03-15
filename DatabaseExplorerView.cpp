@@ -159,7 +159,6 @@ CDatabaseExplorerDoc* CDatabaseExplorerView::GetDocument() const // non-debug ve
 LRESULT CDatabaseExplorerView::OnPostInit(WPARAM wParam, LPARAM lParam)
 {
 	CDatabaseExplorerDoc* pDoc = GetDocument();
-	TRACE("CDatabaseExplorerView::OnPostInit:%S\n", GetDocument()->GetTitle());
 	pDoc->UpdateAllViews(NULL, CDatabaseExplorerApp::UH_POPULATEDATABASEPANEL);
 
 	return 1;
