@@ -55,6 +55,7 @@ CDatabaseExplorerDoc::CDatabaseExplorerDoc() noexcept
 	m_bLogPopulateList = theApp.GetProfileInt(_T("Settings"), _T("LogPopulateList"), m_bLogPopulateList);
 
 	SetDSN(theApp.GetProfileString(_T("Settings"), _T("DSN")));
+	m_bDSNSource = static_cast<BOOL>(theApp.GetProfileInt(_T("Settings"), _T("DSNSource"), 0));
 	m_DatabaseType = static_cast<DatabaseType>(theApp.GetProfileInt(_T("Settings"), _T("DatabaseType"), static_cast<int>(DatabaseType::MSSQL)));
 	m_pDB->SetRecordsetType(theApp.GetProfileInt(_T("Settings"), _T("RSType"), CRecordset::dynaset));
 	m_bMsSqlAuthenticationRequired = theApp.GetProfileInt(_T("Settings"), _T("MsSqlAuthenticationRequired"), m_bMsSqlAuthenticationRequired);
@@ -63,6 +64,7 @@ CDatabaseExplorerDoc::CDatabaseExplorerDoc() noexcept
 CDatabaseExplorerDoc::~CDatabaseExplorerDoc()
 {
 	theApp.WriteProfileInt(_T("Settings"), _T("LogPopulateList"), m_bLogPopulateList);
+	theApp.WriteProfileInt(_T("Settings"), _T("DSNSource"), m_bDSNSource);
 	theApp.WriteProfileInt(_T("Settings"), _T("DatabaseType"), static_cast<int>(m_DatabaseType));
 	theApp.WriteProfileString(_T("Settings"), _T("DSN"), m_DSN.first);
 	theApp.WriteProfileInt(_T("Settings"), _T("MsSqlAuthenticationRequired"), m_bMsSqlAuthenticationRequired);
@@ -89,9 +91,11 @@ BOOL CDatabaseExplorerDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	// TODO: Add your specialized code here and/or call the base class
 
 	SetDSN(theApp.GetFileNameFrom(lpszPathName));
+	m_bDSNSource = static_cast<BOOL>(theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("DSNSource"), 0));
 	m_DatabaseType = static_cast<DatabaseType>(theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("DBType"), static_cast<int>(m_DatabaseType)));
 	m_pDB->SetRecordsetType(theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("RsType"), CRecordset::dynaset));
 	m_bMsSqlAuthenticationRequired = theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("MsSqlAuthRequired"), m_bMsSqlAuthenticationRequired);
+
 	SetConnectionString();
 
 	return TRUE;
@@ -197,7 +201,7 @@ void CDatabaseExplorerDoc::SetDSN(const CString& sName)
 {
 	m_DSN.first = sName;
 
-	CSettingsStoreEx ss(static_cast<BOOL>(theApp.GetProfileInt(_T("Settings"), _T("DSNSource"), 0)), TRUE);
+	CSettingsStoreEx ss(m_bDSNSource, TRUE);
 	if (ss.Open(_T("SOFTWARE\\ODBC\\ODBC.INI\\ODBC Data Sources")))
 	{
 #ifdef _UNICODE
@@ -907,7 +911,7 @@ CString CDatabaseExplorerDoc::GetOracleUserID(const BOOL bMakeUpper/* = FALSE*/)
 {
 	CString sUserID, sPath;
 	sPath.Format(_T("SOFTWARE\\ODBC\\ODBC.INI\\%s"), m_DSN.first);
-	CSettingsStore ss(static_cast<BOOL>(theApp.GetProfileInt(_T("Settings"), _T("DSNSource"), 0)), TRUE);
+	CSettingsStore ss(m_bDSNSource, TRUE);
 	if (ss.Open(sPath))
 		ss.Read(_T("UserID"), sUserID);
 
@@ -922,7 +926,7 @@ std::pair<CString, CString> CDatabaseExplorerDoc::GetMsSqlAuthenticationCredenti
 	CString sPath;
 	std::pair<CString, CString> credential;
 	sPath.Format(_T("SOFTWARE\\ODBC\\ODBC.INI\\%s"), m_DSN.first);
-	CSettingsStore ss(static_cast<BOOL>(theApp.GetProfileInt(_T("Settings"), _T("DSNSource"), 0)), TRUE);
+	CSettingsStore ss(m_bDSNSource, TRUE);
 	if (ss.Open(sPath))
 	{
 		CString sUser, sPass;

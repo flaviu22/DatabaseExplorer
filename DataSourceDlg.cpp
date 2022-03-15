@@ -99,7 +99,7 @@ BOOL CDataSourceDlg::OnInitDialog()
 	m_ComboDSN.SetEditTooltip(TRUE, TRUE);
 	m_ComboDSN.SetListTooltip(TRUE, TRUE);
 
-	switch(theApp.GetProfileInt(_T("Settings"), _T("DSNSource"), 0))
+	switch(m_pDoc->GetDSNSource())
 	{
 	case 1:
 		CheckRadioButton(IDC_RADIO_USERDSN, IDC_RADIO_SYSTEMDSN, IDC_RADIO_SYSTEMDSN);
@@ -367,8 +367,8 @@ void CDataSourceDlg::OnOK()
 		MessageBox(pDB->GetError(), NULL, MB_ICONERROR);
 		return;
 	}
-	// save DSNSource and recordset type into registry
-	theApp.WriteProfileInt(_T("Settings"), _T("DSNSource"), nDSNSource);
+	m_pDoc->SetDSNSource(nDSNSource);
+	// save recordset type into registry
 	theApp.WriteProfileInt(_T("Settings"), _T("RSType"), nRSType);
 	// setup document data
 	m_pDoc->SetDatabaseType(DBType);

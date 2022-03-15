@@ -48,13 +48,15 @@ private:
 
 struct SDocData
 {
+	BOOL m_bDSNSource{ FALSE };
 	DatabaseType m_DBType{ DatabaseType::MSSQL };
 	UINT m_nRecordsetType{ AFX_DB_USE_DEFAULT_TYPE };
-	std::set<CString> m_queries{};
 	BOOL m_bMsSqlAuthenticationRequired{ FALSE };
+	std::set<CString> m_queries{};
 
-	SDocData(DatabaseType DBType, UINT nRecordsetType, BOOL bMsSqlAuthenticationRequired, std::set<CString>&& queries)
-		:m_DBType(DBType)
+	SDocData(BOOL bDSNSource, DatabaseType DBType, UINT nRecordsetType, BOOL bMsSqlAuthenticationRequired, std::set<CString>&& queries)
+		:m_bDSNSource(bDSNSource)
+		,m_DBType(DBType)
 		,m_nRecordsetType(nRecordsetType)
 		,m_bMsSqlAuthenticationRequired(bMsSqlAuthenticationRequired)
 		,m_queries(std::move(queries))
@@ -63,6 +65,10 @@ struct SDocData
 	SDocData& operator=(const SDocData& rhs) = default;
 	SDocData(SDocData&& rhs) = default;
 	SDocData& operator=(SDocData&& rhs) = default;
+	void AddQueries(std::set<CString>&& queries)
+	{
+		m_queries.insert(queries.begin(), queries.end());
+	}
 };
 
 class CDatabaseExplorerView;
@@ -78,6 +84,8 @@ public:
 	mutable CString m_sState;
 	inline CDatabaseExt* GetDB() { return m_pDB.get(); }
 	inline CRecordset* GetRecordset() const { return m_pRecordset.get(); }
+	BOOL GetDSNSource() const { return m_bDSNSource; }
+	void SetDSNSource(const BOOL bSet) { m_bDSNSource = bSet; }
 	BOOL IsLoggedPopulateList() const { return m_bLogPopulateList; }
 	DatabaseType GetDatabaseType() const { return m_DatabaseType; }
 	void SetDatabaseType(const DatabaseType type) { m_DatabaseType = type; }
@@ -134,6 +142,7 @@ public:
 #endif
 
 protected:
+	BOOL m_bDSNSource{ FALSE };				// user dsn
 	std::pair<CString, CString> m_DSN{};	// dsn name - dsn type
 	CString m_sPostgreDB{ _T("postgres") };
 	std::unique_ptr<CDatabaseExt> m_pDB{ nullptr };
