@@ -8,11 +8,19 @@
 
 #include "resource.h"       // main symbols
 
+#include "DatabaseExplorerDoc.h"
+
+#include <vector>
+#include <string>
+#include <unordered_map>
+
+#define WMU_SETMESSAGETEXT					(WM_APP + 39)
 #define WMU_CHILDFRAMEADDED					(WM_APP + 40)
 #define WMU_CHILDFRAMEREMOVED				(WM_APP + 41)
 #define WMU_CHILDFRAMEACTIVATE				(WM_APP + 42)
 #define WMU_CHILDFRAMEACTIVATED				(WM_APP + 43)
 #define WMU_ISPOPULATEMODE					(WM_APP + 44)
+#define WMU_RESTOREQUERIES					(WM_APP + 45)
 #define WMU_POSTINIT						(WM_APP + 80)
 
 #define TIME_ONEMINUTE						(60 * 1000)
@@ -35,21 +43,39 @@ public:
 		UH_LISTTABLE
 	};
 
+public:
+	BOOL m_bHiColorIcons{ TRUE };
+	BOOL m_bVirtualMode{ FALSE };
+	UINT m_nAppLook{ ID_VIEW_APPLOOK_OFF_2007_BLACK };
+
 // Overrides
 public:
 	virtual BOOL InitInstance();
 	virtual int ExitInstance();
 
 // Implementation
-	UINT m_nAppLook;
-	BOOL m_bHiColorIcons;
-	BOOL m_bVirtualMode{ FALSE };
-
+public:
 	virtual void PreLoadState();
 	virtual void LoadCustomState();
 	virtual void SaveCustomState();
 	int GetOpenDocumentCount() const;
+	CString GetAppPath() const;
+	void UpdateBackupFiles();
+#ifdef _UNICODE
+	BOOL FileExist(const CString sFilePath) const { return (-1 != _waccess(sFilePath, 0)); }
+#else
+	BOOL FileExist(const CString sFilePath) const { return (-1 != _access(sFilePath, 0)); }
+#endif
 
+private:
+	std::vector<std::wstring> GetBackupFiles() const;
+	void SaveQueries(const std::wstring& filename, std::set<CString>&& queries) const;
+	std::unordered_map<std::wstring, SDocData> GetDocumentsData() const;
+	void RemoveOldBackup(const std::unordered_map<std::wstring, SDocData>& docdata);
+	void SaveNewBackup(std::unordered_map<std::wstring, SDocData>&& docdata);
+
+// Generated message map functions
+protected:
 	afx_msg void OnAppAbout();
 	DECLARE_MESSAGE_MAP()
 };

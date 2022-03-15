@@ -5,10 +5,8 @@
 #include "DatabaseExplorer.h"
 #include "DataSourceDlg.h"
 
-#include "MainFrm.h"
 #include "DatabaseExt.h"
 
-#include "SettingsStoreEx.h"
 #include "PasswordDlg.h"
 
 #ifdef _DEBUG
@@ -23,7 +21,7 @@ static char THIS_FILE[] = __FILE__;
 CRestoreConnectionSettings::CRestoreConnectionSettings(CDatabaseExplorerDoc* pDoc)
 	:m_pDoc(pDoc)
 {
-	m_sDSN = m_pDoc->GetDSN();
+	m_sDSN = m_pDoc->GetDSN().first;
 	m_nRSType = m_pDoc->GetDB()->GetRecordsetType();
 }
 
@@ -113,7 +111,7 @@ BOOL CDataSourceDlg::OnInitDialog()
 		break;
 	}
 
-	switch (theApp.GetProfileInt(_T("Settings"), _T("RSType"), CRecordset::dynaset))
+	switch (m_pDoc->GetDB()->GetRecordsetType())
 	{
 	case CRecordset::snapshot:
 		CheckRadioButton(IDC_RADIO_DYNASET, IDC_RADIO_DYNAMIC, IDC_RADIO_SNAPSHOT);
@@ -126,7 +124,7 @@ BOOL CDataSourceDlg::OnInitDialog()
 		break;
 	}
 
-	m_ComboDSN.SetCurSel(GetDSNIndex(m_pDoc->GetDSN()));
+	m_ComboDSN.SetCurSel(GetDSNIndex(m_pDoc->GetDSN().first));
 
 	UpdateData(FALSE);
 
@@ -377,8 +375,7 @@ void CDataSourceDlg::OnOK()
 	m_pDoc->SetDSN(sSelectedDSN);
 	m_pDoc->SetMsSqlAuthenticationRequired(! sSuffix.IsEmpty());
 	// give feedback to user
-	CMainFrame* pFrame = static_cast<CMainFrame*>(AfxGetMainWnd());
-	pFrame->SetMessageText(_T("You have successfully set up the datasource"));
+	::SendMessage(AfxGetMainWnd()->GetSafeHwnd(), WMU_SETMESSAGETEXT, 3000, reinterpret_cast<LPARAM>(_T("You have successfully set up the datasource")));
 	// everything is ok
 	rcs.GiveUpRestoreDSNOrg();
 	ph.GiveUpDeletePassword();

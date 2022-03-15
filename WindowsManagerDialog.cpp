@@ -123,7 +123,7 @@ void CWindowsManagerDialog::PopulateList()
 		m_pIL->Add(hIcon);
 		const CDocument* pDoc = pArrChild->GetAt(i)->GetActiveDocument();
 		if (nullptr != pDoc)
-			sText = pDoc->GetPathName();
+			sText = pDoc->GetTitle();
 		if (sText.IsEmpty())
 			pArrChild->GetAt(i)->GetWindowText(sText);
 		m_List.InsertItem(i, sText, m_pIL->GetImageCount() - 1);

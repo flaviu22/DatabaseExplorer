@@ -56,3 +56,9 @@ CString CQueryPane::GetSelText() const
 {
 	return m_pRichEditCtrl->GetSelText();
 }
+
+void CQueryPane::SetText(std::vector<CString>&& text)
+{
+	for (const auto& it : text)
+		m_pRichEditCtrl->ReplaceSel(it + _T("\n"), TRUE);
+}

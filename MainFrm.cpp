@@ -20,6 +20,7 @@ IMPLEMENT_DYNAMIC(CMainFrame, CMDIFrameWndEx)
 
 BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_WM_CREATE()
+	ON_WM_CLOSE()
 	ON_COMMAND(ID_WINDOW_MANAGER, &CMainFrame::OnWindowManager)
 	ON_COMMAND_RANGE(ID_VIEW_APPLOOK_WIN_2000, ID_VIEW_APPLOOK_WINDOWS_7, &CMainFrame::OnApplicationLook)
 	ON_UPDATE_COMMAND_UI_RANGE(ID_VIEW_APPLOOK_WIN_2000, ID_VIEW_APPLOOK_WINDOWS_7, &CMainFrame::OnUpdateApplicationLook)
@@ -46,6 +47,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_COMMAND(ID_VIEW_VIRTUALMODE, &CMainFrame::OnViewVirtualmode)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_VIRTUALMODE, &CMainFrame::OnUpdateViewVirtualmode)
 	ON_REGISTERED_MESSAGE(AFX_WM_ON_GET_TAB_TOOLTIP, &CMainFrame::OnGetTabToolTip)
+	ON_MESSAGE(WMU_SETMESSAGETEXT, &CMainFrame::OnSetMessageText)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -67,6 +69,15 @@ CMainFrame::CMainFrame() noexcept
 
 CMainFrame::~CMainFrame()
 {
+}
+
+BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
+{
+	if (! CMDIFrameWndEx::PreCreateWindow(cs))
+		return FALSE;
+	// TODO: Modify the Window class or styles here by modifying the CREATESTRUCT cs
+
+	return TRUE;
 }
 
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -108,16 +119,6 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	OnInitData();
 
 	return 0;
-}
-
-BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
-{
-	if(! CMDIFrameWndEx::PreCreateWindow(cs))
-		return FALSE;
-	// TODO: Modify the Window class or styles here by modifying
-	//  the CREATESTRUCT cs
-
-	return TRUE;
 }
 
 // CMainFrame diagnostics
@@ -239,6 +240,15 @@ BOOL CMainFrame::LoadFrame(UINT nIDResource, DWORD dwDefaultStyle, CWnd* pParent
 	return TRUE;
 }
 
+void CMainFrame::OnClose()
+{
+	// TODO: Add your message handler code here and/or call default
+
+	theApp.UpdateBackupFiles();
+
+	CMDIFrameWndEx::OnClose();
+}
+
 void CMainFrame::OnInitData()
 {
 	EnableMDITabs(TRUE, TRUE, CMFCBaseTabCtrl::LOCATION_TOP, TRUE, 
@@ -348,6 +358,24 @@ void CMainFrame::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 		m_pWndFocus->SetFocus();
 }
 
+LRESULT CMainFrame::OnSetMessageText(WPARAM wParam, LPARAM lParam)
+{
+	if (AFX_IDS_IDLEMESSAGE == lParam)
+	{
+		SetMessageText(AFX_IDS_IDLEMESSAGE);
+	}
+	else
+	{
+		if (lParam)
+			SetMessageText(reinterpret_cast<LPCTSTR>(lParam));
+	}
+
+	if (wParam > 0)
+		SetTimer(ID_TIMER_RESETSTATUSBAR, wParam, nullptr);
+
+	return 0;
+}
+
 LRESULT CMainFrame::OnGetTabToolTip(WPARAM wParam, LPARAM lParam)
 {
 	CMFCTabToolTipInfo* pInfo = (CMFCTabToolTipInfo*)lParam;
@@ -364,7 +392,8 @@ LRESULT CMainFrame::OnGetTabToolTip(WPARAM wParam, LPARAM lParam)
 			{
 				CChildFrame* pChild = STATIC_DOWNCAST(CChildFrame, tabPaneWnd);
 				CDatabaseExplorerDoc* pDoc = static_cast<CDatabaseExplorerDoc*>(pChild->GetActiveDocument());
-				pInfo->m_strText = pDoc->GetDSN();
+				if (! pDoc->GetDSN().second.IsEmpty())
+					pInfo->m_strText = pDoc->GetDSN().second;
 			}
 		}
 	}

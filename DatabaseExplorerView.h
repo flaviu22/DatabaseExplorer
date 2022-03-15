@@ -62,6 +62,7 @@ protected:
 	afx_msg void OnFileSave();
 	afx_msg void OnUpdateFileSave(CCmdUI* pCmdUI);
 	afx_msg LRESULT OnIsPopulateMode(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnRestoreQueries(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

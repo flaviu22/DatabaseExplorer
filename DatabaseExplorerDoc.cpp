@@ -51,13 +51,19 @@ CDatabaseExplorerDoc::CDatabaseExplorerDoc() noexcept
 
 	m_pDB = std::make_unique<CDatabaseExt>();
 	m_pRecordset = std::make_unique<CRecordset>(m_pDB.get());
+
+	m_bLogPopulateList = theApp.GetProfileInt(_T("Settings"), _T("LogPopulateList"), m_bLogPopulateList);
+	m_DatabaseType = static_cast<DatabaseType>(theApp.GetProfileInt(_T("Settings"), _T("DatabaseType"), static_cast<int>(DatabaseType::MSSQL)));
+	SetDSN(theApp.GetProfileString(_T("Settings"), _T("DSN")));
+	m_pDB->SetRecordsetType(theApp.GetProfileInt(_T("Settings"), _T("RSType"), CRecordset::dynaset));
+	m_bMsSqlAuthenticationRequired = theApp.GetProfileInt(_T("Settings"), _T("MsSqlAuthenticationRequired"), m_bMsSqlAuthenticationRequired);
 }
 
 CDatabaseExplorerDoc::~CDatabaseExplorerDoc()
 {
 	theApp.WriteProfileInt(_T("Settings"), _T("LogPopulateList"), m_bLogPopulateList);
 	theApp.WriteProfileInt(_T("Settings"), _T("DatabaseType"), static_cast<int>(m_DatabaseType));
-	theApp.WriteProfileString(_T("Settings"), _T("DSN"), m_sDSN);
+	theApp.WriteProfileString(_T("Settings"), _T("DSN"), m_DSN.first);
 	theApp.WriteProfileInt(_T("Settings"), _T("MsSqlAuthenticationRequired"), m_bMsSqlAuthenticationRequired);
 }
 
@@ -69,15 +75,31 @@ BOOL CDatabaseExplorerDoc::OnNewDocument()
 	// TODO: add reinitialization code here
 	// (SDI documents will reuse this document)
 
-	m_bLogPopulateList = theApp.GetProfileInt(_T("Settings"), _T("LogPopulateList"), m_bLogPopulateList);
-	m_DatabaseType = static_cast<DatabaseType>(theApp.GetProfileInt(_T("Settings"), _T("DatabaseType"), static_cast<int>(DatabaseType::MSSQL)));
-	m_sDSN = theApp.GetProfileString(_T("Settings"), _T("DSN"));
-	m_pDB->SetRecordsetType(theApp.GetProfileInt(_T("Settings"), _T("RSType"), CRecordset::dynaset));
-	m_bMsSqlAuthenticationRequired = theApp.GetProfileInt(_T("Settings"), _T("MsSqlAuthenticationRequired"), m_bMsSqlAuthenticationRequired);
-
 	SetConnectionString();
 
 	return TRUE;
+}
+
+BOOL CDatabaseExplorerDoc::OnOpenDocument(LPCTSTR lpszPathName)
+{
+	if (! CDocument::OnOpenDocument(lpszPathName))
+		return FALSE;
+
+	// TODO: Add your specialized code here and/or call the base class
+
+	SetDSN(GetFileNameFrom(lpszPathName));
+	m_DatabaseType = static_cast<DatabaseType>(LOWORD(theApp.GetProfileInt(_T("Backup"), m_DSN.first, static_cast<int>(m_DatabaseType))));
+	m_pDB->SetRecordsetType(HIWORD(theApp.GetProfileInt(_T("Backup"), m_DSN.first, CRecordset::dynaset)));
+	SetConnectionString();
+
+	return TRUE;
+}
+
+void CDatabaseExplorerDoc::OnCloseDocument()
+{
+	// TODO: Add your specialized code here and/or call the base class
+
+	CDocument::OnCloseDocument();
 }
 
 // CDatabaseExplorerDoc serialization
@@ -164,18 +186,42 @@ void CDatabaseExplorerDoc::Dump(CDumpContext& dc) const
 
 // CDatabaseExplorerDoc commands
 
+auto CDatabaseExplorerDoc::GetDSN() const -> std::pair<CString, CString>
+{
+	return m_DSN;
+}
+
+void CDatabaseExplorerDoc::SetDSN(const CString& sName)
+{
+	m_DSN.first = sName;
+
+	CSettingsStoreEx ss(static_cast<BOOL>(theApp.GetProfileInt(_T("Settings"), _T("DSNSource"), 0)), TRUE);
+	if (ss.Open(_T("SOFTWARE\\ODBC\\ODBC.INI\\ODBC Data Sources")))
+	{
+#ifdef _UNICODE
+		std::unordered_map<std::wstring, std::wstring> keys;
+#else
+		std::unordered_map<std::string, std::string> keys;
+#endif // _UNICODE
+		ss.EnumValues(keys);
+		const auto it = keys.find(m_DSN.first.GetString());
+		if (it != keys.end())
+			m_DSN.second = it->second.c_str();
+	}
+}
+
 void CDatabaseExplorerDoc::SetConnectionString() const
 {
 	if (m_pDB)
 	{
 		if (! m_bMsSqlAuthenticationRequired)
 		{
-			m_pDB->SetConnectionString(_T("DSN=") + m_sDSN + _T(";"));
+			m_pDB->SetConnectionString(_T("DSN=") + m_DSN.first + _T(";"));
 		}
 		else
 		{
 			const auto credential = GetMsSqlAuthenticationCredential();
-			m_pDB->SetConnectionString(_T("DSN=") + m_sDSN + 
+			m_pDB->SetConnectionString(_T("DSN=") + m_DSN.first + 
 										_T(";UID=") + credential.first + 
 										_T(";PWD=") + credential.second + _T(";"));
 		}
@@ -858,7 +904,7 @@ BOOL CDatabaseExplorerDoc::SaveListContentToCSV(CListCtrl& ListCtrl, const CStri
 CString CDatabaseExplorerDoc::GetOracleUserID(const BOOL bMakeUpper/* = FALSE*/) const
 {
 	CString sUserID, sPath;
-	sPath.Format(_T("SOFTWARE\\ODBC\\ODBC.INI\\%s"), m_sDSN);
+	sPath.Format(_T("SOFTWARE\\ODBC\\ODBC.INI\\%s"), m_DSN.first);
 	CSettingsStore ss(static_cast<BOOL>(theApp.GetProfileInt(_T("Settings"), _T("DSNSource"), 0)), TRUE);
 	if (ss.Open(sPath))
 		ss.Read(_T("UserID"), sUserID);
@@ -873,7 +919,7 @@ std::pair<CString, CString> CDatabaseExplorerDoc::GetMsSqlAuthenticationCredenti
 {
 	CString sPath;
 	std::pair<CString, CString> credential;
-	sPath.Format(_T("SOFTWARE\\ODBC\\ODBC.INI\\%s"), m_sDSN);
+	sPath.Format(_T("SOFTWARE\\ODBC\\ODBC.INI\\%s"), m_DSN.first);
 	CSettingsStore ss(static_cast<BOOL>(theApp.GetProfileInt(_T("Settings"), _T("DSNSource"), 0)), TRUE);
 	if (ss.Open(sPath))
 	{
@@ -884,4 +930,108 @@ std::pair<CString, CString> CDatabaseExplorerDoc::GetMsSqlAuthenticationCredenti
 		credential.second = sPass;
 	}
 	return credential;
+}
+
+CString CDatabaseExplorerDoc::GetFileNameFrom(const CString& sPath) const
+{
+	CString sFile;
+	_wsplitpath(sPath, NULL, NULL, sFile.GetBuffer(_MAX_PATH), NULL);
+	sFile.ReleaseBuffer();
+	return sFile;
+}
+
+BOOL CDatabaseExplorerDoc::HasValidDocumentTitle(const CString& sTitle) const
+{
+	if (-1 != sTitle.Find(AfxGetAppName()))
+	{
+		for (int i = 0; i < sTitle.GetLength(); ++i)
+		{
+			if (isdigit(sTitle.GetAt(i)))
+				return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+CString CDatabaseExplorerDoc::GetTitleNormalized() const
+{
+	const int nIndex = m_strTitle.Find(':');
+	if (-1 == nIndex)
+		return m_strTitle;
+
+	return m_strTitle.Left(nIndex);
+}
+
+void CDatabaseExplorerDoc::RestoreQueries(CQueryPane* pPane) const
+{
+	if (nullptr == pPane->GetSafeHwnd())
+		return;
+
+	const CString sBackupFile = theApp.GetAppPath() + _T("Backup\\") + m_DSN.first;
+	if (! theApp.FileExist(sBackupFile))
+		return;
+
+	pPane->SetText(GetQueries(sBackupFile));
+}
+
+std::vector<CString> CDatabaseExplorerDoc::GetQueries(const CString& sFile) const
+{
+	CStdioFile file;
+	CFileException ex;
+	std::vector<CString> queries;
+
+	if (! file.Open(sFile, CFile::modeRead | CFile::typeText, &ex))
+	{
+		ex.GetErrorMessage(m_sState.GetBuffer(_MAX_PATH), _MAX_PATH);
+		m_sState.ReleaseBuffer();
+		return queries;
+	}
+
+	CString sLine;
+	while (file.ReadString(sLine))
+		queries.push_back(sLine);
+
+	return queries;
+}
+
+void CDatabaseExplorerDoc::GetQueries(CRichEditCtrl* pRichEdit, std::set<CString>& queries) const
+{
+	if (nullptr == pRichEdit)
+		return;
+
+	CString sLine;
+	for (int i = 0; i < pRichEdit->GetLineCount(); ++i)
+	{
+		const int nLineLength = pRichEdit->LineLength(pRichEdit->LineIndex(i));
+		if (nLineLength > 1)
+		{
+			sLine.Empty();
+			pRichEdit->GetLine(i, sLine.GetBuffer(nLineLength), nLineLength);
+			sLine.ReleaseBuffer();
+			queries.emplace(sLine);
+		}
+	}
+}
+
+std::set<CString> CDatabaseExplorerDoc::GetDocumentQueries() const
+{
+	std::set<CString> queries;
+	POSITION pos = GetFirstViewPosition();
+	while (pos)
+	{
+		CDatabaseExplorerView* pView = static_cast<CDatabaseExplorerView*>(GetNextView(pos));
+		if (pView)
+		{
+			CChildFrame* pChild = static_cast<CChildFrame*>(pView->GetParentFrame());
+			if (pChild)
+			{
+				CQueryPane* pQuery = static_cast<CQueryPane*>(pChild->GetQueryPane());
+				if (pQuery)
+					GetQueries(pQuery->GetRichEditCtrl(), queries);
+			}
+		}
+	}
+
+	return queries;
 }

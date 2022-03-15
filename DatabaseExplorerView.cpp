@@ -12,7 +12,6 @@
 #include "DatabaseExplorerDoc.h"
 #include "DatabaseExplorerView.h"
 
-#include "MainFrm.h"
 #include "ChildFrm.h"
 #include "FileDialogEx.h"
 
@@ -37,6 +36,7 @@ BEGIN_MESSAGE_MAP(CDatabaseExplorerView, CListView)
 	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE, &CDatabaseExplorerView::OnUpdateFileSave)
 	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE_AS, &CDatabaseExplorerView::OnUpdateFileSave)
 	ON_MESSAGE(WMU_ISPOPULATEMODE, &CDatabaseExplorerView::OnIsPopulateMode)
+	ON_MESSAGE(WMU_RESTOREQUERIES, &CDatabaseExplorerView::OnRestoreQueries)
 	// Standard printing commands
 	ON_COMMAND(ID_FILE_PRINT, &CListView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CListView::OnFilePrint)
@@ -48,7 +48,6 @@ END_MESSAGE_MAP()
 CDatabaseExplorerView::CDatabaseExplorerView() noexcept
 {
 	// TODO: add construction code here
-
 }
 
 CDatabaseExplorerView::~CDatabaseExplorerView()
@@ -93,6 +92,8 @@ void CDatabaseExplorerView::OnInitialUpdate()
 	ListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_INFOTIP);
 
 	PostMessage(WMU_POSTINIT);
+	if (! GetDocument()->GetPathName().IsEmpty())
+		PostMessage(WMU_RESTOREQUERIES);
 }
 
 // CDatabaseExplorerView printing
@@ -158,6 +159,7 @@ CDatabaseExplorerDoc* CDatabaseExplorerView::GetDocument() const // non-debug ve
 LRESULT CDatabaseExplorerView::OnPostInit(WPARAM wParam, LPARAM lParam)
 {
 	CDatabaseExplorerDoc* pDoc = GetDocument();
+	TRACE("CDatabaseExplorerView::OnPostInit:%S\n", GetDocument()->GetTitle());
 	pDoc->UpdateAllViews(NULL, CDatabaseExplorerApp::UH_POPULATEDATABASEPANEL);
 
 	return 1;
@@ -180,9 +182,7 @@ void CDatabaseExplorerView::OnEditRun()
 {
 	// TODO: Add your command handler code here
 
-	CMainFrame* pFrame = (CMainFrame*)AfxGetMainWnd();
-	pFrame->SetMessageText(AFX_IDS_IDLEMESSAGE);
-
+	::SendMessage(AfxGetMainWnd()->GetSafeHwnd(), WMU_SETMESSAGETEXT, 0, AFX_IDS_IDLEMESSAGE);
 	GetDocument()->UpdateAllViews(NULL, CDatabaseExplorerApp::UH_RUNSQLSATEMENTS);
 }
 
@@ -225,12 +225,10 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 		CChildFrame* pChild = static_cast<CChildFrame*>(GetParentFrame());
 		if (nullptr != pChild->GetSafeHwnd())
 		{
-			if (! pDoc->PopulateDatabasePanel(*pChild->GetDatabasePane()->GetTreeCtrl()))
-			{
-				CMainFrame* pFrame = static_cast<CMainFrame*>(AfxGetMainWnd());
-				pFrame->SetMessageText(pDoc->m_sState);
-				pFrame->SetTimer(ID_TIMER_RESETSTATUSBAR, 12000, nullptr);
-			}
+			if (pDoc->PopulateDatabasePanel(*pChild->GetDatabasePane()->GetTreeCtrl()))
+				pDoc->SetTitle(pDoc->GetDSN().first);
+			else
+				::SendMessage(AfxGetMainWnd()->GetSafeHwnd(), WMU_SETMESSAGETEXT, 7000, reinterpret_cast<LPARAM>(pDoc->m_sState.GetString()));
 		}
 
 		return;
@@ -312,7 +310,7 @@ void CDatabaseExplorerView::ExecuteSelect(CDatabaseExplorerDoc* pDoc, const CStr
 	else
 	{
 		const int nRows = pDoc->GetRecordCount(sSQL);
-		if (nRows > 33000)
+		if (nRows > 20000)
 		{
 			CString sMessage;
 			sMessage.Format(_T("This select will get %d rows, continue ?"), nRows);
@@ -422,4 +420,14 @@ void CDatabaseExplorerView::OnUpdateFileSave(CCmdUI* pCmdUI)
 LRESULT CDatabaseExplorerView::OnIsPopulateMode(WPARAM wParam, LPARAM lParam)
 {
 	return static_cast<LRESULT>(m_bPopulateMode);
+}
+
+LRESULT CDatabaseExplorerView::OnRestoreQueries(WPARAM wParam, LPARAM lParam)
+{
+	CDatabaseExplorerDoc* pDoc = GetDocument();
+	CChildFrame* pChild = static_cast<CChildFrame*>(GetParentFrame());
+	if (nullptr != pDoc && nullptr != pChild->GetSafeHwnd())
+		pDoc->RestoreQueries(pChild->GetQueryPane());
+
+	return 1;
 }

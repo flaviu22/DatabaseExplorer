@@ -1,5 +1,6 @@
 #pragma once
 #include "RichEditPane.h"
+#include <vector>
 
 class CQueryPane : public CRichEditPane
 {
@@ -9,6 +10,7 @@ public:
 
 public:
 	CString GetSelText() const;
+	void SetText(std::vector<CString>&& text);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

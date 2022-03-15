@@ -6,9 +6,11 @@
 #include "MessagePane.h"
 #include "DatabasePane.h"
 #include "DatabaseExt.h"
+#include "SettingsStoreEx.h"
 
 #include <vector>
 #include <chrono>
+#include <set>
 
 #pragma once
 
@@ -44,6 +46,23 @@ private:
 	BOOL& m_bFlag;
 };
 
+struct SDocData
+{
+	DatabaseType m_DBType{ DatabaseType::MSSQL };
+	UINT m_nRecordsetType{ AFX_DB_USE_DEFAULT_TYPE };
+	std::set<CString> m_queries{};
+
+	SDocData(DatabaseType DBType, UINT nRecordsetType, std::set<CString>&& queries)
+		:m_DBType(DBType)
+		,m_nRecordsetType(nRecordsetType)
+		,m_queries(std::move(queries))
+	{}
+	SDocData(const SDocData& rhs) = default;
+	SDocData& operator=(const SDocData& rhs) = default;
+	SDocData(SDocData&& rhs) = default;
+	SDocData& operator=(SDocData&& rhs) = default;
+};
+
 class CDatabaseExplorerView;
 
 class CDatabaseExplorerDoc : public CDocument
@@ -54,15 +73,12 @@ protected: // create from serialization only
 
 // Attributes
 public:
-	CString m_sState;
+	mutable CString m_sState;
 	inline CDatabaseExt* GetDB() { return m_pDB.get(); }
 	inline CRecordset* GetRecordset() const { return m_pRecordset.get(); }
 	BOOL IsLoggedPopulateList() const { return m_bLogPopulateList; }
 	DatabaseType GetDatabaseType() const { return m_DatabaseType; }
 	void SetDatabaseType(const DatabaseType type) { m_DatabaseType = type; }
-	CString GetDSN() const { return m_sDSN; }
-	void SetDSN(const CString& sName) { m_sDSN = sName; }
-	void SetConnectionString() const;
 	CString GetPostgreDB() const { return m_sPostgreDB; }
 	void SetPostgreDB(const CString& sName) { m_sPostgreDB = sName; }
 	const CString DecodePostGreDatabase(const CString& sConnectionString) const;
@@ -70,6 +86,9 @@ public:
 
 // Operations
 public:
+	void SetConnectionString() const;
+	auto GetDSN() const -> std::pair<CString, CString>;
+	void SetDSN(const CString& sName);
 	std::vector<CString> GetSQLStatements(const CString& sText) const;
 	CQueryPane* GetQueryPane() const;
 	CMessagePane* GetMessagePane() const;
@@ -87,10 +106,16 @@ public:
 	long GetRecordCount(const CString& sSQL);
 	int GetDatabaseCount() const;
 	BOOL SaveListContentToCSV(CListCtrl& ListCtrl, const CString& sPathName);
+	void RestoreQueries(CQueryPane* pPane) const;
+	std::set<CString> GetDocumentQueries() const;
+	BOOL HasValidDocumentTitle(const CString& sTitle) const;
+	CString GetTitleNormalized() const;
 
 // Overrides
 public:
 	virtual BOOL OnNewDocument();
+	virtual BOOL OnOpenDocument(LPCTSTR lpszPathName);
+	virtual void OnCloseDocument();
 	virtual void Serialize(CArchive& ar);
 #ifdef SHARED_HANDLERS
 	virtual void InitializeSearchContent();
@@ -106,7 +131,7 @@ public:
 #endif
 
 protected:
-	CString m_sDSN;
+	std::pair<CString, CString> m_DSN{};	// dsn name - dsn type
 	CString m_sPostgreDB{ _T("postgres") };
 	std::unique_ptr<CDatabaseExt> m_pDB{ nullptr };
 	std::unique_ptr<CRecordset> m_pRecordset{ nullptr };
@@ -168,6 +193,11 @@ protected:
 
 private:
 	BOOL m_bLogPopulateList{ TRUE };
+
+private:
+	CString GetFileNameFrom(const CString& sPath) const;
+	void GetQueries(CRichEditCtrl* pRichEdit, std::set<CString>& queries) const;
+	std::vector<CString> GetQueries(const CString& sFile) const;
 
 // Generated message map functions
 protected:

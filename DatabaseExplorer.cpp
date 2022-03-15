@@ -9,12 +9,50 @@
 #include "MainFrm.h"
 
 #include "ChildFrm.h"
-#include "DatabaseExplorerDoc.h"
 #include "DatabaseExplorerView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+
+// CAboutDlg dialog used for App About
+
+class CAboutDlg : public CDialogEx
+{
+public:
+	CAboutDlg() noexcept;
+
+	// Dialog Data
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_ABOUTBOX };
+#endif
+
+protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+// Implementation
+protected:
+	DECLARE_MESSAGE_MAP()
+};
+
+CAboutDlg::CAboutDlg() noexcept : CDialogEx(IDD_ABOUTBOX)
+{
+}
+
+void CAboutDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+}
+
+BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
+END_MESSAGE_MAP()
+
+// App command to run the dialog
+void CDatabaseExplorerApp::OnAppAbout()
+{
+	CAboutDlg aboutDlg;
+	aboutDlg.DoModal();
+}
 
 // CDatabaseExplorerApp
 
@@ -26,7 +64,6 @@ BEGIN_MESSAGE_MAP(CDatabaseExplorerApp, CWinAppEx)
 	// Standard print setup command
 	ON_COMMAND(ID_FILE_PRINT_SETUP, &CWinAppEx::OnFilePrintSetup)
 END_MESSAGE_MAP()
-
 
 // CDatabaseExplorerApp construction
 
@@ -79,7 +116,6 @@ BOOL CDatabaseExplorerApp::InitInstance()
 	}
 
 	AfxEnableControlContainer();
-
 	EnableTaskbarInteraction(FALSE);
 
 	// AfxInitRichEdit2() is required to use RichEdit control
@@ -105,7 +141,6 @@ BOOL CDatabaseExplorerApp::InitInstance()
 		RUNTIME_CLASS(CMFCToolTipCtrl), &ttParams);
 
 	m_bVirtualMode = GetProfileInt(_T("Settings"), _T("VirtualMode"), 0);
-
 	// Register the application's document templates.  Document templates
 	//  serve as the connection between documents, frame windows and views
 	CMultiDocTemplate* pDocTemplate;
@@ -116,7 +151,6 @@ BOOL CDatabaseExplorerApp::InitInstance()
 	if (! pDocTemplate)
 		return FALSE;
 	AddDocTemplate(pDocTemplate);
-
 	// create main MDI Frame window
 	CMainFrame* pMainFrame = new CMainFrame;
 	if (! pMainFrame || ! pMainFrame->LoadFrame(IDR_MAINFRAME))
@@ -125,12 +159,10 @@ BOOL CDatabaseExplorerApp::InitInstance()
 		return FALSE;
 	}
 	m_pMainWnd = pMainFrame;
-
 	// call DragAcceptFiles only if there's a suffix
 	//  In an MDI app, this should occur immediately after setting m_pMainWnd
 	// Enable drag/drop open
 	m_pMainWnd->DragAcceptFiles();
-
 	// Parse command line for standard shell commands, DDE, file open
 	CCommandLineInfo cmdInfo;
 	ParseCommandLine(cmdInfo);
@@ -148,6 +180,10 @@ BOOL CDatabaseExplorerApp::InitInstance()
 	pMainFrame->ShowWindow(m_nCmdShow);
 	pMainFrame->UpdateWindow();
 
+	const auto data = GetBackupFiles();
+	for (const auto& it : data)
+		OpenDocumentFile(reinterpret_cast<LPCTSTR>(it.c_str()), FALSE);
+
 	return TRUE;
 }
 
@@ -161,54 +197,12 @@ int CDatabaseExplorerApp::ExitInstance()
 	return CWinAppEx::ExitInstance();
 }
 
-// CDatabaseExplorerApp message handlers
-
-// CAboutDlg dialog used for App About
-
-class CAboutDlg : public CDialogEx
-{
-public:
-	CAboutDlg() noexcept;
-
-// Dialog Data
-#ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_ABOUTBOX };
-#endif
-
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
-// Implementation
-protected:
-	DECLARE_MESSAGE_MAP()
-};
-
-CAboutDlg::CAboutDlg() noexcept : CDialogEx(IDD_ABOUTBOX)
-{
-}
-
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
-{
-	CDialogEx::DoDataExchange(pDX);
-}
-
-BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
-END_MESSAGE_MAP()
-
-// App command to run the dialog
-void CDatabaseExplorerApp::OnAppAbout()
-{
-	CAboutDlg aboutDlg;
-	aboutDlg.DoModal();
-}
-
 // CDatabaseExplorerApp customization load/save methods
 
 void CDatabaseExplorerApp::PreLoadState()
 {
-	BOOL bNameValid;
 	CString strName;
-	bNameValid = strName.LoadString(IDS_EDIT_MENU);
+	const BOOL bNameValid = strName.LoadString(IDS_EDIT_MENU);
 	ASSERT(bNameValid);
 	GetContextMenuManager()->AddMenu(strName, IDR_POPUP_EDIT);
 }
@@ -226,11 +220,11 @@ void CDatabaseExplorerApp::SaveCustomState()
 int CDatabaseExplorerApp::GetOpenDocumentCount() const
 {
 	int nCount = 0;
-	POSITION posDoc, pos = GetFirstDocTemplatePosition();
+	POSITION pos = GetFirstDocTemplatePosition();
 	while (NULL != pos)
 	{
-		CDocTemplate* pDocTemplate = (CDocTemplate*)GetNextDocTemplate(pos);
-		posDoc = pDocTemplate->GetFirstDocPosition();
+		CDocTemplate* pDocTemplate = static_cast<CDocTemplate*>(GetNextDocTemplate(pos));
+		POSITION posDoc = pDocTemplate->GetFirstDocPosition();
 		while (NULL != posDoc)
 		{
 			CDocument* pDoc = pDocTemplate->GetNextDoc(posDoc);
@@ -240,4 +234,110 @@ int CDatabaseExplorerApp::GetOpenDocumentCount() const
 	}
 
 	return nCount;
+}
+
+CString CDatabaseExplorerApp::GetAppPath() const
+{
+	CString sFullPath;
+	GetModuleFileName(NULL, sFullPath.GetBuffer(_MAX_PATH), _MAX_PATH);
+	sFullPath.ReleaseBuffer();
+
+	CString sDrive, sFolder, sPath;
+	_wsplitpath(sFullPath, sDrive.GetBuffer(_MAX_PATH), sFolder.GetBuffer(_MAX_PATH), NULL, NULL);
+	sDrive.ReleaseBuffer();
+	sFolder.ReleaseBuffer();
+	sPath.Format(_T("%s%s"), sDrive, sFolder);
+
+	return sPath;
+}
+
+std::vector<std::wstring> CDatabaseExplorerApp::GetBackupFiles() const
+{
+	CFileFind ff;
+	std::vector<std::wstring> data;
+	const CString sAppPath = GetAppPath();
+	BOOL bMoreFiles = ff.FindFile(sAppPath + _T("Backup\\*.*"));
+
+	while (bMoreFiles)
+	{
+		bMoreFiles = ff.FindNextFile();
+
+		if (ff.IsDots() || ff.IsHidden())
+			continue;
+		if (! ff.IsDirectory() && -1 == ff.GetFileName().Find('.'))
+			data.push_back(std::wstring(sAppPath + _T("Backup\\") + ff.GetFileName()));
+	}
+
+	return data;
+}
+
+void CDatabaseExplorerApp::UpdateBackupFiles()
+{
+	const CString sBackupPath = theApp.GetAppPath() + _T("Backup");
+	if (! PathIsDirectory(sBackupPath))
+		CreateDirectory(sBackupPath, NULL);
+
+	auto docdata = GetDocumentsData();
+	RemoveOldBackup(docdata);
+	SaveNewBackup(std::move(docdata));
+}
+
+std::unordered_map<std::wstring, SDocData> CDatabaseExplorerApp::GetDocumentsData() const
+{
+	std::unordered_map<std::wstring, SDocData> docdata;
+
+	POSITION pos = GetFirstDocTemplatePosition();
+	while (NULL != pos)
+	{
+		CDocTemplate* pDocTemplate = static_cast<CDocTemplate*>(GetNextDocTemplate(pos));
+		POSITION posDoc = pDocTemplate->GetFirstDocPosition();
+		while (NULL != posDoc)
+		{
+			CDatabaseExplorerDoc* pDoc = static_cast<CDatabaseExplorerDoc*>(pDocTemplate->GetNextDoc(posDoc));
+			if (nullptr != pDoc && pDoc->HasValidDocumentTitle(pDoc->GetTitleNormalized()))
+			{
+				docdata.emplace(pDoc->GetDSN().first,
+						SDocData(pDoc->GetDatabaseType(),
+						pDoc->GetDB()->GetRecordsetType(),
+						pDoc->GetDocumentQueries()));
+			}
+		}
+	}
+
+	return docdata;
+}
+
+void CDatabaseExplorerApp::RemoveOldBackup(const std::unordered_map<std::wstring, SDocData>& docdata)
+{
+	const auto data = GetBackupFiles();
+	for (const auto& it : data)
+	{
+		if (docdata.find(it) == docdata.end())
+		{
+			if (FileExist(it.c_str()))
+				DeleteFile(it.c_str());
+			WriteProfileString(_T("Backup"), it.c_str(), nullptr);
+		}
+	}
+}
+
+void CDatabaseExplorerApp::SaveNewBackup(std::unordered_map<std::wstring, SDocData>&& docdata)
+{
+	for (auto it : docdata)
+	{
+		SaveQueries(it.first, std::move(it.second.m_queries));
+		WriteProfileInt(_T("Backup"), it.first.c_str(), 
+			MAKEWPARAM(static_cast<int>(it.second.m_DBType), it.second.m_nRecordsetType));
+	}
+}
+
+void CDatabaseExplorerApp::SaveQueries(const std::wstring& filename, std::set<CString>&& queries) const
+{
+	CStdioFile file;
+	if (! file.Open(theApp.GetAppPath() + _T("Backup\\") + filename.c_str(),
+		CFile::modeCreate | CFile::modeReadWrite | CFile::typeText))
+		return;
+
+	for (const auto it : queries)
+		file.WriteString(it + _T("\n"));
 }

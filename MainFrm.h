@@ -44,6 +44,7 @@ protected:  // control bar embedded members
 // Generated message map functions
 protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnClose();
 	afx_msg void OnWindowManager();
 	afx_msg void OnApplicationLook(UINT id);
 	afx_msg void OnUpdateApplicationLook(CCmdUI* pCmdUI);
@@ -66,5 +67,6 @@ protected:
 	afx_msg void OnUpdateViewVirtualmode(CCmdUI* pCmdUI);
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	afx_msg LRESULT OnGetTabToolTip(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnSetMessageText(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
