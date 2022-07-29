@@ -179,7 +179,7 @@ protected:
 	afx_msg BOOL OnEditchange();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	//}}AFX_MSG
 	afx_msg LRESULT OnAddString(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnInsertString(WPARAM wParam, LPARAM lParam);

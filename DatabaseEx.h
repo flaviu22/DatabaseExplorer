@@ -6,6 +6,7 @@
 #define AFX_DatabaseEx_H__0ED7B212_C215_452C_AA8F_054809CF5F07__INCLUDED_
 
 #include <afxdb.h>
+#include <memory>
 #include <vector>
 #include <string>
 

@@ -202,7 +202,7 @@ BOOL CComboBoxExt::OnDropdown()
 	::SendMessage(m_hWndToolTip, TTM_TRACKACTIVATE, (WPARAM)FALSE, (LPARAM)(LPTOOLINFO)&m_ToolInfo);
 
 	if (! m_bAdjustDroppedWidth)
-		return Default();
+		return static_cast<BOOL>(Default());
 
 	int dx = 0;
 	CSize sz(0, 0);
@@ -235,7 +235,7 @@ BOOL CComboBoxExt::OnDropdown()
 	if (GetDroppedWidth() < dx)
 		SetDroppedWidth(dx);
 
-	return Default();
+	return static_cast<BOOL>(Default());
 }
 
 HBRUSH CComboBoxExt::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
@@ -248,11 +248,11 @@ HBRUSH CComboBoxExt::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
 	if (CTLCOLOR_EDIT == nCtlColor)
 	{
-		if (!m_bAlertText)
+		if (! m_bAlertText)
 			pDC->SetTextColor(GetSysColor(COLOR_WINDOWTEXT));
 		else
 			pDC->SetTextColor(m_crAlertText);
-		if (!m_bAlertBkg)
+		if (! m_bAlertBkg)
 			pDC->SetBkColor(GetSysColor(COLOR_WINDOW));
 		else
 		{
@@ -270,7 +270,7 @@ BOOL CComboBoxExt::OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRE
 {
 	// TODO: Add your specialized code here and/or call the base class
 
-	if (CBS_DROPDOWNLIST != (3 & GetStyle()) || (!m_bAlertText && !m_bAlertBkg) || WM_CTLCOLOREDIT != message)
+	if (CBS_DROPDOWNLIST != (3 & GetStyle()) || (! m_bAlertText && ! m_bAlertBkg) || WM_CTLCOLOREDIT != message)
 		return CComboBox::OnChildNotify(message, wParam, lParam, pLResult);
 
 	HDC hdcChild = (HDC)wParam;
@@ -335,9 +335,9 @@ BOOL CComboBoxExt::OnSelendok()
 	::SendMessage(m_hWndToolTip, TTM_TRACKACTIVATE, (WPARAM)FALSE, (LPARAM)(LPTOOLINFO)&m_ToolInfo);
 
 	if (! GetDroppedState())
-		return Default();
+		return static_cast<BOOL>(Default());
 
-	int nIndex = GetCurSel();
+	const int nIndex = GetCurSel();
 	if (CB_ERR != nIndex)
 	{
 		GetLBText(nIndex, m_sTypedText);
@@ -346,7 +346,7 @@ BOOL CComboBoxExt::OnSelendok()
 		SetEditSel(m_dwStartSel, m_dwEndSel);
 	}
 
-	return Default();
+	return static_cast<BOOL>(Default());
 }
 
 BOOL CComboBoxExt::OnSelchange()
@@ -362,7 +362,7 @@ BOOL CComboBoxExt::OnSelchange()
 	}
 
 	if (m_bEdit || MODE_STANDARD == m_nMode || CBS_SIMPLE == (3 & GetStyle()))
-		return Default();
+		return static_cast<BOOL>(Default());
 
 	const int nIndex = GetCurSel();
 	if (CB_ERR != nIndex)
@@ -371,7 +371,7 @@ BOOL CComboBoxExt::OnSelchange()
 		SetWindowText(m_sTypedText);
 	}
 
-	return Default();
+	return static_cast<BOOL>(Default());
 }
 
 BOOL CComboBoxExt::OnEditchange()
@@ -381,7 +381,7 @@ BOOL CComboBoxExt::OnEditchange()
 	::SendMessage(m_hWndToolTip, TTM_TRACKACTIVATE, (WPARAM)FALSE, (LPARAM)(LPTOOLINFO)&m_ToolInfo);
 
 	if (MODE_STANDARD == m_nMode || CBS_SIMPLE == (3 & GetStyle()))
-		return Default();
+		return static_cast<BOOL>(Default());
 
 	SendMessage(CB_GETEDITSEL, (WPARAM)&m_dwStartSel, (LPARAM)&m_dwEndSel);
 
@@ -422,7 +422,7 @@ BOOL CComboBoxExt::OnEditchange()
 			GetLBText(0, sFirstOccurrence);
 	}
 
-	if (MODE_AUTOCOMPLETE == m_nMode && m_bAutoComplete && !sFirstOccurrence.IsEmpty())
+	if (MODE_AUTOCOMPLETE == m_nMode && m_bAutoComplete && ! sFirstOccurrence.IsEmpty())
 	{
 		m_bAutoSelection = TRUE;
 		SetWindowText(sFirstOccurrence);
@@ -437,7 +437,7 @@ BOOL CComboBoxExt::OnEditchange()
 
 	m_bAutoComplete = TRUE;
 
-	return Default();
+	return static_cast<BOOL>(Default());
 }
 
 BOOL CComboBoxExt::OnCloseup()
@@ -460,7 +460,7 @@ BOOL CComboBoxExt::OnCloseup()
 
 	m_bEdit = FALSE;
 
-	return Default();
+	return static_cast<BOOL>(Default());
 }
 
 LRESULT CComboBoxExt::OnPostCloseup(WPARAM wParam, LPARAM lParam)
@@ -474,7 +474,7 @@ LRESULT CComboBoxExt::OnPostCloseup(WPARAM wParam, LPARAM lParam)
 	if (CB_ERR == nIndex)
 		SetWindowText(m_sTypedText);
 
-	if (!m_bAutoSelection)
+	if (! m_bAutoSelection)
 	{
 		if (0 == m_dwStartSel && 0 == m_dwEndSel && CB_ERR != FindStringExact(-1, m_sTypedText))
 			PostMessage(CB_SETEDITSEL, (WPARAM)0, MAKELPARAM(m_sTypedText.GetLength(), m_sTypedText.GetLength()));
@@ -540,7 +540,7 @@ int CComboBoxExt::AddItem(CItemData* pData)
 	if (NULL == pData || TRUE == pData->m_bState)
 		return CB_ERR;
 
-	int nIndex = SendMessage(CB_ADDSTRING, (WPARAM)m_PtrList.Find(pData), (LPARAM)(LPCTSTR)pData->m_sItem);
+	int nIndex = static_cast<int>(SendMessage(CB_ADDSTRING, (WPARAM)m_PtrList.Find(pData), (LPARAM)(LPCTSTR)pData->m_sItem));
 	if (CB_ERR == nIndex || CB_ERRSPACE == nIndex)
 		return nIndex;
 
@@ -564,7 +564,7 @@ int CComboBoxExt::DeleteItem(CItemData* pData)
 	{
 		if (pData == (CItemData*)GetItemDataPtr(i))
 		{
-			nIndex = SendMessage(CB_DELETESTRING, (WPARAM)i, (LPARAM)m_PtrList.Find(pData));
+			nIndex = static_cast<int>(SendMessage(CB_DELETESTRING, (WPARAM)i, (LPARAM)m_PtrList.Find(pData)));
 			break;
 		}
 	}
@@ -689,7 +689,7 @@ void CComboBoxExt::OnMouseMove(UINT nFlags, CPoint point)
 	}
 }
 
-void CComboBoxExt::OnTimer(UINT nIDEvent)
+void CComboBoxExt::OnTimer(UINT_PTR nIDEvent)
 {
 	// TODO: Add your message handler code here and/or call default
 

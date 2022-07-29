@@ -51,7 +51,7 @@ protected:
 protected:
 	//{{AFX_MSG(CComboBoxExtList)
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	//}}AFX_MSG
 	afx_msg LRESULT OnLbFindString(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()

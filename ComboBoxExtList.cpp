@@ -166,7 +166,7 @@ void CComboBoxExtList::OnMouseMove(UINT nFlags, CPoint point)
 	}
 }
 
-void CComboBoxExtList::OnTimer(UINT nIDEvent)
+void CComboBoxExtList::OnTimer(UINT_PTR nIDEvent)
 {
 	// TODO: Add your message handler code here and/or call default
 
