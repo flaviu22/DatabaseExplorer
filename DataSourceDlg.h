@@ -9,57 +9,58 @@
 #endif // _MSC_VER > 1000
 // DataSourceDlg.h : header file
 //
-/////////////////////////////////////////////////////////////////////////////
-// CRestoreDSN class
-
-class CRestoreConnectionSettings
-{
-public:
-	CRestoreConnectionSettings(CDatabaseExplorerDoc* pDoc);
-	~CRestoreConnectionSettings();
-	CRestoreConnectionSettings(const CRestoreConnectionSettings& rhs) = delete;
-	CRestoreConnectionSettings& operator=(const CRestoreConnectionSettings& rhs) = delete;
-	CRestoreConnectionSettings(CRestoreConnectionSettings&& rhs) = delete;
-	CRestoreConnectionSettings& operator=(CRestoreConnectionSettings&& rhs) = delete;
-
-public:
-	void GiveUpRestoreDSNOrg() { m_bRestore = FALSE; }
-
-private:
-	CString m_sDSN;
-	BOOL m_bRestore{ TRUE };
-	UINT m_nRSType{ CRecordset::dynaset };
-	CDatabaseExplorerDoc* m_pDoc{ nullptr };
-};
-
-/////////////////////////////////////////////////////////////////////////////
-// CPasswordHandler class
-
-class CPasswordHandler
-{
-public:
-	CPasswordHandler(BOOL bAdmin, const CString& sDSN, const BOOL bSetDelete);
-	~CPasswordHandler();
-
-	CPasswordHandler(const CPasswordHandler& rhs) = delete;
-	CPasswordHandler& operator=(const CPasswordHandler& rhs) = delete;
-	CPasswordHandler(CPasswordHandler&& rhs) = delete;
-	CPasswordHandler& operator=(CPasswordHandler&& rhs) = delete;
-
-public:
-	void GiveUpDeletePassword() { m_bDeletePassword = FALSE; }
-
-private:
-	BOOL m_bAdmin{ FALSE };
-	CString m_sDSN;
-	BOOL m_bDeletePassword{ TRUE };
-};
 
 /////////////////////////////////////////////////////////////////////////////
 // CDataSourceDlg dialog
 
 class CDataSourceDlg : public CDialog
 {
+	/////////////////////////////////////////////////////////////////////////////
+	// CRestoreConnectionSettings class
+
+	class CRestoreConnectionSettings
+	{
+	public:
+		CRestoreConnectionSettings(CDatabaseExplorerDoc* pDoc);
+		~CRestoreConnectionSettings();
+		CRestoreConnectionSettings(const CRestoreConnectionSettings& rhs) = delete;
+		CRestoreConnectionSettings& operator=(const CRestoreConnectionSettings& rhs) = delete;
+		CRestoreConnectionSettings(CRestoreConnectionSettings&& rhs) = delete;
+		CRestoreConnectionSettings& operator=(CRestoreConnectionSettings&& rhs) = delete;
+
+	public:
+		void GiveUpRestoreDSNOrg() { m_bRestore = FALSE; }
+
+	private:
+		CString m_sDSN;
+		BOOL m_bRestore{ TRUE };
+		UINT m_nRSType{ CRecordset::dynaset };
+		CDatabaseExplorerDoc* m_pDoc{ nullptr };
+	};
+
+	/////////////////////////////////////////////////////////////////////////////
+	// CPasswordHandler class
+
+	class CPasswordHandler
+	{
+	public:
+		CPasswordHandler(BOOL bAdmin, const CString& sDSN, const BOOL bSetDelete);
+		~CPasswordHandler();
+
+		CPasswordHandler(const CPasswordHandler& rhs) = delete;
+		CPasswordHandler& operator=(const CPasswordHandler& rhs) = delete;
+		CPasswordHandler(CPasswordHandler&& rhs) = delete;
+		CPasswordHandler& operator=(CPasswordHandler&& rhs) = delete;
+
+	public:
+		void GiveUpDeletePassword() { m_bDeletePassword = FALSE; }
+
+	private:
+		BOOL m_bAdmin{ FALSE };
+		CString m_sDSN;
+		BOOL m_bDeletePassword{ TRUE };
+	};
+
 // Construction
 public:
 	CDataSourceDlg(CDatabaseExplorerDoc* pDoc, CWnd* pParent = NULL);   // standard constructor

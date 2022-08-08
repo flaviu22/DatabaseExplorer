@@ -16,16 +16,16 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
-// CRestoreDSN class
+// CRestoreConnectionSettings class
 
-CRestoreConnectionSettings::CRestoreConnectionSettings(CDatabaseExplorerDoc* pDoc)
+CDataSourceDlg::CRestoreConnectionSettings::CRestoreConnectionSettings(CDatabaseExplorerDoc* pDoc)
 	:m_pDoc(pDoc)
 {
 	m_sDSN = m_pDoc->GetDSN().first;
 	m_nRSType = m_pDoc->GetDB()->GetRecordsetType();
 }
 
-CRestoreConnectionSettings::~CRestoreConnectionSettings()
+CDataSourceDlg::CRestoreConnectionSettings::~CRestoreConnectionSettings()
 {
 	if (m_bRestore)
 	{
@@ -37,14 +37,14 @@ CRestoreConnectionSettings::~CRestoreConnectionSettings()
 /////////////////////////////////////////////////////////////////////////////
 // CPasswordHandler class
 
-CPasswordHandler::CPasswordHandler(BOOL bAdmin, const CString& sDSN, const BOOL bSetDelete)
+CDataSourceDlg::CPasswordHandler::CPasswordHandler(BOOL bAdmin, const CString& sDSN, const BOOL bSetDelete)
 {
 	m_bAdmin = bAdmin;
 	m_sDSN = sDSN;
 	m_bDeletePassword = bSetDelete;
 }
 
-CPasswordHandler::~CPasswordHandler()
+CDataSourceDlg::CPasswordHandler::~CPasswordHandler()
 {
 	if (m_bDeletePassword)
 	{
@@ -252,11 +252,7 @@ const DatabaseType CDataSourceDlg::DecodeDatabaseType(CString sData) const
 
 int CDataSourceDlg::GetSelectedDSNSource() const
 {
-	int nDSNSource = 0;	// User DSN
-	if (IDC_RADIO_SYSTEMDSN == GetCheckedRadioButton(IDC_RADIO_USERDSN, IDC_RADIO_SYSTEMDSN))
-		nDSNSource = 1;
-
-	return nDSNSource;
+	return static_cast<int>(IDC_RADIO_SYSTEMDSN == GetCheckedRadioButton(IDC_RADIO_USERDSN, IDC_RADIO_SYSTEMDSN));
 }
 
 UINT CDataSourceDlg::GetSelectedRSType() const
