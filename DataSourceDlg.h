@@ -92,7 +92,7 @@ protected:
 	CDatabaseExplorerDoc* m_pDoc;
 
 protected:
-	int GetSelectedDSNSource() const;
+	BOOL IsSystemDsnSelected() const;
 	UINT GetSelectedRSType() const;
 	void Test(CDatabaseExt* pDB, const DatabaseType DBType) const;
 

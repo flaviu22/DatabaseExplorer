@@ -250,9 +250,9 @@ const DatabaseType CDataSourceDlg::DecodeDatabaseType(CString sData) const
 	return DatabaseType::UNKNOWN;
 }
 
-int CDataSourceDlg::GetSelectedDSNSource() const
+BOOL CDataSourceDlg::IsSystemDsnSelected() const
 {
-	return static_cast<int>(IDC_RADIO_SYSTEMDSN == GetCheckedRadioButton(IDC_RADIO_USERDSN, IDC_RADIO_SYSTEMDSN));
+	return (IDC_RADIO_SYSTEMDSN == GetCheckedRadioButton(IDC_RADIO_USERDSN, IDC_RADIO_SYSTEMDSN));
 }
 
 UINT CDataSourceDlg::GetSelectedRSType() const
@@ -329,7 +329,7 @@ void CDataSourceDlg::OnOK()
 	}
 
 	CRestoreConnectionSettings rcs(m_pDoc);
-	const int nDSNSource = GetSelectedDSNSource();
+	const BOOL bIsSystemDsnSelected = IsSystemDsnSelected();
 	const UINT nRSType = GetSelectedRSType();
 	const CString sSelectedDSN = GetComboSelection();
 	const DatabaseType DBType = DecodeDatabaseType(GetKeyData(sSelectedDSN));
@@ -345,7 +345,7 @@ void CDataSourceDlg::OnOK()
 	if (DatabaseType::ORACLE == DBType || 
 		(DatabaseType::MSSQL == DBType && ! sMsSQLAuthenticationUser.IsEmpty()))
 	{
-		CPasswordDlg dlg(static_cast<BOOL>(nDSNSource), sSelectedDSN);
+		CPasswordDlg dlg(bIsSystemDsnSelected, sSelectedDSN);
 		if (IDOK != dlg.DoModal())
 			return;
 		sSuffix.Format(_T("UID=%s;PWD=%s;"), sMsSQLAuthenticationUser, dlg.GetPassword());
@@ -354,7 +354,7 @@ void CDataSourceDlg::OnOK()
 	pDB->SetConnectionString(_T("DSN=") + sSelectedDSN + _T(";") + sSuffix);
 	pDB->SetRecordsetType(nRSType);
 
-	CPasswordHandler ph(static_cast<BOOL>(nDSNSource), sSelectedDSN, DatabaseType::ORACLE == DBType);
+	CPasswordHandler ph(bIsSystemDsnSelected, sSelectedDSN, DatabaseType::ORACLE == DBType);
 
 	CWaitCursor Wait;
 	Test(pDB, DBType);
@@ -363,7 +363,7 @@ void CDataSourceDlg::OnOK()
 		MessageBox(pDB->GetError(), NULL, MB_ICONERROR);
 		return;
 	}
-	m_pDoc->SetDSNSource(nDSNSource);
+	m_pDoc->SetDSNSource(bIsSystemDsnSelected);
 	// save recordset type into registry
 	theApp.WriteProfileInt(_T("Settings"), _T("RSType"), nRSType);
 	// setup document data
