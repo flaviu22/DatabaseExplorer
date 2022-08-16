@@ -101,7 +101,7 @@ BOOL CDatabaseExt::GetData(CStringArray& saResult, LPCTSTR lpszSQL/* = NULL*/, D
 	return m_sError.IsEmpty();
 }
 
-BOOL CDatabaseExt::GetData(CStringArray& saResult, CString(*FormatData)(short nIndex, CDBVariant* pVariant), LPCTSTR lpszSQL/* = NULL*/, DWORD dwRecordsetOptions/* = CRecordset::none*/)
+BOOL CDatabaseExt::GetData(CStringArray& saResult, CString(*FormatData)(short nIndex, CDBVariant*), LPCTSTR lpszSQL/* = NULL*/, DWORD dwRecordsetOptions/* = CRecordset::none*/)
 {
 	m_nFieldCount = 0;
 	if (! OpenConnection())
@@ -155,43 +155,31 @@ BOOL CDatabaseExt::GetData(CStringArray& saResult, CString(*FormatData)(short nI
 	return m_sError.IsEmpty();
 }
 
-std::vector<CString> CDatabaseExt::GetDataAsCStringV(LPCTSTR lpszFormat, ...)
+BOOL CDatabaseExt::GetDataV(std::vector<CString>& data, LPCTSTR lpszFormat, ...)
 {
 	CString sSQL;
 	va_list args;
 	va_start(args, lpszFormat);
 	sSQL.FormatV(lpszFormat, args);
 
-	return GetDataAsCString(sSQL);
+	return GetData(data, sSQL);
 }
 
-std::vector<std::string> CDatabaseExt::GetDataAsStdStringV(LPCTSTR lpszFormat, ...)
+std::vector<std::string> CDatabaseExt::GetDataV(LPCTSTR lpszFormat, ...)
 {
 	CString sSQL;
 	va_list args;
 	va_start(args, lpszFormat);
 	sSQL.FormatV(lpszFormat, args);
 
-	return GetDataAsStdString(sSQL);
+	return GetData(sSQL);
 }
 
-std::vector<CDBVariant> CDatabaseExt::GetDataAsDBVariantV(LPCTSTR lpszFormat, ...)
+BOOL CDatabaseExt::GetData(std::vector<CString>& data, LPCTSTR lpszSQL/* = NULL*/, DWORD dwRecordsetOptions/* = CRecordset::none*/)
 {
-	CString sSQL;
-	va_list args;
-	va_start(args, lpszFormat);
-	sSQL.FormatV(lpszFormat, args);
-
-	return GetDataAsDBVariant(sSQL);
-}
-
-std::vector<CString> CDatabaseExt::GetDataAsCString(LPCTSTR lpszSQL/* = NULL*/, DWORD dwRecordsetOptions/* = CRecordset::none*/)
-{
-	std::vector<CString> result;
-
 	m_nFieldCount = 0;
 	if (! OpenConnection())
-		return result;
+		return FALSE;
 
 	std::unique_ptr<CRecordset> recordset = std::make_unique<CRecordset>(this);
 
@@ -211,7 +199,7 @@ std::vector<CString> CDatabaseExt::GetDataAsCString(LPCTSTR lpszSQL/* = NULL*/, 
 				try
 				{
 					recordset->GetFieldValue(static_cast<short>(i), sTemp);
-					result.push_back(sTemp);
+					data.push_back(sTemp);
 				}
 				catch (CDBException* pDBException)
 				{
@@ -238,10 +226,10 @@ std::vector<CString> CDatabaseExt::GetDataAsCString(LPCTSTR lpszSQL/* = NULL*/, 
 
 	} while (FALSE);
 
-	return result;
+	return m_sError.IsEmpty();
 }
 
-std::vector<std::string> CDatabaseExt::GetDataAsStdString(LPCTSTR lpszSQL/* = NULL*/, DWORD dwRecordsetOptions/* = CRecordset::none*/)
+std::vector<std::string> CDatabaseExt::GetData(LPCTSTR lpszSQL/* = NULL*/, DWORD dwRecordsetOptions/* = CRecordset::none*/)
 {
 	std::vector<std::string> result;
 
@@ -301,13 +289,11 @@ std::vector<std::string> CDatabaseExt::GetDataAsStdString(LPCTSTR lpszSQL/* = NU
 	return result;
 }
 
-std::vector<CDBVariant> CDatabaseExt::GetDataAsDBVariant(LPCTSTR lpszSQL/* = NULL*/, DWORD dwRecordsetOptions/* = CRecordset::none*/)
+BOOL CDatabaseExt::GetData(std::vector<CString>& data, CString(*FormatData)(short nIndex, CDBVariant*), LPCTSTR lpszSQL/* = NULL*/, DWORD dwRecordsetOptions/* = CRecordset::none*/)
 {
-	std::vector<CDBVariant> result;
-
 	m_nFieldCount = 0;
 	if (! OpenConnection())
-		return result;
+		return FALSE;
 
 	std::unique_ptr<CRecordset> recordset = std::make_unique<CRecordset>(this);
 
@@ -327,7 +313,7 @@ std::vector<CDBVariant> CDatabaseExt::GetDataAsDBVariant(LPCTSTR lpszSQL/* = NUL
 				try
 				{
 					recordset->GetFieldValue(static_cast<short>(i), variant);
-					result.push_back(variant);
+					data.push_back(FormatData(static_cast<short>(i), &variant));
 				}
 				catch (CDBException* pDBException)
 				{
@@ -354,61 +340,5 @@ std::vector<CDBVariant> CDatabaseExt::GetDataAsDBVariant(LPCTSTR lpszSQL/* = NUL
 
 	} while (FALSE);
 
-	return result;
-}
-
-std::vector<CString> CDatabaseExt::GetDataAsCString(CString(*FormatData)(short nIndex, CDBVariant*), LPCTSTR lpszSQL/* = NULL*/, DWORD dwRecordsetOptions/* = CRecordset::none*/)
-{
-	std::vector<CString> result;
-
-	m_nFieldCount = 0;
-	if (! OpenConnection())
-		return result;
-
-	std::unique_ptr<CRecordset> recordset = std::make_unique<CRecordset>(this);
-
-	do
-	{
-		if (! OpenRecordset(recordset.get(), lpszSQL, dwRecordsetOptions))
-			break;
-
-		m_nFieldCount = recordset->GetODBCFieldCount();
-
-		CDBVariant variant;
-
-		while (! recordset->IsEOF())
-		{
-			for (int i = 0; i < m_nFieldCount; ++i)
-			{
-				try
-				{
-					recordset->GetFieldValue(static_cast<short>(i), variant);
-					result.push_back(FormatData(static_cast<short>(i), &variant));
-				}
-				catch (CDBException* pDBException)
-				{
-					pDBException->GetErrorMessage(m_sError.GetBuffer(_MAX_PATH), _MAX_PATH);
-					m_sError.ReleaseBuffer();
-					pDBException->Delete();
-					break;
-				}
-				catch (CMemoryException* pMemException)
-				{
-					pMemException->GetErrorMessage(m_sError.GetBuffer(_MAX_PATH), _MAX_PATH);
-					m_sError.ReleaseBuffer();
-					pMemException->Delete();
-					break;
-				}
-			}
-			if (m_sError.IsEmpty())
-				recordset->MoveNext();
-			else
-				break;
-		}
-
-		recordset->Close();
-
-	} while (FALSE);
-
-	return result;
+	return m_sError.IsEmpty();
 }

@@ -525,7 +525,7 @@ BOOL CDatabaseExplorerDoc::PopulateDatabasePanel(CTreeCtrl& tree)
 
 BOOL CDatabaseExplorerDoc::GetMSSQLDatabases(CTreeCtrl& tree)
 {
-	const auto database = m_pDB->GetDataAsStdString(_T("SELECT database_id, name FROM sys.databases ORDER BY 2"));
+	const auto database = m_pDB->GetData(_T("SELECT database_id, name FROM sys.databases ORDER BY 2"));
 	if (! m_pDB->GetError().IsEmpty())
 	{
 		m_sState.Format(_T("%s"), m_pDB->GetError());
@@ -536,11 +536,11 @@ BOOL CDatabaseExplorerDoc::GetMSSQLDatabases(CTreeCtrl& tree)
 		{
 			HTREEITEM hItem = tree.InsertItem(CString((it + 1)->c_str()), 0, 0);
 			tree.SetItemData(hItem, std::atoi(it->c_str()));
-			std::vector<CString> table = m_pDB->GetDataAsCStringV(_T("SELECT table_name FROM %s.information_schema.tables ORDER BY 1"), CString((it + 1)->c_str()));
+			const auto table = m_pDB->GetDataV(_T("SELECT table_name FROM %s.information_schema.tables ORDER BY 1"), CString((it + 1)->c_str()));
 			if (! m_pDB->GetError().IsEmpty() || table.empty())
 				continue;
 			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
-				tree.SetItemData(tree.InsertItem(*it_table, 1, 1, hItem), 0);
+				tree.SetItemData(tree.InsertItem(CString(it_table->c_str()), 1, 1, hItem), 0);
 		}
 	}
 
@@ -549,7 +549,7 @@ BOOL CDatabaseExplorerDoc::GetMSSQLDatabases(CTreeCtrl& tree)
 
 BOOL CDatabaseExplorerDoc::GetOracleDatabases(CTreeCtrl& tree)
 {
-	const auto database = m_pDB->GetDataAsStdString(_T("SELECT 1, global_name FROM global_name ORDER BY 2"));
+	const auto database = m_pDB->GetData(_T("SELECT 1, global_name FROM global_name ORDER BY 2"));
 	if (! m_pDB->GetError().IsEmpty())
 	{
 		m_sState.Format(_T("%s"), m_pDB->GetError());
@@ -561,11 +561,11 @@ BOOL CDatabaseExplorerDoc::GetOracleDatabases(CTreeCtrl& tree)
 		{
 			HTREEITEM hItem = tree.InsertItem(CString((it + 1)->c_str()), 0, 0);
 			tree.SetItemData(hItem, std::atoi(it->c_str()));
-			std::vector<CString> table = m_pDB->GetDataAsCStringV(_T("SELECT table_name FROM dba_tables WHERE owner = '%s' AND tablespace_name = '%s' ORDER BY 1"), sUserID, sUserID);
+			const auto table = m_pDB->GetDataV(_T("SELECT table_name FROM dba_tables WHERE owner = '%s' AND tablespace_name = '%s' ORDER BY 1"), sUserID, sUserID);
 			if (! m_pDB->GetError().IsEmpty() || table.empty())
 				continue;
 			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
-				tree.SetItemData(tree.InsertItem(*it_table, 1, 1, hItem), 0);
+				tree.SetItemData(tree.InsertItem(CString(it_table->c_str()), 1, 1, hItem), 0);
 		}
 	}
 	return m_sState.IsEmpty();
@@ -573,7 +573,7 @@ BOOL CDatabaseExplorerDoc::GetOracleDatabases(CTreeCtrl& tree)
 
 BOOL CDatabaseExplorerDoc::GetSQLiteDatabases(CTreeCtrl& tree)
 {
-	const auto database = m_pDB->GetDataAsStdString(_T("SELECT 1, file FROM pragma_database_list WHERE name='main'"));
+	const auto database = m_pDB->GetData(_T("SELECT 1, file FROM pragma_database_list WHERE name='main'"));
 	if (! m_pDB->GetError().IsEmpty())
 	{
 		m_sState.Format(_T("%s"), m_pDB->GetError());
@@ -584,11 +584,11 @@ BOOL CDatabaseExplorerDoc::GetSQLiteDatabases(CTreeCtrl& tree)
 		{
 			HTREEITEM hItem = tree.InsertItem(CString((it + 1)->c_str()), 0, 0);
 			tree.SetItemData(hItem, std::atoi(it->c_str()));
-			std::vector<CString> table = m_pDB->GetDataAsCString(_T("SELECT tbl_name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY 1"));
+			const auto table = m_pDB->GetData(_T("SELECT tbl_name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY 1"));
 			if (! m_pDB->GetError().IsEmpty() || table.empty())
 				continue;
 			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
-				tree.SetItemData(tree.InsertItem(*it_table, 1, 1, hItem), 0);
+				tree.SetItemData(tree.InsertItem(CString(it_table->c_str()), 1, 1, hItem), 0);
 		}
 	}
 
@@ -597,7 +597,7 @@ BOOL CDatabaseExplorerDoc::GetSQLiteDatabases(CTreeCtrl& tree)
 
 BOOL CDatabaseExplorerDoc::GetMySqlDatabases(CTreeCtrl& tree)
 {
-	const auto database = m_pDB->GetDataAsStdString(_T("SELECT 1, schema_name FROM information_schema.schemata ORDER BY 2"));
+	const auto database = m_pDB->GetData(_T("SELECT 1, schema_name FROM information_schema.schemata ORDER BY 2"));
 	if (! m_pDB->GetError().IsEmpty())
 	{
 		m_sState.Format(_T("%s"), m_pDB->GetError());
@@ -608,11 +608,11 @@ BOOL CDatabaseExplorerDoc::GetMySqlDatabases(CTreeCtrl& tree)
 		{
 			HTREEITEM hItem = tree.InsertItem(CString((it + 1)->c_str()), 0, 0);
 			tree.SetItemData(hItem, std::atoi(it->c_str()));
-			std::vector<CString> table = m_pDB->GetDataAsCStringV(_T("SELECT table_name FROM information_schema.tables WHERE table_schema = '%s' AND table_type = 'BASE TABLE' ORDER BY 1"), CString((it + 1)->c_str()));
+			const auto table = m_pDB->GetDataV(_T("SELECT table_name FROM information_schema.tables WHERE table_schema = '%s' AND table_type = 'BASE TABLE' ORDER BY 1"), CString((it + 1)->c_str()));
 			if (! m_pDB->GetError().IsEmpty() || table.empty())
 				continue;
 			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
-				tree.SetItemData(tree.InsertItem(*it_table, 1, 1, hItem), 0);
+				tree.SetItemData(tree.InsertItem(CString(it_table->c_str()), 1, 1, hItem), 0);
 		}
 	}
 	return m_sState.IsEmpty();
@@ -620,7 +620,7 @@ BOOL CDatabaseExplorerDoc::GetMySqlDatabases(CTreeCtrl& tree)
 
 BOOL CDatabaseExplorerDoc::GetPostgreDatabases(CTreeCtrl& tree)
 {
-	const auto database = m_pDB->GetDataAsStdStringV(_T("SELECT 1, datname FROM pg_database WHERE datistemplate = false ORDER BY 2"));
+	const auto database = m_pDB->GetDataV(_T("SELECT 1, datname FROM pg_database WHERE datistemplate = false ORDER BY 2"));
 	if (! m_pDB->GetError().IsEmpty())
 	{
 		m_sState.Format(_T("%s"), m_pDB->GetError());
@@ -634,11 +634,11 @@ BOOL CDatabaseExplorerDoc::GetPostgreDatabases(CTreeCtrl& tree)
 			tree.SetItemData(hItem, std::atoi(it->c_str()));
 			if (m_sPostgreDB != CString((it + 1)->c_str()))
 				continue;
-			std::vector<CString> table = m_pDB->GetDataAsCString(_T("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema' ORDER BY 1"));
+			const auto table = m_pDB->GetData(_T("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema' ORDER BY 1"));
 			if (! m_pDB->GetError().IsEmpty() || table.empty())
 				continue;
 			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
-				tree.SetItemData(tree.InsertItem(*it_table, 1, 1, hItem), 0);
+				tree.SetItemData(tree.InsertItem(CString(it_table->c_str()), 1, 1, hItem), 0);
 		}
 	}
 	return m_sState.IsEmpty();
@@ -740,7 +740,7 @@ int CDatabaseExplorerDoc::GetDatabaseCount() const
 		break;
 	}
 
-	std::vector<std::string> val = m_pDB->GetDataAsStdString(sSQL);
+	const auto val = m_pDB->GetData(sSQL);
 	if (! m_pDB->GetError().IsEmpty())
 		return -1;
 
@@ -752,7 +752,7 @@ int CDatabaseExplorerDoc::GetDatabaseCount() const
 
 long CDatabaseExplorerDoc::GetRecordCount(const CString& sSQL)
 {
-	std::vector<std::string> val = m_pDB->GetDataAsStdString(PrepareSQLForCountAll(sSQL));
+	const auto val = m_pDB->GetData(PrepareSQLForCountAll(sSQL));
 
 	if (! m_pDB->GetError().IsEmpty())
 	{

@@ -281,28 +281,28 @@ void CDataSourceDlg::Test(CDatabaseExt* pDB, const DatabaseType DBType) const
 	case DatabaseType::MSSQL:
 		if (! pDB->Execute(_T("SELECT count(*) FROM information_schema.tables")))
 			break;
-		pDB->GetDataAsStdString(_T("SELECT count(*) FROM information_schema.tables"));
+		pDB->GetData(_T("SELECT count(*) FROM information_schema.tables"));
 		break;
 	case DatabaseType::ORACLE:
 		if (! pDB->Execute(_T("SELECT count(*) FROM GLOBAL_NAME")))
 			break;
-		pDB->GetDataAsStdString(_T("SELECT count(*) FROM GLOBAL_NAME"));
+		pDB->GetData(_T("SELECT count(*) FROM GLOBAL_NAME"));
 		break;
 	case DatabaseType::SQLITE:
 		if (! pDB->Execute(_T("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")))
 			break;
-		pDB->GetDataAsStdString(_T("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"));
+		pDB->GetData(_T("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"));
 		break;
 	case DatabaseType::MYSQL:
 	case DatabaseType::MARIADB:
 		if (! pDB->Execute(_T("SELECT count(*) FROM information_schema.schemata")))
 			break;
-		pDB->GetDataAsStdString(_T("SELECT count(*) FROM information_schema.schemata"));
+		pDB->GetData(_T("SELECT count(*) FROM information_schema.schemata"));
 		break;
 	case DatabaseType::POSTGRE:
 		if (! pDB->Execute(_T("SELECT count(*) FROM pg_database")))
 			break;
-		pDB->GetDataAsStdString(_T("SELECT count(*) FROM pg_database"));
+		pDB->GetData(_T("SELECT count(*) FROM pg_database"));
 		if (! pDB->GetError().IsEmpty())
 			break;
 		m_pDoc->SetPostgreDB(m_pDoc->DecodePostGreDatabase(pDB->GetConnect()));
