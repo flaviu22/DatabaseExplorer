@@ -45,7 +45,9 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECTALL, &CMainFrame::OnUpdateEdit)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECTLINE, &CMainFrame::OnUpdateEdit)
 	ON_COMMAND(ID_VIEW_VIRTUALMODE, &CMainFrame::OnViewVirtualmode)
+	ON_COMMAND(ID_VIEW_WORDWRAP, &CMainFrame::OnViewWordwrap)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_VIRTUALMODE, &CMainFrame::OnUpdateViewVirtualmode)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_WORDWRAP, &CMainFrame::OnUpdateViewWordwrap)
 	ON_REGISTERED_MESSAGE(AFX_WM_ON_GET_TAB_TOOLTIP, &CMainFrame::OnGetTabToolTip)
 	ON_MESSAGE(WMU_SETMESSAGETEXT, &CMainFrame::OnSetMessageText)
 END_MESSAGE_MAP()
@@ -238,6 +240,21 @@ BOOL CMainFrame::LoadFrame(UINT nIDResource, DWORD dwDefaultStyle, CWnd* pParent
 		return FALSE;
 
 	return TRUE;
+}
+
+std::vector<CString> CMainFrame::GetTabsNames()
+{
+	CString sLabel;
+	std::vector<CString> data{};
+	CMFCTabCtrl& MFCTabCtrl = GetMDITabs();
+	const int nCount = MFCTabCtrl.GetTabsNum();
+	for (int i = 0; i < nCount; ++i)
+	{
+		MFCTabCtrl.GetTabLabel(i, sLabel);
+		data.push_back(sLabel);
+	}
+
+	return data;
 }
 
 void CMainFrame::OnClose()
@@ -580,9 +597,40 @@ void CMainFrame::OnViewVirtualmode()
 	theApp.m_bVirtualMode = ! theApp.m_bVirtualMode;
 }
 
+void CMainFrame::OnViewWordwrap()
+{
+	// TODO: Add your command handler code here
+
+	theApp.m_bWordWrap = ! theApp.m_bWordWrap;
+
+	POSITION pos = theApp.GetFirstDocTemplatePosition();
+	while (pos)
+	{
+		CDocTemplate* pDocTemplate = static_cast<CDocTemplate*>(theApp.GetNextDocTemplate(pos));
+		POSITION posDoc = pDocTemplate->GetFirstDocPosition();
+		while (posDoc)
+		{
+			CDatabaseExplorerDoc* pDoc = static_cast<CDatabaseExplorerDoc*>(pDocTemplate->GetNextDoc(posDoc));
+			POSITION posView = pDoc->GetFirstViewPosition();
+			while (posView)
+			{
+				CView* pView = pDoc->GetNextView(posView);
+				::SendMessage(pView->GetParentFrame()->GetSafeHwnd(), WMU_SETWORDWRAP, static_cast<WPARAM>(! theApp.m_bWordWrap), 0);
+			}
+		}
+	}
+}
+
 void CMainFrame::OnUpdateViewVirtualmode(CCmdUI* pCmdUI)
 {
 	// TODO: Add your command update UI handler code here
 
 	pCmdUI->SetCheck(theApp.m_bVirtualMode);
+}
+
+void CMainFrame::OnUpdateViewWordwrap(CCmdUI* pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
+
+	pCmdUI->SetCheck(theApp.m_bWordWrap);
 }

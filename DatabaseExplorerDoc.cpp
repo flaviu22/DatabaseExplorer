@@ -13,6 +13,8 @@
 #include "DataSourceDlg.h"
 #include "DatabaseExplorerView.h"
 
+#include "ChildFrm.h"
+
 #include <propkey.h>
 #include <algorithm>
 
@@ -92,9 +94,9 @@ BOOL CDatabaseExplorerDoc::OnOpenDocument(LPCTSTR lpszPathName)
 
 	SetDSN(theApp.GetFileNameFrom(lpszPathName));
 	m_bDSNSource = static_cast<BOOL>(theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("DSNSource"), 0));
-	m_DatabaseType = static_cast<DatabaseType>(theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("DBType"), static_cast<int>(m_DatabaseType)));
+	m_DatabaseType = static_cast<DatabaseType>(theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("DatabaseType"), static_cast<int>(m_DatabaseType)));
 	m_pDB->SetRecordsetType(theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("RsType"), CRecordset::dynaset));
-	m_bMsSqlAuthenticationRequired = theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("MsSqlAuthRequired"), m_bMsSqlAuthenticationRequired);
+	m_bMsSqlAuthenticationRequired = theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("MsSqlAuthenticationRequired"), m_bMsSqlAuthenticationRequired);
 
 	SetConnectionString();
 
@@ -405,7 +407,7 @@ void CDatabaseExplorerDoc::PopulateHeader(CListCtrl& ListCtrl, CRecordset& recor
 	{
 		recordset.GetODBCFieldInfo(nColumn, fieldinfo);
 		if(fieldinfo.m_strName.IsEmpty())
-			sText.Format(_T("   "));
+			sText.Format(_T("	"));
 		else
 			sText.Format(_T("%s"), fieldinfo.m_strName);
 		ListCtrl.InsertColumn(nColumn, sText, LVCFMT_LEFT, 200);
@@ -420,7 +422,8 @@ BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& 
 	if (m_pRecordset->IsOpen())
 		m_pRecordset->Close();
 
-	long nTotalCount = 0;
+	long nColumns{};
+	long nTotalCount{};
 
 	do
 	{
@@ -444,6 +447,7 @@ BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& 
 			break;
 		}
 
+		nColumns = m_pRecordset->GetODBCFieldCount();
 		PopulateHeader(ListCtrl, *m_pRecordset.get());
 
 		if (m_bLogPopulateList)
@@ -490,9 +494,9 @@ BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& 
 	{
 		CString sMessage;
 		if (theApp.m_bVirtualMode)
-			sMessage.Format(_T("%d rows, populated in %s"), nTotalCount, GetTimeAsString(start, end));
+			sMessage.Format(_T("%d rows, %d columns, populated in %s"), nTotalCount, nColumns, GetTimeAsString(start, end));
 		else
-			sMessage.Format(_T("%d rows, populated in %s"), ListCtrl.GetItemCount(), GetTimeAsString(start, end));
+			sMessage.Format(_T("%d rows, %d columns, populated in %s"), ListCtrl.GetItemCount(), nColumns, GetTimeAsString(start, end));
 		LogMessage(sMessage, MessageType::info);
 	}
 

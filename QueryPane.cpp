@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "QueryPane.h"
+#include "DatabaseExplorer.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -29,12 +30,15 @@ int CQueryPane::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	AdjustLayout();
 
-	m_pRichEditCtrl->PostMessage(EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_SCROLLEVENTS | ENM_KEYEVENTS);
+	::PostMessage(m_pRichEditCtrl->GetSafeHwnd(), EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_SCROLLEVENTS | ENM_KEYEVENTS);
 
 	const DWORD dwNominator = static_cast<DWORD>(AfxGetApp()->GetProfileInt(_T("Settings"), _T("QueryPaneZoomNominator"), 0));
 	const DWORD dwDenominator = static_cast<DWORD>(AfxGetApp()->GetProfileInt(_T("Settings"), _T("QueryPaneZoomDenominator"), 0));
 	if (dwNominator > 0 || dwDenominator > 0)
 		::PostMessage(m_pRichEditCtrl->GetSafeHwnd(), EM_SETZOOM, static_cast<WPARAM>(dwNominator), static_cast<LPARAM>(dwDenominator));
+
+	if (theApp.m_bWordWrap)
+		m_pRichEditCtrl->SetTargetDevice(nullptr, 0);
 
 	return 0;
 }

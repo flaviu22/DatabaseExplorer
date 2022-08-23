@@ -24,6 +24,7 @@ BEGIN_MESSAGE_MAP(CChildFrame, CMDIChildWndExt)
 	ON_COMMAND(ID_VIEW_DATABASE, &CChildFrame::OnViewDatabase)
 	ON_MESSAGE(WMU_POSTINIT, &CChildFrame::OnPostInit)
 	ON_MESSAGE(WMU_ISPOPULATEMODE, &CChildFrame::OnIsPopulateMode)
+	ON_MESSAGE(WMU_SETWORDWRAP, &CChildFrame::OnSetWordWrap)
 END_MESSAGE_MAP()
 
 // CChildFrame construction/destruction
@@ -208,4 +209,9 @@ LRESULT CChildFrame::OnPostInit(WPARAM wParam, LPARAM lParam)
 LRESULT CChildFrame::OnIsPopulateMode(WPARAM wParam, LPARAM lParam)
 {
 	return ::SendMessage(GetActiveView()->GetSafeHwnd(), WMU_ISPOPULATEMODE, 0, 0);
+}
+
+LRESULT CChildFrame::OnSetWordWrap(WPARAM wParam, LPARAM lParam)
+{
+	return m_pQueryPane->GetRichEditCtrl()->SetTargetDevice(nullptr, wParam);
 }

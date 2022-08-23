@@ -22,6 +22,7 @@ public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	virtual BOOL LoadFrame(UINT nIDResource, DWORD dwDefaultStyle = WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, CWnd* pParentWnd = nullptr, CCreateContext* pContext = nullptr);
+	std::vector<CString> GetTabsNames();
 
 private:
 	void OnInitData();
@@ -64,7 +65,9 @@ protected:
 	afx_msg void OnUpdateCut(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateCopy(CCmdUI* pCmdUI);
 	afx_msg void OnViewVirtualmode();
+	afx_msg void OnViewWordwrap();
 	afx_msg void OnUpdateViewVirtualmode(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateViewWordwrap(CCmdUI* pCmdUI);
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	afx_msg LRESULT OnGetTabToolTip(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnSetMessageText(WPARAM wParam, LPARAM lParam);

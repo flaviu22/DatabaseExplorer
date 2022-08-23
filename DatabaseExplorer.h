@@ -21,6 +21,7 @@
 #define WMU_CHILDFRAMEACTIVATED				(WM_APP + 43)
 #define WMU_ISPOPULATEMODE					(WM_APP + 44)
 #define WMU_RESTOREQUERIES					(WM_APP + 45)
+#define WMU_SETWORDWRAP						(WM_APP + 46)
 #define WMU_POSTINIT						(WM_APP + 80)
 
 #define TIME_ONEMINUTE						(60 * 1000)
@@ -44,6 +45,7 @@ public:
 	};
 
 public:
+	BOOL m_bWordWrap{ FALSE };
 	BOOL m_bHiColorIcons{ TRUE };
 	BOOL m_bVirtualMode{ FALSE };
 	UINT m_nAppLook{ ID_VIEW_APPLOOK_OFF_2007_BLACK };
@@ -59,6 +61,7 @@ public:
 	virtual void LoadCustomState();
 	virtual void SaveCustomState();
 	CString GetAppPath() const;
+	CString GetAppPathTemp() const;
 	CString GetFileNameFrom(const CString& sPath) const;
 	void UpdateBackupFiles();
 #ifdef _UNICODE
@@ -73,6 +76,9 @@ private:
 	std::unordered_map<std::wstring, SDocData> GetDocumentsData() const;
 	void RemoveOldBackup(const std::unordered_map<std::wstring, SDocData>& docdata);
 	void SaveNewBackup(std::unordered_map<std::wstring, SDocData>&& docdata);
+	void SaveDocsOrder(std::vector<CString>&& names) const;
+	std::vector<std::wstring> GetDocsOrder() const;
+	CString GetBackupPath() const { return GetAppPath() + _T("Backup\\"); }
 
 // Generated message map functions
 protected:

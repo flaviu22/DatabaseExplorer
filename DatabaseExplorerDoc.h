@@ -184,7 +184,10 @@ protected:
 				COleDateTime date(variant.m_pdate->year, variant.m_pdate->month,
 					variant.m_pdate->day, variant.m_pdate->hour,
 					variant.m_pdate->minute, variant.m_pdate->second);
-				sRet = date.Format();
+				if (0 == variant.m_pdate->hour && 0 == variant.m_pdate->minute && 0 == variant.m_pdate->second)
+					sRet = date.Format(_T("%Y-%m-%d"));
+				else
+					sRet = date.Format(_T("%Y-%m-%d %H:%M:%S"));
 			}
 			break;
 		case DBVT_STRING:

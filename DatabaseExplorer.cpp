@@ -141,6 +141,7 @@ BOOL CDatabaseExplorerApp::InitInstance()
 		RUNTIME_CLASS(CMFCToolTipCtrl), &ttParams);
 
 	m_bVirtualMode = GetProfileInt(_T("Settings"), _T("VirtualMode"), 0);
+	m_bWordWrap = GetProfileInt(_T("Settings"), _T("WordWrap"), 0);
 	// Register the application's document templates.  Document templates
 	//  serve as the connection between documents, frame windows and views
 	CMultiDocTemplate* pDocTemplate;
@@ -180,9 +181,9 @@ BOOL CDatabaseExplorerApp::InitInstance()
 	pMainFrame->ShowWindow(m_nCmdShow);
 	pMainFrame->UpdateWindow();
 
-	const auto data = GetBackupFiles();
+	const auto data = GetDocsOrder();
 	for (const auto& it : data)
-		OpenDocumentFile(reinterpret_cast<LPCTSTR>(it.c_str()), FALSE);
+		OpenDocumentFile(GetBackupPath() + reinterpret_cast<LPCTSTR>(it.c_str()), FALSE);
 
 	return TRUE;
 }
@@ -190,6 +191,7 @@ BOOL CDatabaseExplorerApp::InitInstance()
 int CDatabaseExplorerApp::ExitInstance()
 {
 	WriteProfileInt(_T("Settings"), _T("VirtualMode"), m_bVirtualMode);
+	WriteProfileInt(_T("Settings"), _T("WordWrap"), m_bWordWrap);
 
 	//TODO: handle additional resources you may have added
 	AfxOleTerm(FALSE);
@@ -232,6 +234,20 @@ CString CDatabaseExplorerApp::GetAppPath() const
 	return sPath;
 }
 
+CString CDatabaseExplorerApp::GetAppPathTemp() const
+{
+	CString sTempPath, sTemp;
+	GetTempPath(_MAX_PATH, sTempPath.GetBuffer(_MAX_PATH));
+	sTemp.Format(_T("%s%s\\"), sTempPath, AfxGetApp()->m_pszAppName);
+
+	if (! PathIsDirectory(sTemp) &&
+		! CreateDirectory(sTemp, NULL) &&
+		ERROR_ALREADY_EXISTS != GetLastError())
+		return sTempPath;
+
+	return sTemp;
+}
+
 CString CDatabaseExplorerApp::GetFileNameFrom(const CString& sPath) const
 {
 	CString sFile;
@@ -242,10 +258,9 @@ CString CDatabaseExplorerApp::GetFileNameFrom(const CString& sPath) const
 
 std::vector<std::wstring> CDatabaseExplorerApp::GetBackupFiles() const
 {
-	CFileFind ff;
-	std::vector<std::wstring> data;
-	const CString sAppPath = GetAppPath();
-	BOOL bMoreFiles = ff.FindFile(sAppPath + _T("Backup\\*.*"));
+	CFileFind ff{};
+	std::vector<std::wstring> data{};
+	BOOL bMoreFiles = ff.FindFile(GetBackupPath() + _T("*.*"));
 
 	while (bMoreFiles)
 	{
@@ -254,7 +269,7 @@ std::vector<std::wstring> CDatabaseExplorerApp::GetBackupFiles() const
 		if (ff.IsDots() || ff.IsHidden())
 			continue;
 		if (! ff.IsDirectory() && -1 == ff.GetFileName().Find('.'))
-			data.push_back(std::wstring(sAppPath + _T("Backup\\") + ff.GetFileName()));
+			data.push_back(std::wstring(ff.GetFileName()));
 	}
 
 	return data;
@@ -265,10 +280,13 @@ void CDatabaseExplorerApp::UpdateBackupFiles()
 	auto docdata = GetDocumentsData();
 	if (docdata.size() > 0)
 	{
-		const CString sBackupPath = theApp.GetAppPath() + _T("Backup");
+		const CString sBackupPath = GetAppPath() + _T("Backup");
 		if (! PathIsDirectory(sBackupPath))
 			CreateDirectory(sBackupPath, NULL);
 	}
+
+	CMainFrame* pFrame = dynamic_cast<CMainFrame*>(m_pMainWnd);
+	SaveDocsOrder(pFrame->GetTabsNames());
 
 	RemoveOldBackup(docdata);
 	SaveNewBackup(std::move(docdata));
@@ -276,7 +294,7 @@ void CDatabaseExplorerApp::UpdateBackupFiles()
 
 std::unordered_map<std::wstring, SDocData> CDatabaseExplorerApp::GetDocumentsData() const
 {
-	std::unordered_map<std::wstring, SDocData> docdata;
+	std::unordered_map<std::wstring, SDocData> docdata{};
 
 	POSITION pos = GetFirstDocTemplatePosition();
 	while (NULL != pos)
@@ -313,18 +331,50 @@ void CDatabaseExplorerApp::RemoveOldBackup(const std::unordered_map<std::wstring
 	{
 		if (docdata.find(it) == docdata.end())
 		{
-			if (FileExist(it.c_str()))
-				DeleteFile(it.c_str());
-			sKey.Format(_T("%sDSNSource"), GetFileNameFrom(it.c_str()));
+			const CString sFile = GetBackupPath() + it.c_str();
+			if (FileExist(sFile))
+				DeleteFile(sFile);
+			sKey.Format(_T("%sDSNSource"), it.c_str());
 			WriteProfileString(_T("Backup"), sKey, nullptr);
-			sKey.Format(_T("%sDBType"), GetFileNameFrom(it.c_str()));
+			sKey.Format(_T("%sDBType"), it.c_str());
 			WriteProfileString(_T("Backup"), sKey, nullptr);
-			sKey.Format(_T("%sRsType"), GetFileNameFrom(it.c_str()));
+			sKey.Format(_T("%sRsType"), it.c_str());
 			WriteProfileString(_T("Backup"), sKey, nullptr);
-			sKey.Format(_T("%sMsSqlAuthRequired"), GetFileNameFrom(it.c_str()));
+			sKey.Format(_T("%sMsSqlAuthRequired"), it.c_str());
 			WriteProfileString(_T("Backup"), sKey, nullptr);
 		}
 	}
+}
+
+void CDatabaseExplorerApp::SaveDocsOrder(std::vector<CString>&& names) const
+{
+	const CString sFileName = GetAppPathTemp() + _T("DocsOrder");
+	if (names.empty() && FileExist(sFileName))
+	{
+		DeleteFile(sFileName);
+		return;
+	}
+
+	CStdioFile file;
+	if (file.Open(sFileName, CFile::modeCreate | CFile::modeReadWrite | CFile::typeText))
+	{
+		for (const auto it : names)
+			file.WriteString(it + _T("\n"));
+	}
+}
+
+std::vector<std::wstring> CDatabaseExplorerApp::GetDocsOrder() const
+{
+	CStdioFile file;
+	std::vector<std::wstring> data{};
+	if (file.Open(GetAppPathTemp() + _T("DocsOrder"), CFile::modeRead | CFile::typeText))
+	{
+		CString sLine;
+		while (file.ReadString(sLine))
+			data.push_back(sLine.GetString());
+	}
+
+	return data;
 }
 
 void CDatabaseExplorerApp::SaveNewBackup(std::unordered_map<std::wstring, SDocData>&& docdata)
@@ -335,11 +385,11 @@ void CDatabaseExplorerApp::SaveNewBackup(std::unordered_map<std::wstring, SDocDa
 		SaveQueries(it.first, std::move(it.second.m_queries));
 		sKey.Format(_T("%sDSNSource"), it.first.c_str());
 		WriteProfileInt(_T("Backup"), sKey, static_cast<int>(it.second.m_bDSNSource));
-		sKey.Format(_T("%sDBType"), it.first.c_str());
+		sKey.Format(_T("%sDatabaseType"), it.first.c_str());
 		WriteProfileInt(_T("Backup"), sKey, static_cast<int>(it.second.m_DBType));
 		sKey.Format(_T("%sRsType"), it.first.c_str());
 		WriteProfileInt(_T("Backup"), sKey, it.second.m_nRecordsetType);
-		sKey.Format(_T("%sMsSqlAuthRequired"), it.first.c_str());
+		sKey.Format(_T("%sMsSqlAuthenticationRequired"), it.first.c_str());
 		WriteProfileInt(_T("Backup"), sKey, it.second.m_bMsSqlAuthenticationRequired);
 	}
 }
@@ -347,7 +397,7 @@ void CDatabaseExplorerApp::SaveNewBackup(std::unordered_map<std::wstring, SDocDa
 void CDatabaseExplorerApp::SaveQueries(const std::wstring& filename, std::set<CString>&& queries) const
 {
 	CStdioFile file;
-	if (! file.Open(theApp.GetAppPath() + _T("Backup\\") + filename.c_str(),
+	if (! file.Open(GetBackupPath() + filename.c_str(),
 		CFile::modeCreate | CFile::modeReadWrite | CFile::typeText))
 		return;
 

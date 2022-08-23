@@ -395,7 +395,7 @@ void CDatabaseExplorerView::OnFileSave()
 	}
 
 	CFileDialogEx fde(FALSE, nullptr, nullptr, OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT,
-		_T("CSV files (*.csv)|*.csv|All Files (*.*)|*.*||"));
+					_T("CSV files (*.csv)|*.csv|All Files (*.*)|*.*||"));
 
 	if (IDOK != fde.DoModal())
 		return;
