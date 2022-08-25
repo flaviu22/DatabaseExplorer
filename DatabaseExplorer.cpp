@@ -128,7 +128,7 @@ BOOL CDatabaseExplorerApp::InitInstance()
 	// Change the registry key under which our settings are stored
 	// TODO: You should modify this string to be something appropriate
 	// such as the name of your company or organization
-	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
+	SetRegistryKey(_T("Sinis"));
 	LoadStdProfileSettings(16);  // Load standard INI file options (including MRU)
 
 	InitContextMenuManager();
@@ -183,7 +183,11 @@ BOOL CDatabaseExplorerApp::InitInstance()
 
 	const auto data = GetDocsOrder();
 	for (const auto& it : data)
-		OpenDocumentFile(GetBackupPath() + reinterpret_cast<LPCTSTR>(it.c_str()), FALSE);
+	{
+		const CString sFile = GetBackupPath() + reinterpret_cast<LPCTSTR>(it.c_str());
+		if (FileExist(sFile))
+			OpenDocumentFile(sFile, FALSE);
+	}
 
 	return TRUE;
 }
@@ -256,6 +260,28 @@ CString CDatabaseExplorerApp::GetFileNameFrom(const CString& sPath) const
 	return sFile;
 }
 
+CString CDatabaseExplorerApp::GetTitleNormalized(const CString& sTitle) const
+{
+	CString sText(sTitle);
+	const int nIndex = sText.Find(':');
+	if (-1 == nIndex)
+		return sText;
+
+	return sText.Left(nIndex);
+}
+
+BOOL CDatabaseExplorerApp::HasValidDocumentTitle(CString sTitle) const
+{
+	if (-1 != sTitle.Find(AfxGetAppName()))
+	{
+		sTitle.MakeReverse();
+		if (isdigit(sTitle.GetAt(0)))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
 std::vector<std::wstring> CDatabaseExplorerApp::GetBackupFiles() const
 {
 	CFileFind ff{};
@@ -304,9 +330,9 @@ std::unordered_map<std::wstring, SDocData> CDatabaseExplorerApp::GetDocumentsDat
 		while (NULL != posDoc)
 		{
 			CDatabaseExplorerDoc* pDoc = static_cast<CDatabaseExplorerDoc*>(pDocTemplate->GetNextDoc(posDoc));
-			if (nullptr != pDoc && pDoc->HasValidDocumentTitle(pDoc->GetTitleNormalized()))
+			if (nullptr != pDoc && HasValidDocumentTitle(GetTitleNormalized(pDoc->GetTitle())))
 			{
-				const auto it = docdata.find(pDoc->GetDSN().first.GetString());
+				const auto& it = docdata.find(pDoc->GetDSN().first.GetString());
 				if (it == docdata.end())
 					docdata.emplace(pDoc->GetDSN().first,
 									SDocData(pDoc->GetDSNSource(),
@@ -334,13 +360,13 @@ void CDatabaseExplorerApp::RemoveOldBackup(const std::unordered_map<std::wstring
 			const CString sFile = GetBackupPath() + it.c_str();
 			if (FileExist(sFile))
 				DeleteFile(sFile);
-			sKey.Format(_T("%sDSNSource"), it.c_str());
+			sKey.Format(_T("%s%s"), it.c_str(), STR_DSNSOURCE);
 			WriteProfileString(_T("Backup"), sKey, nullptr);
-			sKey.Format(_T("%sDBType"), it.c_str());
+			sKey.Format(_T("%s%s"), it.c_str(), STR_DATABASETYPE);
 			WriteProfileString(_T("Backup"), sKey, nullptr);
-			sKey.Format(_T("%sRsType"), it.c_str());
+			sKey.Format(_T("%s%s"), it.c_str(), STR_RSTYPE);
 			WriteProfileString(_T("Backup"), sKey, nullptr);
-			sKey.Format(_T("%sMsSqlAuthRequired"), it.c_str());
+			sKey.Format(_T("%s%s"), it.c_str(), STR_MSSQLAUTHENTICATIONREQUIRED);
 			WriteProfileString(_T("Backup"), sKey, nullptr);
 		}
 	}
@@ -358,7 +384,7 @@ void CDatabaseExplorerApp::SaveDocsOrder(std::vector<CString>&& names) const
 	CStdioFile file;
 	if (file.Open(sFileName, CFile::modeCreate | CFile::modeReadWrite | CFile::typeText))
 	{
-		for (const auto it : names)
+		for (const auto& it : names)
 			file.WriteString(it + _T("\n"));
 	}
 }
@@ -380,21 +406,21 @@ std::vector<std::wstring> CDatabaseExplorerApp::GetDocsOrder() const
 void CDatabaseExplorerApp::SaveNewBackup(std::unordered_map<std::wstring, SDocData>&& docdata)
 {
 	CString sKey;
-	for (auto it : docdata)
+	for (auto& it : docdata)
 	{
 		SaveQueries(it.first, std::move(it.second.m_queries));
-		sKey.Format(_T("%sDSNSource"), it.first.c_str());
+		sKey.Format(_T("%s%s"), it.first.c_str(), STR_DSNSOURCE);
 		WriteProfileInt(_T("Backup"), sKey, static_cast<int>(it.second.m_bDSNSource));
-		sKey.Format(_T("%sDatabaseType"), it.first.c_str());
+		sKey.Format(_T("%s%s"), it.first.c_str(), STR_DATABASETYPE);
 		WriteProfileInt(_T("Backup"), sKey, static_cast<int>(it.second.m_DBType));
-		sKey.Format(_T("%sRsType"), it.first.c_str());
+		sKey.Format(_T("%s%s"), it.first.c_str(), STR_RSTYPE);
 		WriteProfileInt(_T("Backup"), sKey, it.second.m_nRecordsetType);
-		sKey.Format(_T("%sMsSqlAuthenticationRequired"), it.first.c_str());
+		sKey.Format(_T("%s%s"), it.first.c_str(), STR_MSSQLAUTHENTICATIONREQUIRED);
 		WriteProfileInt(_T("Backup"), sKey, it.second.m_bMsSqlAuthenticationRequired);
 	}
 }
 
-void CDatabaseExplorerApp::SaveQueries(const std::wstring& filename, std::set<CString>&& queries) const
+void CDatabaseExplorerApp::SaveQueries(const std::wstring& filename, std::vector<CString>&& queries) const
 {
 	CStdioFile file;
 	if (! file.Open(GetBackupPath() + filename.c_str(),

@@ -10,7 +10,6 @@
 
 #include <vector>
 #include <chrono>
-#include <set>
 
 #pragma once
 
@@ -52,22 +51,22 @@ struct SDocData
 	DatabaseType m_DBType{ DatabaseType::MSSQL };
 	UINT m_nRecordsetType{ AFX_DB_USE_DEFAULT_TYPE };
 	BOOL m_bMsSqlAuthenticationRequired{ FALSE };
-	std::set<CString> m_queries{};
+	std::vector<CString> m_queries{};
 
-	SDocData(BOOL bDSNSource, DatabaseType DBType, UINT nRecordsetType, BOOL bMsSqlAuthenticationRequired, std::set<CString>&& queries)
+	SDocData(BOOL bDSNSource, DatabaseType DBType, UINT nRecordsetType, BOOL bMsSqlAuthenticationRequired, std::vector<CString>&& queries)
 		:m_bDSNSource(bDSNSource)
 		,m_DBType(DBType)
 		,m_nRecordsetType(nRecordsetType)
 		,m_bMsSqlAuthenticationRequired(bMsSqlAuthenticationRequired)
 		,m_queries(std::move(queries))
 	{}
-	SDocData(const SDocData& rhs) = default;
-	SDocData& operator=(const SDocData& rhs) = default;
+	SDocData(const SDocData& rhs) = delete;
+	SDocData& operator=(const SDocData& rhs) = delete;
 	SDocData(SDocData&& rhs) = default;
 	SDocData& operator=(SDocData&& rhs) = default;
-	void AddQueries(std::set<CString>&& queries)
+	void AddQueries(std::vector<CString>&& queries)
 	{
-		m_queries.insert(queries.begin(), queries.end());
+		m_queries.insert(m_queries.begin(), queries.begin(), queries.end());
 	}
 };
 
@@ -118,9 +117,7 @@ public:
 	int GetDatabaseCount() const;
 	BOOL SaveListContentToCSV(CListCtrl& ListCtrl, const CString& sPathName);
 	void RestoreQueries(CQueryPane* pPane) const;
-	std::set<CString> GetDocumentQueries() const;
-	BOOL HasValidDocumentTitle(const CString& sTitle) const;
-	CString GetTitleNormalized() const;
+	std::vector<CString> GetDocumentQueries() const;
 
 // Overrides
 public:
@@ -210,7 +207,7 @@ private:
 	BOOL m_bLogPopulateList{ TRUE };
 
 private:
-	void GetQueries(CRichEditCtrl* pRichEdit, std::set<CString>& queries) const;
+	void GetQueries(CRichEditCtrl* pRichEdit, std::vector<CString>& queries) const;
 	std::vector<CString> GetQueries(const CString& sFile) const;
 
 // Generated message map functions

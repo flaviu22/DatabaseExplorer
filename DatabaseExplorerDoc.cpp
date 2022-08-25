@@ -93,10 +93,10 @@ BOOL CDatabaseExplorerDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	// TODO: Add your specialized code here and/or call the base class
 
 	SetDSN(theApp.GetFileNameFrom(lpszPathName));
-	m_bDSNSource = static_cast<BOOL>(theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("DSNSource"), 0));
-	m_DatabaseType = static_cast<DatabaseType>(theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("DatabaseType"), static_cast<int>(m_DatabaseType)));
-	m_pDB->SetRecordsetType(theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("RsType"), CRecordset::dynaset));
-	m_bMsSqlAuthenticationRequired = theApp.GetProfileInt(_T("Backup"), m_DSN.first + _T("MsSqlAuthenticationRequired"), m_bMsSqlAuthenticationRequired);
+	m_bDSNSource = static_cast<BOOL>(theApp.GetProfileInt(_T("Backup"), m_DSN.first + STR_DSNSOURCE, 0));
+	m_DatabaseType = static_cast<DatabaseType>(theApp.GetProfileInt(_T("Backup"), m_DSN.first + STR_DATABASETYPE, static_cast<int>(m_DatabaseType)));
+	m_pDB->SetRecordsetType(theApp.GetProfileInt(_T("Backup"), m_DSN.first + STR_RSTYPE, CRecordset::dynaset));
+	m_bMsSqlAuthenticationRequired = theApp.GetProfileInt(_T("Backup"), m_DSN.first + STR_MSSQLAUTHENTICATIONREQUIRED, m_bMsSqlAuthenticationRequired);
 
 	SetConnectionString();
 
@@ -561,7 +561,7 @@ BOOL CDatabaseExplorerDoc::GetOracleDatabases(CTreeCtrl& tree)
 	else
 	{
 		const CString sUserID = GetOracleUserID(TRUE);
-		for (auto it = database.begin(); it != database.end(); it += 2)
+		for (auto& it = database.begin(); it != database.end(); it += 2)
 		{
 			HTREEITEM hItem = tree.InsertItem(CString((it + 1)->c_str()), 0, 0);
 			tree.SetItemData(hItem, std::atoi(it->c_str()));
@@ -591,7 +591,7 @@ BOOL CDatabaseExplorerDoc::GetSQLiteDatabases(CTreeCtrl& tree)
 			const auto table = m_pDB->GetData(_T("SELECT tbl_name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY 1"));
 			if (! m_pDB->GetError().IsEmpty() || table.empty())
 				continue;
-			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
+			for (auto& it_table = table.begin(); it_table != table.end(); ++it_table)
 				tree.SetItemData(tree.InsertItem(CString(it_table->c_str()), 1, 1, hItem), 0);
 		}
 	}
@@ -942,29 +942,6 @@ std::pair<CString, CString> CDatabaseExplorerDoc::GetMsSqlAuthenticationCredenti
 	return credential;
 }
 
-BOOL CDatabaseExplorerDoc::HasValidDocumentTitle(const CString& sTitle) const
-{
-	if (-1 != sTitle.Find(AfxGetAppName()))
-	{
-		for (int i = 0; i < sTitle.GetLength(); ++i)
-		{
-			if (isdigit(sTitle.GetAt(i)))
-				return FALSE;
-		}
-	}
-
-	return TRUE;
-}
-
-CString CDatabaseExplorerDoc::GetTitleNormalized() const
-{
-	const int nIndex = m_strTitle.Find(':');
-	if (-1 == nIndex)
-		return m_strTitle;
-
-	return m_strTitle.Left(nIndex);
-}
-
 void CDatabaseExplorerDoc::RestoreQueries(CQueryPane* pPane) const
 {
 	if (nullptr == pPane->GetSafeHwnd())
@@ -997,7 +974,7 @@ std::vector<CString> CDatabaseExplorerDoc::GetQueries(const CString& sFile) cons
 	return queries;
 }
 
-void CDatabaseExplorerDoc::GetQueries(CRichEditCtrl* pRichEdit, std::set<CString>& queries) const
+void CDatabaseExplorerDoc::GetQueries(CRichEditCtrl* pRichEdit, std::vector<CString>& queries) const
 {
 	if (nullptr == pRichEdit)
 		return;
@@ -1011,14 +988,16 @@ void CDatabaseExplorerDoc::GetQueries(CRichEditCtrl* pRichEdit, std::set<CString
 			sLine.Empty();
 			pRichEdit->GetLine(i, sLine.GetBuffer(nLineLength), nLineLength);
 			sLine.ReleaseBuffer();
-			queries.emplace(sLine);
+			const auto found = std::find(queries.cbegin(), queries.cend(), sLine);
+			if (found == queries.cend())
+				queries.push_back(sLine);
 		}
 	}
 }
 
-std::set<CString> CDatabaseExplorerDoc::GetDocumentQueries() const
+std::vector<CString> CDatabaseExplorerDoc::GetDocumentQueries() const
 {
-	std::set<CString> queries;
+	std::vector<CString> queries;
 	POSITION pos = GetFirstViewPosition();
 	while (pos)
 	{

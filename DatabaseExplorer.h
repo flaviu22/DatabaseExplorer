@@ -26,6 +26,11 @@
 
 #define TIME_ONEMINUTE						(60 * 1000)
 
+#define STR_DSNSOURCE						_T("DSNSource")
+#define STR_DATABASETYPE					_T("DatabaseType")
+#define STR_RSTYPE							_T("RsType")
+#define STR_MSSQLAUTHENTICATIONREQUIRED		_T("MsSqlAuthenticationRequired")
+
 // CDatabaseExplorerApp:
 // See DatabaseExplorer.cpp for the implementation of this class
 //
@@ -64,6 +69,9 @@ public:
 	CString GetAppPathTemp() const;
 	CString GetFileNameFrom(const CString& sPath) const;
 	void UpdateBackupFiles();
+	CString GetTitleNormalized(const CString& sTitle) const;
+	BOOL HasValidDocumentTitle(CString sTitle) const;
+
 #ifdef _UNICODE
 	BOOL FileExist(const CString sFilePath) const { return (-1 != _waccess(sFilePath, 0)); }
 #else
@@ -72,7 +80,7 @@ public:
 
 private:
 	std::vector<std::wstring> GetBackupFiles() const;
-	void SaveQueries(const std::wstring& filename, std::set<CString>&& queries) const;
+	void SaveQueries(const std::wstring& filename, std::vector<CString>&& queries) const;
 	std::unordered_map<std::wstring, SDocData> GetDocumentsData() const;
 	void RemoveOldBackup(const std::unordered_map<std::wstring, SDocData>& docdata);
 	void SaveNewBackup(std::unordered_map<std::wstring, SDocData>&& docdata);

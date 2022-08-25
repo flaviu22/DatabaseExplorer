@@ -251,7 +251,10 @@ std::vector<CString> CMainFrame::GetTabsNames()
 	for (int i = 0; i < nCount; ++i)
 	{
 		MFCTabCtrl.GetTabLabel(i, sLabel);
-		data.push_back(sLabel);
+		const CString sLabelNormalized = theApp.GetTitleNormalized(sLabel);
+		const auto found = std::find(data.cbegin(), data.cend(), sLabelNormalized);
+		if (theApp.HasValidDocumentTitle(sLabelNormalized) && found == data.cend())
+			data.push_back(sLabelNormalized);
 	}
 
 	return data;
@@ -261,6 +264,11 @@ void CMainFrame::OnClose()
 {
 	// TODO: Add your message handler code here and/or call default
 
+	if (theApp.m_bWordWrap)
+	{
+		OnViewWordwrap();
+		theApp.m_bWordWrap = TRUE;
+	}
 	theApp.UpdateBackupFiles();
 
 	CMDIFrameWndEx::OnClose();
