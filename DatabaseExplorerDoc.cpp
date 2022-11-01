@@ -406,10 +406,10 @@ void CDatabaseExplorerDoc::PopulateHeader(CListCtrl& ListCtrl, CRecordset& recor
 	for (short nColumn = 0; nColumn < nColumns; ++nColumn)
 	{
 		recordset.GetODBCFieldInfo(nColumn, fieldinfo);
-		if(fieldinfo.m_strName.IsEmpty())
-			sText.Format(_T("	"));
+		if (fieldinfo.m_strName.IsEmpty())
+			sText.Format(_T("(%d) -"), nColumn);
 		else
-			sText.Format(_T("%s"), fieldinfo.m_strName);
+			sText.Format(_T("(%d) %s"), nColumn, fieldinfo.m_strName);
 		ListCtrl.InsertColumn(nColumn, sText, LVCFMT_LEFT, 200);
 	}
 }
