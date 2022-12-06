@@ -439,7 +439,7 @@ BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& 
 
 		end = std::chrono::high_resolution_clock::now();
 
-		LogMessage(_T("SQL select took: ") + GetTimeAsString(start, end), MessageType::info);
+		LogMessage(_T("SQL select have took: ") + GetTimeAsString(start, end), MessageType::info);
 
 		if (m_pRecordset->GetODBCFieldCount() < 1)
 		{
