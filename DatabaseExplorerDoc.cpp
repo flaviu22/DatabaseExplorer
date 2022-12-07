@@ -417,7 +417,7 @@ void CDatabaseExplorerDoc::PopulateHeader(CListCtrl& ListCtrl, CRecordset& recor
 BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& sSQL)
 {
 	m_sState.Empty();
-	std::chrono::high_resolution_clock::time_point start, end;
+	std::chrono::high_resolution_clock::time_point start{}, end{};
 
 	if (m_pRecordset->IsOpen())
 		m_pRecordset->Close();
@@ -679,7 +679,7 @@ void CDatabaseExplorerDoc::OnUpdateEditLogpopulatelist(CCmdUI* pCmdUI)
 	pCmdUI->SetCheck(m_bLogPopulateList);
 }
 
-void CDatabaseExplorerDoc::LogMessage(const CString& sMessage, const MessageType& type)
+void CDatabaseExplorerDoc::LogMessage(const CString& sMessage, const MessageType& type) const
 {
 	CString sText;
 	COleDateTime dtNow = COleDateTime::GetCurrentTime();
@@ -699,16 +699,16 @@ void CDatabaseExplorerDoc::LogMessage(const CString& sMessage, const MessageType
 	}
 }
 
-BOOL CDatabaseExplorerDoc::RunSQL(const CString sSQL)
+BOOL CDatabaseExplorerDoc::RunSQL(const CString sSQL) const
 {
 	m_sState.Empty();
 
-	auto start = std::chrono::high_resolution_clock::now();
+	const auto start = std::chrono::high_resolution_clock::now();
 
 	if (! m_pDB->Execute(sSQL))
 		m_sState = m_pDB->GetError();
 
-	auto end = std::chrono::high_resolution_clock::now();
+	const auto end = std::chrono::high_resolution_clock::now();
 
 	LogMessage(sSQL, MessageType::info);
 	if (m_sState.IsEmpty())
@@ -754,7 +754,7 @@ int CDatabaseExplorerDoc::GetDatabaseCount() const
 	return 0;
 }
 
-long CDatabaseExplorerDoc::GetRecordCount(const CString& sSQL)
+long CDatabaseExplorerDoc::GetRecordCount(const CString& sSQL) const
 {
 	const auto val = m_pDB->GetData(PrepareSQLForCountAll(sSQL));
 
@@ -770,7 +770,7 @@ long CDatabaseExplorerDoc::GetRecordCount(const CString& sSQL)
 	return 0;
 }
 
-CString CDatabaseExplorerDoc::PrepareSQLForCountAll(const CString& sSQL)
+CString CDatabaseExplorerDoc::PrepareSQLForCountAll(const CString& sSQL) const
 {
 	CString sTemp(sSQL);
 	sTemp.TrimLeft();

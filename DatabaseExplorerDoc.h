@@ -110,10 +110,10 @@ public:
 	BOOL IsTableOperation(CString sQuery) const;
 	BOOL IsDatabaseOperation(CString sQuery) const;
 	BOOL PopulateDatabasePanel(CTreeCtrl& tree);
-	void LogMessage(const CString& sMessage, const MessageType& type);
-	BOOL RunSQL(const CString sSQL);
+	void LogMessage(const CString& sMessage, const MessageType& type) const;
+	BOOL RunSQL(const CString sSQL) const;
 	CString InitDatabase();
-	long GetRecordCount(const CString& sSQL);
+	long GetRecordCount(const CString& sSQL) const;
 	int GetDatabaseCount() const;
 	BOOL SaveListContentToCSV(CListCtrl& ListCtrl, const CString& sPathName);
 	void RestoreQueries(CQueryPane* pPane) const;
@@ -156,7 +156,7 @@ protected:
 	BOOL GetMySqlDatabases(CTreeCtrl& tree);
 	BOOL GetPostgreDatabases(CTreeCtrl& tree);
 	CChildFrame* GetChildFrame() const;
-	CString PrepareSQLForCountAll(const CString& sSQL);
+	CString PrepareSQLForCountAll(const CString& sSQL) const;
 	std::vector<CString> GetHeaderItems(CListCtrl& ListCtrl);
 	void WriteHeaderLine(CListCtrl& ListCtrl, CStdioFile& file, const CString& sSeparator);
 	void WriteListLines(CListCtrl& ListCtrl, CStdioFile& file, const CString& sSeparator);
