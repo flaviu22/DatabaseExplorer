@@ -171,7 +171,9 @@ void CDatabaseExplorerView::OnTimer(UINT_PTR nIDEvent)
 	if (ID_TIMER_DBDISCONNECT == nIDEvent)
 	{
 		KillTimer(nIDEvent);
-		GetDocument()->GetDB()->Close();
+		CDatabaseExplorerDoc* pDoc = GetDocument();
+		pDoc->GetDB()->Close();
+		pDoc->LogMessage(_T("You have been disconnected from the current database due to inactivity"), MessageType::info);
 	}
 
 	CListView::OnTimer(nIDEvent);
