@@ -110,7 +110,7 @@ public:
 	BOOL IsTableOperation(CString sQuery) const;
 	BOOL IsDatabaseOperation(CString sQuery) const;
 	BOOL PopulateDatabasePanel(CTreeCtrl& tree);
-	void LogMessage(const CString& sMessage, const MessageType& type) const;
+	void LogMessage(const CString& sMessage, const MessageType& type, CChildFrame* pChild = nullptr) const;
 	BOOL RunSQL(const CString sSQL) const;
 	CString InitDatabase();
 	long GetRecordCount(const CString& sSQL) const;
@@ -209,6 +209,7 @@ private:
 private:
 	void GetQueries(CRichEditCtrl* pRichEdit, std::vector<CString>& queries) const;
 	std::vector<CString> GetQueries(const CString& sFile) const;
+	CChildFrame* GetChild(LPCTSTR lpszTitle = NULL) const;
 
 // Generated message map functions
 protected:

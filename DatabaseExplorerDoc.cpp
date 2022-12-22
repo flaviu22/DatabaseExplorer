@@ -679,8 +679,11 @@ void CDatabaseExplorerDoc::OnUpdateEditLogpopulatelist(CCmdUI* pCmdUI)
 	pCmdUI->SetCheck(m_bLogPopulateList);
 }
 
-void CDatabaseExplorerDoc::LogMessage(const CString& sMessage, const MessageType& type) const
+void CDatabaseExplorerDoc::LogMessage(const CString& sMessage, const MessageType& type, CChildFrame* pChild/* = nullptr*/) const
 {
+	if (nullptr == pChild)
+		pChild = GetChildFrame();
+
 	CString sText;
 	COleDateTime dtNow = COleDateTime::GetCurrentTime();
 	sText.Format(_T("%.4d-%.2d-%.2d %.2d:%.2d:%.2d - %s"), 
@@ -688,15 +691,8 @@ void CDatabaseExplorerDoc::LogMessage(const CString& sMessage, const MessageType
 		dtNow.GetHour(), dtNow.GetMinute(), dtNow.GetSecond(),
 		sMessage);
 
-	CMDIFrameWnd* pFrame = static_cast<CMDIFrameWnd*>(AfxGetMainWnd());
-	if (nullptr != pFrame->GetSafeHwnd())
-	{
-		CChildFrame* pChild = static_cast<CChildFrame*>(pFrame->MDIGetActive());
-		if (nullptr != pChild->GetSafeHwnd())
-		{
-			pChild->SetMessage(sText, MessageType::error == type ? Color::red : Color::black);
-		}
-	}
+	if (nullptr != pChild && nullptr != pChild->GetSafeHwnd())
+		pChild->SetMessage(sText, MessageType::error == type ? Color::red : Color::black);
 }
 
 BOOL CDatabaseExplorerDoc::RunSQL(const CString sSQL) const
@@ -1015,4 +1011,37 @@ std::vector<CString> CDatabaseExplorerDoc::GetDocumentQueries() const
 	}
 
 	return queries;
+}
+
+CChildFrame* CDatabaseExplorerDoc::GetChild(LPCTSTR lpszTitle/* = NULL*/) const
+{
+	if (lpszTitle && *lpszTitle)
+	{
+		CString sText;
+		POSITION pos = theApp.GetFirstDocTemplatePosition();
+		while (pos)
+		{
+			CDocTemplate* pDocTemplate = static_cast<CDocTemplate*>(theApp.GetNextDocTemplate(pos));
+			POSITION posDoc = pDocTemplate->GetFirstDocPosition();
+			while (posDoc)
+			{
+				CDatabaseExplorerDoc* pDoc = static_cast<CDatabaseExplorerDoc*>(pDocTemplate->GetNextDoc(posDoc));
+				POSITION posView = pDoc->GetFirstViewPosition();
+				while (posView)
+				{
+					sText.Empty();
+					CView* pView = pDoc->GetNextView(posView);
+					CChildFrame* pChild = static_cast<CChildFrame*>(pView->GetParentFrame());
+					if (pChild)
+					{
+						pChild->GetWindowText(sText);
+						if (sText == lpszTitle)
+							return pChild;
+					}
+				}
+			}
+		}
+	}
+
+	return nullptr;
 }
