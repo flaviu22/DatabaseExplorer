@@ -29,6 +29,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_MESSAGE(WMU_CHILDFRAMEACTIVATE, &CMainFrame::OnChildFrameActivate)
 	ON_MESSAGE(WMU_CHILDFRAMEACTIVATED, &CMainFrame::OnChildFrameActivated)
 	ON_WM_TIMER()
+	ON_WM_TIMECHANGE()
 	ON_WM_ACTIVATE()
 	ON_COMMAND(ID_EDIT_CUT, &CMainFrame::OnEditCut)
 	ON_COMMAND(ID_EDIT_COPY, &CMainFrame::OnEditCopy)
@@ -369,6 +370,15 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 		KillTimer(nIDEvent);
 		PostMessage(WM_SETMESSAGESTRING, AFX_IDS_IDLEMESSAGE, 0);
 	}
+}
+
+void CMainFrame::OnTimeChange()
+{
+	CMDIFrameWndEx::OnTimeChange();
+
+	// TODO: Add your message handler code here
+
+	theApp.DisconnectAllDatabases();
 }
 
 void CMainFrame::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)

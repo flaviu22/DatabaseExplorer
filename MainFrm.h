@@ -54,6 +54,7 @@ protected:
 	afx_msg LRESULT OnChildFrameActivate(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnChildFrameActivated(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnTimeChange();
 	afx_msg void OnEditCut();
 	afx_msg void OnEditCopy();
 	afx_msg void OnEditPaste();

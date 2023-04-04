@@ -323,11 +323,11 @@ std::unordered_map<std::wstring, SDocData> CDatabaseExplorerApp::GetDocumentsDat
 	std::unordered_map<std::wstring, SDocData> docdata{};
 
 	POSITION pos = GetFirstDocTemplatePosition();
-	while (NULL != pos)
+	while (pos)
 	{
 		CDocTemplate* pDocTemplate = static_cast<CDocTemplate*>(GetNextDocTemplate(pos));
 		POSITION posDoc = pDocTemplate->GetFirstDocPosition();
-		while (NULL != posDoc)
+		while (posDoc)
 		{
 			CDatabaseExplorerDoc* pDoc = static_cast<CDatabaseExplorerDoc*>(pDocTemplate->GetNextDoc(posDoc));
 			if (nullptr != pDoc && HasValidDocumentTitle(GetTitleNormalized(pDoc->GetTitle())))
@@ -429,4 +429,31 @@ void CDatabaseExplorerApp::SaveQueries(const std::wstring& filename, std::vector
 
 	for (const auto it : queries)
 		file.WriteString(it + _T("\n"));
+}
+
+void CDatabaseExplorerApp::DisconnectAllDatabases() const
+{
+	POSITION pos = GetFirstDocTemplatePosition();
+	while (pos)
+	{
+		CDocTemplate* pDocTemplate = static_cast<CDocTemplate*>(GetNextDocTemplate(pos));
+		POSITION posDoc = pDocTemplate->GetFirstDocPosition();
+		while (posDoc)
+		{
+			CDatabaseExplorerDoc* pDoc = static_cast<CDatabaseExplorerDoc*>(pDocTemplate->GetNextDoc(posDoc));
+			if (pDoc)
+			{
+				POSITION posView = pDoc->GetFirstViewPosition();
+				while (posView)
+				{
+					CView* pView = pDoc->GetNextView(posView);
+					if (nullptr != pView->GetSafeHwnd())
+					{
+						pDoc->GetDB()->Close();
+						pDoc->LogMessage(_T("Disconnected from the current database"), MessageType::info, static_cast<CChildFrame*>(pView->GetParentFrame()));
+					}
+				}				
+			}
+		}
+	}
 }

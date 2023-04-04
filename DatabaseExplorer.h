@@ -71,6 +71,7 @@ public:
 	void UpdateBackupFiles();
 	CString GetTitleNormalized(const CString& sTitle) const;
 	BOOL HasValidDocumentTitle(CString sTitle) const;
+	void DisconnectAllDatabases() const;
 
 #ifdef _UNICODE
 	BOOL FileExist(const CString sFilePath) const { return (-1 != _waccess(sFilePath, 0)); }
