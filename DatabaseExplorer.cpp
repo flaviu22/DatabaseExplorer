@@ -447,7 +447,7 @@ void CDatabaseExplorerApp::DisconnectAllDatabases() const
 				while (posView)
 				{
 					CView* pView = pDoc->GetNextView(posView);
-					if (nullptr != pView->GetSafeHwnd())
+					if (nullptr != pView->GetSafeHwnd() && pDoc->GetDB()->IsOpen())
 					{
 						pDoc->GetDB()->Close();
 						pDoc->LogMessage(_T("Disconnected from the current database"), MessageType::info, static_cast<CChildFrame*>(pView->GetParentFrame()));
