@@ -149,14 +149,14 @@ void CChildFrame::SetDockingWindowIcons(BOOL bHiColorIcons)
 	m_pDatabasePane->SetIcon(hBarIcon, FALSE);
 }
 
-CString CChildFrame::GetQueryText()
+CString CChildFrame::GetQueryText() const
 {
 	CString sText;
 	m_pQueryPane->GetRichEditCtrl()->GetWindowText(sText);
 	return sText;
 }
 
-CString CChildFrame::GetMessageText()
+CString CChildFrame::GetMessageText() const
 {
 	CString sText;
 	m_pQueryPane->GetRichEditCtrl()->GetWindowText(sText);

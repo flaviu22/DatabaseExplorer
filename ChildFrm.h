@@ -35,8 +35,8 @@ protected:
 
 // Operations
 public:
-	CString GetQueryText();
-	CString GetMessageText();
+	CString GetQueryText() const;
+	CString GetMessageText() const;
 	CQueryPane* GetQueryPane() { return m_pQueryPane.get(); }
 	CMessagePane* GetMessagePane() { return m_pMessagePane.get(); }
 	CDatabasePane* GetDatabasePane() { return m_pDatabasePane.get(); }
