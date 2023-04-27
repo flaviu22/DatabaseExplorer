@@ -167,6 +167,7 @@ void CChildFrame::OnViewQuery()
 {
 	// TODO: Add your command handler code here
 
+	m_pQueryPane->ShowPane(TRUE, FALSE, TRUE);
 	if (m_pQueryPane->IsDocked())
 		m_pQueryPane->Slide(TRUE);
 	m_pQueryPane->GetRichEditCtrl()->SetFocus();
@@ -176,6 +177,7 @@ void CChildFrame::OnViewMessage()
 {
 	// TODO: Add your command handler code here
 
+	m_pMessagePane->ShowPane(TRUE, FALSE, TRUE);
 	if (m_pMessagePane->IsDocked())
 		m_pMessagePane->Slide(TRUE);
 	m_pMessagePane->GetRichEditCtrl()->SetFocus();
@@ -185,6 +187,7 @@ void CChildFrame::OnViewDatabase()
 {
 	// TODO: Add your command handler code here
 
+	m_pDatabasePane->ShowPane(TRUE, FALSE, TRUE);
 	if (m_pDatabasePane->IsDocked())
 		m_pDatabasePane->Slide(TRUE);
 	m_pDatabasePane->SetFocus();
