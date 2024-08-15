@@ -55,7 +55,7 @@ void CMessagePane::OnDestroy()
 
 void CMessagePane::AppendToLogAndScroll(const CString& str, const COLORREF& color)
 {
-	CHARFORMAT cf;
+	CHARFORMAT cf{};
 	long nVisible = 0;
 	long nInsertionPoint = 0;
 

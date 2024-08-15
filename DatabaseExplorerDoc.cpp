@@ -285,7 +285,7 @@ BOOL CDatabaseExplorerDoc::IsTableOperation(CString sQuery) const
 	sQuery.MakeLower();
 	sQuery.TrimLeft();
 
-	return (-1 != sQuery.Find(_T(" table")));
+	return (-1 != sQuery.Find(_T("table")) || - 1 != sQuery.Find(_T("exec")));
 }
 
 BOOL CDatabaseExplorerDoc::IsDatabaseOperation(CString sQuery) const
@@ -293,7 +293,7 @@ BOOL CDatabaseExplorerDoc::IsDatabaseOperation(CString sQuery) const
 	sQuery.MakeLower();
 	sQuery.TrimLeft();
 
-	return (-1 != sQuery.Find(_T(" database")));
+	return (-1 != sQuery.Find(_T("database")) || -1 != sQuery.Find(_T("create")));
 }
 
 CChildFrame* CDatabaseExplorerDoc::GetChildFrame() const
@@ -657,11 +657,11 @@ void CDatabaseExplorerDoc::OnEditDatasource()
 		return;
 
 	CDataSourceDlg dlg(this);
-	const int nRet = dlg.DoModal();
+	const auto ret = dlg.DoModal();
 
 	SetConnectionString();
 	CString sDatabase = pDatabasePane->GetDatabaseSelection();
-	if (IDOK == nRet)
+	if (IDOK == ret)
 		UpdateAllViews(NULL, CDatabaseExplorerApp::UH_POPULATEDATABASEPANEL);
 	UpdateAllViews(NULL, CDatabaseExplorerApp::UH_SELECTDATABASE, reinterpret_cast<CObject*>(&sDatabase));
 	UpdateAllViews(NULL, CDatabaseExplorerApp::UH_INITDATABASE);
@@ -828,7 +828,7 @@ CString CDatabaseExplorerDoc::GetText(CHeaderCtrl& header, int nItem) const
 	hdi.mask = HDI_TEXT;
 	std::vector<wchar_t> text(127);
 	hdi.pszText = text.data();
-	hdi.cchTextMax = text.size();
+	hdi.cchTextMax = static_cast<int>(text.size());
 	header.GetItem(nItem, &hdi);
 	return hdi.pszText;
 }

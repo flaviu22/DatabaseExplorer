@@ -93,6 +93,9 @@
     <ClInclude Include="PasswordDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RedrawHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DatabaseExplorer.cpp">

@@ -406,7 +406,7 @@ LRESULT CMainFrame::OnSetMessageText(WPARAM wParam, LPARAM lParam)
 	}
 
 	if (wParam > 0)
-		SetTimer(ID_TIMER_RESETSTATUSBAR, wParam, nullptr);
+		SetTimer(ID_TIMER_RESETSTATUSBAR, static_cast<UINT>(wParam), nullptr);
 
 	return 0;
 }

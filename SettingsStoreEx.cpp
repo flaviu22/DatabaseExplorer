@@ -35,7 +35,7 @@ void CSettingsStoreEx::EnumKeys(std::vector<CString>& keys)
 	for (DWORD i = 0; i < dwCount; i++)
 	{
 		std::vector<wchar_t> buff(_MAX_PATH);
-		DWORD dwLength = buff.size();
+		DWORD dwLength = static_cast<DWORD>(buff.size());
 		if (ERROR_SUCCESS == m_reg.EnumKey(i, buff.data(), &dwLength))
 			keys.push_back(buff.data());
 	}
@@ -52,7 +52,7 @@ void CSettingsStoreEx::EnumValues(std::vector<CString>& values)
 	for (DWORD i = 0; i < dwCount; ++i)
 	{
 		std::vector<wchar_t> buff(_MAX_PATH);
-		DWORD dwLength = buff.size();
+		DWORD dwLength = static_cast<DWORD>(buff.size());
 		if (ERROR_SUCCESS == RegEnumValue(m_reg.m_hKey, i, buff.data(), &dwLength, 
 			NULL, NULL, NULL, NULL))
 			values.push_back(buff.data());
@@ -71,8 +71,8 @@ void CSettingsStoreEx::EnumValues(std::unordered_map<std::wstring, std::wstring>
 	{
 		std::vector<wchar_t> value(_MAX_PATH);
 		std::vector<wchar_t> data(_MAX_PATH);
-		DWORD dwLengthValue = value.size();
-		DWORD dwLengthData = data.size();
+		DWORD dwLengthValue = static_cast<DWORD>(value.size());
+		DWORD dwLengthData = static_cast<DWORD>(data.size());
 		if (ERROR_SUCCESS == RegEnumValue(m_reg.m_hKey, i,
 			value.data(), &dwLengthValue, NULL, NULL, 
 			reinterpret_cast<LPBYTE>(data.data()), &dwLengthData))

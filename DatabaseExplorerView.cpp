@@ -14,6 +14,7 @@
 
 #include "ChildFrm.h"
 #include "FileDialogEx.h"
+#include "RedrawHelper.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -85,7 +86,7 @@ void CDatabaseExplorerView::OnInitialUpdate()
 	// TODO: You may populate your ListView with items by directly accessing
 	//  its list control through a call to GetListCtrl().
 
-	CListCtrl& ListCtrl = GetListCtrl();
+	auto& ListCtrl = GetListCtrl();
 	if (ListCtrl.GetHeaderCtrl()->GetItemCount() > 0)
 		return;
 
@@ -291,11 +292,11 @@ void CDatabaseExplorerView::DeleteAllColumns()
 {
 	CListCtrl& ListCtrl = GetListCtrl();
 	ListCtrl.DeleteAllItems();
-	int nCount = ListCtrl.GetHeaderCtrl()->GetItemCount();
-	while (nCount > 0)
+	auto count = ListCtrl.GetHeaderCtrl()->GetItemCount();
+	while (count > 0)
 	{
 		ListCtrl.DeleteColumn(0);
-		nCount--;
+		count--;
 	}
 }
 
@@ -317,16 +318,15 @@ void CDatabaseExplorerView::ExecuteSelect(CDatabaseExplorerDoc* pDoc, const CStr
 		if (nRows > 20000)
 		{
 			CString sMessage;
-			sMessage.Format(_T("This select will get %d rows, continue ?"), nRows);
+			sMessage.Format(_T("This SELECT will get %d rows, continue ?"), nRows);
 			if (IDYES != MessageBox(sMessage, NULL, MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2))
 				return;
 		}
 	}
 
-	SetRedraw(FALSE);
+	CRedrawHelper rh(this);
 	DeleteAllColumns();
 	pDoc->PopulateListCtrl(GetListCtrl(), sSQL);
-	SetRedraw();
 }
 
 void CDatabaseExplorerView::OnLvnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)

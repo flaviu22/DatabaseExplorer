@@ -216,5 +216,5 @@ LRESULT CChildFrame::OnIsPopulateMode(WPARAM wParam, LPARAM lParam)
 
 LRESULT CChildFrame::OnSetWordWrap(WPARAM wParam, LPARAM lParam)
 {
-	return m_pQueryPane->GetRichEditCtrl()->SetTargetDevice(nullptr, wParam);
+	return m_pQueryPane->GetRichEditCtrl()->SetTargetDevice(nullptr, static_cast<long>(wParam));
 }
