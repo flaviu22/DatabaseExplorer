@@ -105,6 +105,7 @@ public:
 	CDatabasePane* GetDatabasePane() const;
 	CString GetTimeAsString(const std::chrono::high_resolution_clock::time_point& point1,
 							const std::chrono::high_resolution_clock::time_point& point2) const;
+	CString InitDatabase();
 	BOOL PopulateListCtrl(CListCtrl& ListCtrl, const CString& sSQL);
 	BOOL IsSelect(CString sQuery) const;
 	BOOL IsTableOperation(CString sQuery) const;
@@ -112,7 +113,6 @@ public:
 	BOOL PopulateDatabasePanel(CTreeCtrl& tree);
 	void LogMessage(const CString& sMessage, const MessageType& type, CChildFrame* pChild = nullptr) const;
 	BOOL RunSQL(const CString sSQL) const;
-	CString InitDatabase();
 	long GetRecordCount(const CString& sSQL) const;
 	int GetDatabaseCount() const;
 	BOOL SaveListContentToCSV(CListCtrl& ListCtrl, const CString& sPathName);
@@ -142,8 +142,8 @@ protected:
 	BOOL m_bDSNSource{ FALSE };				// user dsn
 	std::pair<CString, CString> m_DSN{};	// dsn name - dsn type
 	CString m_sPostgreDB{ _T("postgres") };
-	std::unique_ptr<CDatabaseExt> m_pDB{ nullptr };
-	std::unique_ptr<CRecordset> m_pRecordset{ nullptr };
+	std::unique_ptr<CDatabaseExt> m_pDB{};
+	std::unique_ptr<CRecordset> m_pRecordset{};
 	DatabaseType m_DatabaseType{ DatabaseType::MSSQL };
 	BOOL m_bMsSqlAuthenticationRequired{ FALSE };
 
@@ -209,7 +209,6 @@ private:
 private:
 	void GetQueries(CRichEditCtrl* pRichEdit, std::vector<CString>& queries) const;
 	std::vector<CString> GetQueries(const CString& sFile) const;
-	CChildFrame* GetChild(LPCTSTR lpszTitle = NULL) const;
 
 // Generated message map functions
 protected:

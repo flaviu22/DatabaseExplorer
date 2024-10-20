@@ -362,21 +362,21 @@ void CDatabaseExplorerView::OnLvnOdcachehint(NMHDR* pNMHDR, LRESULT* pResult)
 		{
 			CString sValue;
 			CDatabaseExplorerDoc* pDoc = GetDocument();
-			CRecordset* pRecordset = pDoc->GetRecordset();
+			auto recordset = pDoc->GetRecordset();
 
 			auto start = std::chrono::high_resolution_clock::now();
 
 			for (auto dwRow = dwFetchedRows; dwRow <= dwToRow; ++dwRow)
 			{
 				std::unique_ptr<CDBRecord> record = std::make_unique<CDBRecord>();
-				const short nColCount = pRecordset->GetODBCFieldCount();
+				const short nColCount = recordset->GetODBCFieldCount();
 				for (auto nCol = 0; nCol < nColCount; ++nCol)
 				{
-					pRecordset->GetFieldValue(nCol, sValue);
+					recordset->GetFieldValue(nCol, sValue);
 					record->m_arrValue.push_back(sValue);
 				}
 				m_arrRows.emplace_back(std::move(record));
-				pRecordset->MoveNext();
+				recordset->MoveNext();
 			}
 			auto end = std::chrono::high_resolution_clock::now();
 			if (pDoc->IsLoggedPopulateList())
@@ -399,13 +399,13 @@ void CDatabaseExplorerView::OnFileSave()
 		return;
 	}
 
-	CFileDialogEx fde(FALSE, nullptr, nullptr, OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT,
+	CFileDialogEx dlg(FALSE, nullptr, nullptr, OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT,
 					_T("CSV files (*.csv)|*.csv|All Files (*.*)|*.*||"));
 
-	if (IDOK != fde.DoModal())
+	if (IDOK != dlg.DoModal())
 		return;
 
-	CString sPathName = fde.GetPathName();	// if the use didn't put the extension
+	CString sPathName = dlg.GetPathName();	// if the use didn't put the extension
 	if (sPathName.Find('.') < sPathName.GetLength() - 5)
 		sPathName.AppendFormat(_T(".csv"));	// put .csv extension
 

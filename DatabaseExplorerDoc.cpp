@@ -1012,36 +1012,3 @@ std::vector<CString> CDatabaseExplorerDoc::GetDocumentQueries() const
 
 	return queries;
 }
-
-CChildFrame* CDatabaseExplorerDoc::GetChild(LPCTSTR lpszTitle/* = NULL*/) const
-{
-	if (lpszTitle && *lpszTitle)
-	{
-		CString sText;
-		POSITION pos = theApp.GetFirstDocTemplatePosition();
-		while (pos)
-		{
-			CDocTemplate* pDocTemplate = static_cast<CDocTemplate*>(theApp.GetNextDocTemplate(pos));
-			POSITION posDoc = pDocTemplate->GetFirstDocPosition();
-			while (posDoc)
-			{
-				CDatabaseExplorerDoc* pDoc = static_cast<CDatabaseExplorerDoc*>(pDocTemplate->GetNextDoc(posDoc));
-				POSITION posView = pDoc->GetFirstViewPosition();
-				while (posView)
-				{
-					sText.Empty();
-					CView* pView = pDoc->GetNextView(posView);
-					CChildFrame* pChild = static_cast<CChildFrame*>(pView->GetParentFrame());
-					if (pChild)
-					{
-						pChild->GetWindowText(sText);
-						if (sText == lpszTitle)
-							return pChild;
-					}
-				}
-			}
-		}
-	}
-
-	return nullptr;
-}
