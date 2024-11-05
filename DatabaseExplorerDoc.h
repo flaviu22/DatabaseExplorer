@@ -80,7 +80,6 @@ protected: // create from serialization only
 
 // Attributes
 public:
-	mutable CString m_sState;
 	inline CDatabaseExt* GetDB() { return m_pDB.get(); }
 	inline CRecordset* GetRecordset() const { return m_pRecordset.get(); }
 	BOOL GetDSNSource() const { return m_bDSNSource; }
@@ -93,6 +92,9 @@ public:
 	const CString DecodePostGreDatabase(const CString& sConnectionString) const;
 	BOOL GetMsSqlAuthenticationRequired() const { return m_bMsSqlAuthenticationRequired; }
 	void SetMsSqlAuthenticationRequired(const BOOL bSet) { m_bMsSqlAuthenticationRequired = bSet; }
+	CString GetLastSelect() const { return m_sLastSelect; }
+	void SetLastSelect(const CString& sSQL) { m_sLastSelect = sSQL; }
+	CString GetError() const { return m_sError; }
 
 // Operations
 public:
@@ -118,6 +120,7 @@ public:
 	BOOL SaveListContentToCSV(CListCtrl& ListCtrl, const CString& sPathName);
 	void RestoreQueries(CQueryPane* pPane) const;
 	std::vector<CString> GetDocumentQueries() const;
+	BOOL HasHarmfulQueries(const std::vector<CString>& queries) const;
 
 // Overrides
 public:
@@ -139,6 +142,7 @@ public:
 #endif
 
 protected:
+	mutable CString m_sError;
 	BOOL m_bDSNSource{ FALSE };				// user dsn
 	std::pair<CString, CString> m_DSN{};	// dsn name - dsn type
 	CString m_sPostgreDB{ _T("postgres") };
@@ -146,6 +150,7 @@ protected:
 	std::unique_ptr<CRecordset> m_pRecordset{};
 	DatabaseType m_DatabaseType{ DatabaseType::MSSQL };
 	BOOL m_bMsSqlAuthenticationRequired{ FALSE };
+	CString m_sLastSelect{};
 
 protected:
 	size_t TokenizeString(const CString& sText, const CString& sToken, std::vector<CString>& result) const;
@@ -209,6 +214,7 @@ private:
 private:
 	void GetQueries(CRichEditCtrl* pRichEdit, std::vector<CString>& queries) const;
 	std::vector<CString> GetQueries(const CString& sFile) const;
+	BOOL ContainHarmfulKeyword(const CString& sSQL) const;
 
 // Generated message map functions
 protected:

@@ -416,7 +416,7 @@ void CDatabaseExplorerDoc::PopulateHeader(CListCtrl& ListCtrl, CRecordset& recor
 
 BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& sSQL)
 {
-	m_sState.Empty();
+	m_sError.Empty();
 	std::chrono::high_resolution_clock::time_point start{}, end{};
 
 	if (m_pRecordset->IsOpen())
@@ -433,7 +433,7 @@ BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& 
 
 		if (! m_pDB->OpenRecordset(m_pRecordset.get(), sSQL))
 		{
-			m_sState = m_pDB->GetError();
+			m_sError = m_pDB->GetError();
 			break;
 		}
 
@@ -443,7 +443,7 @@ BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& 
 
 		if (m_pRecordset->GetODBCFieldCount() < 1)
 		{
-			m_sState.Format(_T("SQL result has no field"));
+			m_sError.Format(_T("SQL result has no field"));
 			break;
 		}
 
@@ -486,9 +486,9 @@ BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& 
 	if (! theApp.m_bVirtualMode)
 		m_pRecordset->Close();
 
-	if (! m_sState.IsEmpty())
+	if (! m_sError.IsEmpty())
 	{
-		LogMessage(m_sState, MessageType::error);
+		LogMessage(m_sError, MessageType::error);
 	}
 	else if (m_bLogPopulateList)
 	{
@@ -500,12 +500,12 @@ BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& 
 		LogMessage(sMessage, MessageType::info);
 	}
 
-	return m_sState.IsEmpty();
+	return m_sError.IsEmpty();
 }
 
 BOOL CDatabaseExplorerDoc::PopulateDatabasePanel(CTreeCtrl& tree)
 {
-	m_sState.Empty();
+	m_sError.Empty();
 	tree.DeleteAllItems();
 
 	switch (m_DatabaseType)
@@ -532,7 +532,7 @@ BOOL CDatabaseExplorerDoc::GetMSSQLDatabases(CTreeCtrl& tree)
 	const auto database = m_pDB->GetData(_T("SELECT database_id, name FROM sys.databases ORDER BY 2"));
 	if (! m_pDB->GetError().IsEmpty())
 	{
-		m_sState.Format(_T("%s"), m_pDB->GetError());
+		m_sError.Format(_T("%s"), m_pDB->GetError());
 	}
 	else
 	{
@@ -548,7 +548,7 @@ BOOL CDatabaseExplorerDoc::GetMSSQLDatabases(CTreeCtrl& tree)
 		}
 	}
 
-	return m_sState.IsEmpty();
+	return m_sError.IsEmpty();
 }
 
 BOOL CDatabaseExplorerDoc::GetOracleDatabases(CTreeCtrl& tree)
@@ -556,7 +556,7 @@ BOOL CDatabaseExplorerDoc::GetOracleDatabases(CTreeCtrl& tree)
 	const auto database = m_pDB->GetData(_T("SELECT 1, global_name FROM global_name ORDER BY 2"));
 	if (! m_pDB->GetError().IsEmpty())
 	{
-		m_sState.Format(_T("%s"), m_pDB->GetError());
+		m_sError.Format(_T("%s"), m_pDB->GetError());
 	}
 	else
 	{
@@ -572,7 +572,7 @@ BOOL CDatabaseExplorerDoc::GetOracleDatabases(CTreeCtrl& tree)
 				tree.SetItemData(tree.InsertItem(CString(it_table->c_str()), 1, 1, hItem), 0);
 		}
 	}
-	return m_sState.IsEmpty();
+	return m_sError.IsEmpty();
 }
 
 BOOL CDatabaseExplorerDoc::GetSQLiteDatabases(CTreeCtrl& tree)
@@ -580,7 +580,7 @@ BOOL CDatabaseExplorerDoc::GetSQLiteDatabases(CTreeCtrl& tree)
 	const auto database = m_pDB->GetData(_T("SELECT 1, file FROM pragma_database_list WHERE name='main'"));
 	if (! m_pDB->GetError().IsEmpty())
 	{
-		m_sState.Format(_T("%s"), m_pDB->GetError());
+		m_sError.Format(_T("%s"), m_pDB->GetError());
 	}
 	else
 	{
@@ -596,7 +596,7 @@ BOOL CDatabaseExplorerDoc::GetSQLiteDatabases(CTreeCtrl& tree)
 		}
 	}
 
-	return m_sState.IsEmpty();
+	return m_sError.IsEmpty();
 }
 
 BOOL CDatabaseExplorerDoc::GetMySqlDatabases(CTreeCtrl& tree)
@@ -604,7 +604,7 @@ BOOL CDatabaseExplorerDoc::GetMySqlDatabases(CTreeCtrl& tree)
 	const auto database = m_pDB->GetData(_T("SELECT 1, schema_name FROM information_schema.schemata ORDER BY 2"));
 	if (! m_pDB->GetError().IsEmpty())
 	{
-		m_sState.Format(_T("%s"), m_pDB->GetError());
+		m_sError.Format(_T("%s"), m_pDB->GetError());
 	}
 	else
 	{
@@ -619,7 +619,7 @@ BOOL CDatabaseExplorerDoc::GetMySqlDatabases(CTreeCtrl& tree)
 				tree.SetItemData(tree.InsertItem(CString(it_table->c_str()), 1, 1, hItem), 0);
 		}
 	}
-	return m_sState.IsEmpty();
+	return m_sError.IsEmpty();
 }
 
 BOOL CDatabaseExplorerDoc::GetPostgreDatabases(CTreeCtrl& tree)
@@ -627,7 +627,7 @@ BOOL CDatabaseExplorerDoc::GetPostgreDatabases(CTreeCtrl& tree)
 	const auto database = m_pDB->GetDataV(_T("SELECT 1, datname FROM pg_database WHERE datistemplate = false ORDER BY 2"));
 	if (! m_pDB->GetError().IsEmpty())
 	{
-		m_sState.Format(_T("%s"), m_pDB->GetError());
+		m_sError.Format(_T("%s"), m_pDB->GetError());
 	}
 	else
 	{
@@ -645,7 +645,7 @@ BOOL CDatabaseExplorerDoc::GetPostgreDatabases(CTreeCtrl& tree)
 				tree.SetItemData(tree.InsertItem(CString(it_table->c_str()), 1, 1, hItem), 0);
 		}
 	}
-	return m_sState.IsEmpty();
+	return m_sError.IsEmpty();
 }
 
 void CDatabaseExplorerDoc::OnEditDatasource()
@@ -697,22 +697,22 @@ void CDatabaseExplorerDoc::LogMessage(const CString& sMessage, const MessageType
 
 BOOL CDatabaseExplorerDoc::RunSQL(const CString sSQL) const
 {
-	m_sState.Empty();
+	m_sError.Empty();
 
 	const auto start = std::chrono::high_resolution_clock::now();
 
 	if (! m_pDB->Execute(sSQL))
-		m_sState = m_pDB->GetError();
+		m_sError = m_pDB->GetError();
 
 	const auto end = std::chrono::high_resolution_clock::now();
 
 	LogMessage(sSQL, MessageType::info);
-	if (m_sState.IsEmpty())
+	if (m_sError.IsEmpty())
 		LogMessage(_T("SQL statement took: ") + GetTimeAsString(start, end), MessageType::info);
 	else
-		LogMessage(m_sState, MessageType::error);
+		LogMessage(m_sError, MessageType::error);
 
-	return m_sState.IsEmpty();
+	return m_sError.IsEmpty();
 }
 
 int CDatabaseExplorerDoc::GetDatabaseCount() const
@@ -756,7 +756,7 @@ long CDatabaseExplorerDoc::GetRecordCount(const CString& sSQL) const
 
 	if (! m_pDB->GetError().IsEmpty())
 	{
-		m_sState = m_pDB->GetError();
+		m_sError = m_pDB->GetError();
 		return -1;
 	}
 
@@ -886,7 +886,7 @@ void CDatabaseExplorerDoc::WriteListLines(CListCtrl& ListCtrl, CStdioFile& file,
 
 BOOL CDatabaseExplorerDoc::SaveListContentToCSV(CListCtrl& ListCtrl, const CString& sPathName)
 {
-	m_sState.Empty();
+	m_sError.Empty();
 
 	const CString sSeparator = AfxGetApp()->GetProfileString(_T("Settings"), _T("CSVSeparator"), _T(","));
 
@@ -896,15 +896,15 @@ BOOL CDatabaseExplorerDoc::SaveListContentToCSV(CListCtrl& ListCtrl, const CStri
 		CFileException ex;
 		if (! file.Open(sPathName, CFile::modeCreate | CFile::modeReadWrite | CFile::typeText, &ex))
 		{
-			ex.GetErrorMessage(m_sState.GetBuffer(_MAX_PATH), MAX_PATH);
-			m_sState.ReleaseBuffer();
+			ex.GetErrorMessage(m_sError.GetBuffer(_MAX_PATH), MAX_PATH);
+			m_sError.ReleaseBuffer();
 			break;
 		}
 		WriteHeaderLine(ListCtrl, file, sSeparator);
 		WriteListLines(ListCtrl, file, sSeparator);
 	} while (FALSE);
 
-	return m_sState.IsEmpty();
+	return m_sError.IsEmpty();
 }
 
 CString CDatabaseExplorerDoc::GetOracleUserID(const BOOL bMakeUpper/* = FALSE*/) const
@@ -958,8 +958,8 @@ std::vector<CString> CDatabaseExplorerDoc::GetQueries(const CString& sFile) cons
 
 	if (! file.Open(sFile, CFile::modeRead | CFile::typeText, &ex))
 	{
-		ex.GetErrorMessage(m_sState.GetBuffer(_MAX_PATH), _MAX_PATH);
-		m_sState.ReleaseBuffer();
+		ex.GetErrorMessage(m_sError.GetBuffer(_MAX_PATH), _MAX_PATH);
+		m_sError.ReleaseBuffer();
 		return queries;
 	}
 
@@ -1011,4 +1011,26 @@ std::vector<CString> CDatabaseExplorerDoc::GetDocumentQueries() const
 	}
 
 	return queries;
+}
+
+BOOL CDatabaseExplorerDoc::HasHarmfulQueries(const std::vector<CString>& queries) const
+{
+	for (const auto& it : queries)
+	{
+		CString sTemp(it);
+		sTemp.MakeLower();
+		if (ContainHarmfulKeyword(sTemp))
+			return TRUE;
+	}
+
+	return FALSE;
+}
+
+BOOL CDatabaseExplorerDoc::ContainHarmfulKeyword(const CString& sSQL) const
+{
+	return (-1 != sSQL.Find(_T("delete")) ||
+		-1 != sSQL.Find(_T("drop")) ||
+		-1 != sSQL.Find(_T("alter")) ||
+		-1 != sSQL.Find(_T("truncate")) ||
+		-1 != sSQL.Find(_T("table")));
 }

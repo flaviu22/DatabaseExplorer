@@ -41,8 +41,8 @@ public:
 #endif
 
 protected:
-	void ExecuteSQL(CDatabaseExplorerDoc* pDoc, const CString& sSQL);
-	void ExecuteSelect(CDatabaseExplorerDoc* pDoc, const CString& sSQL);
+	void ExecuteSQL(CDatabaseExplorerDoc& doc, const CString& sSQL);
+	void ExecuteSelect(CDatabaseExplorerDoc& doc, const CString& sSQL);
 	void DeleteAllColumns();
 
 private:
@@ -55,6 +55,7 @@ protected:
 	afx_msg void OnFilePrintPreview();
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnEditRefresh();
 	afx_msg void OnEditRun();
 	afx_msg LRESULT OnPostInit(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnLvnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult);

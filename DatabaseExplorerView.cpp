@@ -28,6 +28,7 @@ BEGIN_MESSAGE_MAP(CDatabaseExplorerView, CListView)
 	ON_WM_TIMER()
 	ON_WM_CONTEXTMENU()
 	ON_WM_RBUTTONUP()
+	ON_COMMAND(ID_EDIT_REFRESH, &CDatabaseExplorerView::OnEditRefresh)
 	ON_COMMAND(ID_EDIT_RUN, &CDatabaseExplorerView::OnEditRun)
 	ON_MESSAGE(WMU_POSTINIT, &CDatabaseExplorerView::OnPostInit)
 	ON_NOTIFY_REFLECT(LVN_GETDISPINFO, &CDatabaseExplorerView::OnLvnGetdispinfo)
@@ -183,6 +184,14 @@ void CDatabaseExplorerView::OnTimer(UINT_PTR nIDEvent)
 	CListView::OnTimer(nIDEvent);
 }
 
+void CDatabaseExplorerView::OnEditRefresh()
+{
+	// TODO: Add your command handler code here
+
+	::SendMessage(AfxGetMainWnd()->GetSafeHwnd(), WMU_SETMESSAGETEXT, 0, AFX_IDS_IDLEMESSAGE);
+	GetDocument()->UpdateAllViews(NULL, CDatabaseExplorerApp::UH_REFRESH);
+}
+
 void CDatabaseExplorerView::OnEditRun()
 {
 	// TODO: Add your command handler code here
@@ -233,8 +242,17 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 			if (pDoc->PopulateDatabasePanel(*pChild->GetDatabasePane()->GetTreeCtrl()))
 				pDoc->SetTitle(pDoc->GetDSN().first);
 			else
-				::SendMessage(AfxGetMainWnd()->GetSafeHwnd(), WMU_SETMESSAGETEXT, 7000, reinterpret_cast<LPARAM>(pDoc->m_sState.GetString()));
+				::SendMessage(AfxGetMainWnd()->GetSafeHwnd(), WMU_SETMESSAGETEXT, 7000, reinterpret_cast<LPARAM>(pDoc->GetError().GetString()));
 		}
+
+		return;
+	}
+
+	if (CDatabaseExplorerApp::UH_REFRESH == lHint)
+	{
+		const auto select = pDoc->GetLastSelect();
+		if (!select.IsEmpty())
+			ExecuteSelect(*pDoc, select);
 
 		return;
 	}
@@ -253,6 +271,12 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 				return;
 			}
 
+			if (sSelected.IsEmpty() && pDoc->HasHarmfulQueries(sql))
+			{
+				if (IDYES != MessageBox(_T("The queries contain statements that can affect/modify the items structure, do you want to continue?"), NULL, MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2))
+					return;
+			}
+
 			BOOL bIsTableOperation = FALSE;
 			BOOL bIsDatabaseOperation = FALSE;
 			const CString sDatabase = pChild->GetDatabasePane()->GetDatabaseSelection();
@@ -264,9 +288,9 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 				if (! bIsDatabaseOperation && pDoc->IsDatabaseOperation(it))
 					bIsDatabaseOperation = TRUE;
 				if (! pDoc->IsSelect(it))
-					ExecuteSQL(pDoc, it);
+					ExecuteSQL(*pDoc, it);
 				else
-					ExecuteSelect(pDoc, it);
+					ExecuteSelect(*pDoc, it);
 			}
 
 			if (bIsTableOperation || bIsDatabaseOperation)
@@ -282,7 +306,7 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 	if (CDatabaseExplorerApp::UH_LISTTABLE == lHint && nullptr != pHint)
 	{
 		CWaitCursor Wait;
-		ExecuteSelect(pDoc, _T("SELECT * FROM ") + *reinterpret_cast<CString*>(pHint));
+		ExecuteSelect(*pDoc, _T("SELECT * FROM ") + *reinterpret_cast<CString*>(pHint));
 
 		return;
 	}
@@ -300,12 +324,12 @@ void CDatabaseExplorerView::DeleteAllColumns()
 	}
 }
 
-void CDatabaseExplorerView::ExecuteSQL(CDatabaseExplorerDoc* pDoc, const CString& sSQL)
+void CDatabaseExplorerView::ExecuteSQL(CDatabaseExplorerDoc& doc, const CString& sSQL)
 {
-	pDoc->RunSQL(sSQL);
+	doc.RunSQL(sSQL);
 }
 
-void CDatabaseExplorerView::ExecuteSelect(CDatabaseExplorerDoc* pDoc, const CString& sSQL)
+void CDatabaseExplorerView::ExecuteSelect(CDatabaseExplorerDoc& doc, const CString& sSQL)
 {
 	if (theApp.m_bVirtualMode)
 	{
@@ -314,7 +338,7 @@ void CDatabaseExplorerView::ExecuteSelect(CDatabaseExplorerDoc* pDoc, const CStr
 	}
 	else
 	{
-		const int nRows = pDoc->GetRecordCount(sSQL);
+		const int nRows = doc.GetRecordCount(sSQL);
 		if (nRows > 20000)
 		{
 			CString sMessage;
@@ -326,7 +350,9 @@ void CDatabaseExplorerView::ExecuteSelect(CDatabaseExplorerDoc* pDoc, const CStr
 
 	CRedrawHelper rh(this);
 	DeleteAllColumns();
-	pDoc->PopulateListCtrl(GetListCtrl(), sSQL);
+	doc.PopulateListCtrl(GetListCtrl(), sSQL);
+	if (doc.GetError().IsEmpty())
+		doc.SetLastSelect(sSQL);
 }
 
 void CDatabaseExplorerView::OnLvnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
@@ -411,7 +437,7 @@ void CDatabaseExplorerView::OnFileSave()
 
 	CWaitCursor wait;
 	if (! pDoc->SaveListContentToCSV(GetListCtrl(), sPathName))
-		pDoc->LogMessage(pDoc->m_sState, MessageType::error);
+		pDoc->LogMessage(pDoc->GetError(), MessageType::error);
 }
 
 void CDatabaseExplorerView::OnUpdateFileSave(CCmdUI* pCmdUI)
