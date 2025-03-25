@@ -10,14 +10,6 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CPaneTreeCtrl
 
-CPaneTreeCtrl::CPaneTreeCtrl()
-{
-}
-
-CPaneTreeCtrl::~CPaneTreeCtrl()
-{
-}
-
 BEGIN_MESSAGE_MAP(CPaneTreeCtrl, CTreeCtrl)
 END_MESSAGE_MAP()
 

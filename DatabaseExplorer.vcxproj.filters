@@ -96,6 +96,12 @@
     <ClInclude Include="RedrawHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ColorHeaderCtrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ColorListView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DatabaseExplorer.cpp">
@@ -162,6 +168,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PasswordDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ColorHeaderCtrl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ColorListView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

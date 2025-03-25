@@ -201,6 +201,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ChildFrm.h" />
+    <ClInclude Include="ColorHeaderCtrl.h" />
+    <ClInclude Include="ColorListView.h" />
     <ClInclude Include="ComboBoxExt.h" />
     <ClInclude Include="ComboBoxExtList.h" />
     <ClInclude Include="DatabaseEx.h" />
@@ -230,6 +232,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ChildFrm.cpp" />
+    <ClCompile Include="ColorHeaderCtrl.cpp" />
+    <ClCompile Include="ColorListView.cpp" />
     <ClCompile Include="ComboBoxExt.cpp" />
     <ClCompile Include="ComboBoxExtList.cpp" />
     <ClCompile Include="DatabaseEx.cpp" />

@@ -11,11 +11,13 @@ class CDatabasePane : public CNonClosableDockablePane
 
 public:
 	CDatabasePane();
-	virtual ~CDatabasePane() override;
+	~CDatabasePane() override;
 	CPaneTreeCtrl* GetTreeCtrl() { return m_pTreeCtrl.get(); }
 	CString GetSelection() const;
 	CString GetDatabaseSelection() const;
 	void SetItemAsDatabase(const CString& sDatabase);
+	void SetDarkMode(const BOOL bSet);
+	void ResetSelectedItem();
 
 public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
@@ -24,8 +26,8 @@ public:
 
 	// Attributes
 protected:
-	std::unique_ptr<CImageList> m_pIL;
-	std::unique_ptr<CPaneTreeCtrl> m_pTreeCtrl;
+	std::unique_ptr<CImageList> m_pIL{};
+	std::unique_ptr<CPaneTreeCtrl> m_pTreeCtrl{};
 
 private:
 	HTREEITEM m_hItemSelected{ nullptr };

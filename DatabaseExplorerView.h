@@ -3,14 +3,15 @@
 
 #pragma once
 
+#include "ColorListView.h"
 #include "DBRecord.h"
 
 #include <vector>
 
-class CDatabaseExplorerView : public CListView
+class CDatabaseExplorerView : public CColorListView
 {
 protected: // create from serialization only
-	CDatabaseExplorerView() noexcept;
+	CDatabaseExplorerView() noexcept = default;
 	DECLARE_DYNCREATE(CDatabaseExplorerView)
 
 // Attributes
@@ -25,6 +26,7 @@ public:
 public:
 	virtual void OnDraw(CDC* pDC);  // overridden to draw this view
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+
 protected:
 	virtual void OnInitialUpdate(); // called first time after construct
 	virtual BOOL OnPreparePrinting(CPrintInfo* pInfo);
@@ -34,7 +36,7 @@ protected:
 
 // Implementation
 public:
-	virtual ~CDatabaseExplorerView();
+	virtual ~CDatabaseExplorerView() = default;
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;
@@ -64,6 +66,7 @@ protected:
 	afx_msg void OnUpdateFileSave(CCmdUI* pCmdUI);
 	afx_msg LRESULT OnIsPopulateMode(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnRestoreQueries(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnDarkMode(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

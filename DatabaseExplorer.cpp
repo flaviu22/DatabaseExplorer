@@ -142,6 +142,7 @@ BOOL CDatabaseExplorerApp::InitInstance()
 
 	m_bVirtualMode = GetProfileInt(_T("Settings"), _T("VirtualMode"), 0);
 	m_bWordWrap = GetProfileInt(_T("Settings"), _T("WordWrap"), 0);
+	m_bDark = GetProfileInt(_T("Settings"), _T("Dark"), 0);
 	// Register the application's document templates.  Document templates
 	//  serve as the connection between documents, frame windows and views
 	CMultiDocTemplate* pDocTemplate;
@@ -196,6 +197,7 @@ int CDatabaseExplorerApp::ExitInstance()
 {
 	WriteProfileInt(_T("Settings"), _T("VirtualMode"), m_bVirtualMode);
 	WriteProfileInt(_T("Settings"), _T("WordWrap"), m_bWordWrap);
+	WriteProfileInt(_T("Settings"), _T("Dark"), m_bDark);
 
 	//TODO: handle additional resources you may have added
 	AfxOleTerm(FALSE);

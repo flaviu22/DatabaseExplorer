@@ -43,6 +43,7 @@ BEGIN_MESSAGE_MAP(CDatabaseExplorerDoc, CDocument)
 	ON_COMMAND(ID_EDIT_DATASOURCE, &CDatabaseExplorerDoc::OnEditDatasource)
 	ON_COMMAND(ID_EDIT_LOGPOPULATELIST, &CDatabaseExplorerDoc::OnLogPopulateList)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_LOGPOPULATELIST, &CDatabaseExplorerDoc::OnUpdateEditLogpopulatelist)
+	ON_COMMAND(ID_EDIT_DISCONNECT, &CDatabaseExplorerDoc::OnEditDisconnect)
 END_MESSAGE_MAP()
 
 // CDatabaseExplorerDoc construction/destruction
@@ -124,60 +125,6 @@ void CDatabaseExplorerDoc::Serialize(CArchive& ar)
 	}
 }
 
-#ifdef SHARED_HANDLERS
-
-// Support for thumbnails
-void CDatabaseExplorerDoc::OnDrawThumbnail(CDC& dc, LPRECT lprcBounds)
-{
-	// Modify this code to draw the document's data
-	dc.FillSolidRect(lprcBounds, RGB(255, 255, 255));
-
-	CString strText = _T("TODO: implement thumbnail drawing here");
-	LOGFONT lf;
-
-	CFont* pDefaultGUIFont = CFont::FromHandle((HFONT) GetStockObject(DEFAULT_GUI_FONT));
-	pDefaultGUIFont->GetLogFont(&lf);
-	lf.lfHeight = 36;
-
-	CFont fontDraw;
-	fontDraw.CreateFontIndirect(&lf);
-
-	CFont* pOldFont = dc.SelectObject(&fontDraw);
-	dc.DrawText(strText, lprcBounds, DT_CENTER | DT_WORDBREAK);
-	dc.SelectObject(pOldFont);
-}
-
-// Support for Search Handlers
-void CDatabaseExplorerDoc::InitializeSearchContent()
-{
-	CString strSearchContent;
-	// Set search contents from document's data.
-	// The content parts should be separated by ";"
-
-	// For example:  strSearchContent = _T("point;rectangle;circle;ole object;");
-	SetSearchContent(strSearchContent);
-}
-
-void CDatabaseExplorerDoc::SetSearchContent(const CString& value)
-{
-	if (value.IsEmpty())
-	{
-		RemoveChunk(PKEY_Search_Contents.fmtid, PKEY_Search_Contents.pid);
-	}
-	else
-	{
-		CMFCFilterChunkValueImpl *pChunk = nullptr;
-		ATLTRY(pChunk = new CMFCFilterChunkValueImpl);
-		if (pChunk != nullptr)
-		{
-			pChunk->SetTextValue(PKEY_Search_Contents, value, CHUNK_TEXT);
-			SetChunkValue(pChunk);
-		}
-	}
-}
-
-#endif // SHARED_HANDLERS
-
 // CDatabaseExplorerDoc diagnostics
 
 #ifdef _DEBUG
@@ -233,6 +180,17 @@ void CDatabaseExplorerDoc::SetConnectionString() const
 										_T(";UID=") + credential.first + 
 										_T(";PWD=") + credential.second + _T(";"));
 		}
+	}
+}
+
+void CDatabaseExplorerDoc::OnEditDisconnect()
+{
+	// TODO: Add your command handler code here
+
+	if (m_pDB->IsOpen())
+	{
+		m_pDB->Close();
+		LogMessage(_T("Disconnected from the current database."), MessageType::info, GetChildFrame());
 	}
 }
 
@@ -511,23 +469,23 @@ BOOL CDatabaseExplorerDoc::PopulateDatabasePanel(CTreeCtrl& tree)
 	switch (m_DatabaseType)
 	{
 	case DatabaseType::SQLITE:
-		return GetSQLiteDatabases(tree);
+		return PopulateSQLite(tree);
 	case DatabaseType::ORACLE:
-		return GetOracleDatabases(tree);
+		return PopulateOracle(tree);
 	case DatabaseType::MYSQL:
 	case DatabaseType::MARIADB:
-		return GetMySqlDatabases(tree);
+		return PopulateMySql(tree);
 	case DatabaseType::POSTGRE:
-		return GetPostgreDatabases(tree);
+		return PopulatePostgre(tree);
 	case DatabaseType::MSSQL:
 	default:
-		return GetMSSQLDatabases(tree);
+		return PopulateMSSQL(tree);
 	}
 
 	return FALSE;
 }
 
-BOOL CDatabaseExplorerDoc::GetMSSQLDatabases(CTreeCtrl& tree)
+BOOL CDatabaseExplorerDoc::PopulateMSSQL(CTreeCtrl& tree)
 {
 	const auto database = m_pDB->GetData(_T("SELECT database_id, name FROM sys.databases ORDER BY 2"));
 	if (! m_pDB->GetError().IsEmpty())
@@ -551,7 +509,7 @@ BOOL CDatabaseExplorerDoc::GetMSSQLDatabases(CTreeCtrl& tree)
 	return m_sError.IsEmpty();
 }
 
-BOOL CDatabaseExplorerDoc::GetOracleDatabases(CTreeCtrl& tree)
+BOOL CDatabaseExplorerDoc::PopulateOracle(CTreeCtrl& tree)
 {
 	const auto database = m_pDB->GetData(_T("SELECT 1, global_name FROM global_name ORDER BY 2"));
 	if (! m_pDB->GetError().IsEmpty())
@@ -575,7 +533,7 @@ BOOL CDatabaseExplorerDoc::GetOracleDatabases(CTreeCtrl& tree)
 	return m_sError.IsEmpty();
 }
 
-BOOL CDatabaseExplorerDoc::GetSQLiteDatabases(CTreeCtrl& tree)
+BOOL CDatabaseExplorerDoc::PopulateSQLite(CTreeCtrl& tree)
 {
 	const auto database = m_pDB->GetData(_T("SELECT 1, file FROM pragma_database_list WHERE name='main'"));
 	if (! m_pDB->GetError().IsEmpty())
@@ -599,7 +557,7 @@ BOOL CDatabaseExplorerDoc::GetSQLiteDatabases(CTreeCtrl& tree)
 	return m_sError.IsEmpty();
 }
 
-BOOL CDatabaseExplorerDoc::GetMySqlDatabases(CTreeCtrl& tree)
+BOOL CDatabaseExplorerDoc::PopulateMySql(CTreeCtrl& tree)
 {
 	const auto database = m_pDB->GetData(_T("SELECT 1, schema_name FROM information_schema.schemata ORDER BY 2"));
 	if (! m_pDB->GetError().IsEmpty())
@@ -622,7 +580,7 @@ BOOL CDatabaseExplorerDoc::GetMySqlDatabases(CTreeCtrl& tree)
 	return m_sError.IsEmpty();
 }
 
-BOOL CDatabaseExplorerDoc::GetPostgreDatabases(CTreeCtrl& tree)
+BOOL CDatabaseExplorerDoc::PopulatePostgre(CTreeCtrl& tree)
 {
 	const auto database = m_pDB->GetDataV(_T("SELECT 1, datname FROM pg_database WHERE datistemplate = false ORDER BY 2"));
 	if (! m_pDB->GetError().IsEmpty())
@@ -664,7 +622,7 @@ void CDatabaseExplorerDoc::OnEditDatasource()
 	if (IDOK == ret)
 		UpdateAllViews(NULL, CDatabaseExplorerApp::UH_POPULATEDATABASEPANEL);
 	UpdateAllViews(NULL, CDatabaseExplorerApp::UH_SELECTDATABASE, reinterpret_cast<CObject*>(&sDatabase));
-	UpdateAllViews(NULL, CDatabaseExplorerApp::UH_INITDATABASE);
+	UpdateAllViews(NULL, CDatabaseExplorerApp::UH_INITDATABASE, reinterpret_cast<CObject*>(TRUE));
 }
 
 void CDatabaseExplorerDoc::OnLogPopulateList()

@@ -308,7 +308,7 @@ void CDataSourceDlg::Test(CDatabaseExt* pDB, const DatabaseType DBType) const
 		m_pDoc->SetPostgreDB(m_pDoc->DecodePostGreDatabase(pDB->GetConnect()));
 		break;
 	default:
-		pDB->SetError(_T("This version of application is supporting:\n\tMicrosoft SQL\n\tOracle\n\tSQLite\n\tMySQL\n\tMariaDB\n\tPostgreSQL\nFor other type of databases contact the developer"));
+		pDB->SetError(_T("This version of application is supporting:\n\tMicrosoft SQL\n\tOracle\n\tSQLite\n\tMySQL\n\tMariaDB\n\tPostgreSQL\nFor other databases types contact the developer"));
 	}
 
 	pDB->Close();

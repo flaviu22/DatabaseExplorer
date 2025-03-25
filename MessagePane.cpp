@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "DatabaseExplorer.h"
 #include "MessagePane.h"
 
 #ifdef _DEBUG
@@ -32,10 +33,13 @@ int CMessagePane::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_pRichEditCtrl->PostMessage(EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_SCROLLEVENTS | ENM_KEYEVENTS);
 	m_pRichEditCtrl->PostMessage(EM_SETREADONLY, TRUE, 0);
 
-	const DWORD dwNominator = static_cast<DWORD>(AfxGetApp()->GetProfileInt(_T("Settings"), _T("MessagePaneZoomNominator"), 0));
-	const DWORD dwDenominator = static_cast<DWORD>(AfxGetApp()->GetProfileInt(_T("Settings"), _T("MessagePaneZoomDenominator"), 0));
+	const DWORD dwNominator = static_cast<DWORD>(AfxGetApp()->GetProfileInt(_T("Settings"), 
+		_T("MessagePaneZoomNominator"), 120));
+	const DWORD dwDenominator = static_cast<DWORD>(AfxGetApp()->GetProfileInt(_T("Settings"), 
+		_T("MessagePaneZoomDenominator"), 100));
 	if (dwNominator > 0 || dwDenominator > 0)
-		::PostMessage(m_pRichEditCtrl->GetSafeHwnd(), EM_SETZOOM, static_cast<WPARAM>(dwNominator), static_cast<LPARAM>(dwDenominator));
+		::PostMessage(m_pRichEditCtrl->GetSafeHwnd(), EM_SETZOOM, 
+			static_cast<WPARAM>(dwNominator), static_cast<LPARAM>(dwDenominator));
 
 	return 0;
 }
@@ -64,7 +68,10 @@ void CMessagePane::AppendToLogAndScroll(const CString& str, const COLORREF& colo
 	cf.dwMask = CFM_COLOR;
 	cf.dwEffects = 0; // To disable CFE_AUTOCOLOR
 
-	cf.crTextColor = color;
+	if (RGB(250, 7, 7) != color)
+		cf.crTextColor = theApp.m_bDark ? GetSysColor(COLOR_WINDOW) : GetSysColor(COLOR_WINDOWTEXT);
+	else
+		cf.crTextColor = color;
 
 	// Set insertion point to end of text
 	nInsertionPoint = m_pRichEditCtrl->GetWindowTextLength();

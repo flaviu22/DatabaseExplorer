@@ -22,6 +22,7 @@
 #define WMU_ISPOPULATEMODE					(WM_APP + 44)
 #define WMU_RESTOREQUERIES					(WM_APP + 45)
 #define WMU_SETWORDWRAP						(WM_APP + 46)
+#define WMU_DARKMODE						(WM_APP + 47)
 #define WMU_POSTINIT						(WM_APP + 80)
 
 #define TIME_ONEMINUTE						(60 * 1000)
@@ -30,6 +31,13 @@
 #define STR_DATABASETYPE					_T("DatabaseType")
 #define STR_RSTYPE							_T("RsType")
 #define STR_MSSQLAUTHENTICATIONREQUIRED		_T("MsSqlAuthenticationRequired")
+
+constexpr COLORREF g_crDummy = RGB(77, 77, 77);
+constexpr COLORREF g_crColorDark = RGB(44, 44, 44);
+constexpr COLORREF g_crColorWhite = RGB(254, 255, 255);
+constexpr COLORREF g_crHeaderColorDark = RGB(44, 44, 44);
+constexpr COLORREF g_crHeaderColorDarkHot = RGB(64, 64, 64);
+constexpr COLORREF g_crHeaderColorDarkPressed = RGB(144, 144, 144);
 
 // CDatabaseExplorerApp:
 // See DatabaseExplorer.cpp for the implementation of this class
@@ -51,6 +59,7 @@ public:
 	};
 
 public:
+	BOOL m_bDark{ FALSE };
 	BOOL m_bWordWrap{ FALSE };
 	BOOL m_bHiColorIcons{ TRUE };
 	BOOL m_bVirtualMode{ FALSE };

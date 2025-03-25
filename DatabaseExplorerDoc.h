@@ -155,11 +155,11 @@ protected:
 protected:
 	size_t TokenizeString(const CString& sText, const CString& sToken, std::vector<CString>& result) const;
 	void PopulateHeader(CListCtrl& ListCtrl, CRecordset& recordset);
-	BOOL GetMSSQLDatabases(CTreeCtrl& tree);
-	BOOL GetOracleDatabases(CTreeCtrl& tree);
-	BOOL GetSQLiteDatabases(CTreeCtrl& tree);
-	BOOL GetMySqlDatabases(CTreeCtrl& tree);
-	BOOL GetPostgreDatabases(CTreeCtrl& tree);
+	BOOL PopulateMSSQL(CTreeCtrl& tree);
+	BOOL PopulateOracle(CTreeCtrl& tree);
+	BOOL PopulateSQLite(CTreeCtrl& tree);
+	BOOL PopulateMySql(CTreeCtrl& tree);
+	BOOL PopulatePostgre(CTreeCtrl& tree);
 	CChildFrame* GetChildFrame() const;
 	CString PrepareSQLForCountAll(const CString& sSQL) const;
 	std::vector<CString> GetHeaderItems(CListCtrl& ListCtrl);
@@ -218,15 +218,11 @@ private:
 
 // Generated message map functions
 protected:
-	DECLARE_MESSAGE_MAP()
 	//{{AFX_MSG(CDatabaseExplorerDoc)
 	afx_msg void OnEditDatasource();
 	afx_msg void OnLogPopulateList();
 	afx_msg void OnUpdateEditLogpopulatelist(CCmdUI* pCmdUI);
+	afx_msg void OnEditDisconnect();
 	//}}AFX_MSG
-
-#ifdef SHARED_HANDLERS
-	// Helper function that sets search content for a Search Handler
-	void SetSearchContent(const CString& value);
-#endif // SHARED_HANDLERS
+	DECLARE_MESSAGE_MAP()
 };

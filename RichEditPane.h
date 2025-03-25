@@ -18,6 +18,7 @@ public:
 
 public:
 	CString GetText() const;
+	void SetDarkMode(const BOOL bSet);
 
 protected:
 	std::unique_ptr<CRichEditCtrl> m_pRichEditCtrl;

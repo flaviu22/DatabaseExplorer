@@ -64,3 +64,15 @@ CString CRichEditPane::GetText() const
 	m_pRichEditCtrl->GetWindowText(sText);
 	return sText;
 }
+
+void CRichEditPane::SetDarkMode(const BOOL bSet)
+{
+	CHARFORMAT cf{};
+	cf.cbSize = sizeof(CHARFORMAT);
+	cf.dwMask = CFM_COLOR;  // Set color mask
+
+	m_pRichEditCtrl->SetBackgroundColor(bSet ? FALSE : TRUE, bSet ? g_crColorDark : g_crColorWhite);
+	cf.crTextColor = bSet ? GetSysColor(COLOR_WINDOW) : GetSysColor(COLOR_WINDOWTEXT); // Set desired color
+	m_pRichEditCtrl->SetSel(-1, -1);
+	m_pRichEditCtrl->SetDefaultCharFormat(cf);
+}

@@ -25,6 +25,7 @@ BEGIN_MESSAGE_MAP(CChildFrame, CMDIChildWndExt)
 	ON_MESSAGE(WMU_POSTINIT, &CChildFrame::OnPostInit)
 	ON_MESSAGE(WMU_ISPOPULATEMODE, &CChildFrame::OnIsPopulateMode)
 	ON_MESSAGE(WMU_SETWORDWRAP, &CChildFrame::OnSetWordWrap)
+	ON_MESSAGE(WMU_DARKMODE, &CChildFrame::OnDarkMode)
 END_MESSAGE_MAP()
 
 // CChildFrame construction/destruction
@@ -80,7 +81,7 @@ int CChildFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	CString sTitle(_T("Queries"));
 
-	if (! m_pQueryPane->Create(sTitle, this, CSize(240, 240), TRUE, PANEQUERYID,
+	if (! m_pQueryPane->Create(sTitle, this, CSize(300, 200), TRUE, PANEQUERYID,
 		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_BOTTOM | CBRS_FLOAT_MULTI,
 		AFX_CBRS_REGULAR_TABS, AFX_NON_CLOSE_DOCKING_PANE_STYLE))
 	{
@@ -88,7 +89,7 @@ int CChildFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return FALSE; // failed to create
 	}
 	sTitle.Format(_T("Messages"));
-	if (! m_pMessagePane->Create(sTitle, this, CSize(240, 240), TRUE, PANEMESSAGEID,
+	if (! m_pMessagePane->Create(sTitle, this, CSize(700, 200), TRUE, PANEMESSAGEID,
 		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_BOTTOM | CBRS_FLOAT_MULTI,
 		AFX_CBRS_REGULAR_TABS, AFX_NON_CLOSE_DOCKING_PANE_STYLE))
 	{
@@ -97,7 +98,7 @@ int CChildFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	}
 
 	sTitle.Format(_T("Databases"));
-	if (! m_pDatabasePane->Create(sTitle, this, CSize(200, 240), TRUE, PANEDATABASEID,
+	if (! m_pDatabasePane->Create(sTitle, this, CSize(250, 250), TRUE, PANEDATABASEID,
 		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_LEFT | CBRS_FLOAT_MULTI,
 		AFX_CBRS_REGULAR_TABS, AFX_NON_CLOSE_DOCKING_PANE_STYLE))
 	{
@@ -204,7 +205,9 @@ LRESULT CChildFrame::OnPostInit(WPARAM wParam, LPARAM lParam)
 		GetActiveDocument()->UpdateAllViews(nullptr, CDatabaseExplorerApp::UH_INITDATABASE);
 
 	if (DoListTable == static_cast<int>(wParam))
-		GetActiveDocument()->UpdateAllViews(nullptr, CDatabaseExplorerApp::UH_LISTTABLE, reinterpret_cast<CObject*>(&m_pDatabasePane->GetSelection()));
+		GetActiveDocument()->UpdateAllViews(nullptr, 
+			CDatabaseExplorerApp::UH_LISTTABLE, 
+			reinterpret_cast<CObject*>(&m_pDatabasePane->GetSelection()));
 
 	return 1;
 }
@@ -217,4 +220,13 @@ LRESULT CChildFrame::OnIsPopulateMode(WPARAM wParam, LPARAM lParam)
 LRESULT CChildFrame::OnSetWordWrap(WPARAM wParam, LPARAM lParam)
 {
 	return m_pQueryPane->GetRichEditCtrl()->SetTargetDevice(nullptr, static_cast<long>(wParam));
+}
+
+LRESULT CChildFrame::OnDarkMode(WPARAM wParam, LPARAM lParam)
+{
+	m_pQueryPane->SetDarkMode(static_cast<BOOL>(wParam));
+	m_pMessagePane->SetDarkMode(static_cast<BOOL>(wParam));
+	m_pDatabasePane->SetDarkMode(static_cast<BOOL>(wParam));
+
+	return 1;
 }

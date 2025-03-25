@@ -7,7 +7,7 @@ class CPaneTreeCtrl : public CTreeCtrl
 {
 // Construction
 public:
-	CPaneTreeCtrl();
+	CPaneTreeCtrl() = default;
 
 // Overrides
 protected:
@@ -15,7 +15,7 @@ protected:
 
 // Implementation
 public:
-	virtual ~CPaneTreeCtrl();
+	virtual ~CPaneTreeCtrl() = default;
 
 protected:
 	DECLARE_MESSAGE_MAP()

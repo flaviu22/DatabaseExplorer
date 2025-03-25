@@ -22,9 +22,9 @@
 
 // CDatabaseExplorerView
 
-IMPLEMENT_DYNCREATE(CDatabaseExplorerView, CListView)
+IMPLEMENT_DYNCREATE(CDatabaseExplorerView, CColorListView)
 
-BEGIN_MESSAGE_MAP(CDatabaseExplorerView, CListView)
+BEGIN_MESSAGE_MAP(CDatabaseExplorerView, CColorListView)
 	ON_WM_TIMER()
 	ON_WM_CONTEXTMENU()
 	ON_WM_RBUTTONUP()
@@ -39,22 +39,14 @@ BEGIN_MESSAGE_MAP(CDatabaseExplorerView, CListView)
 	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE_AS, &CDatabaseExplorerView::OnUpdateFileSave)
 	ON_MESSAGE(WMU_ISPOPULATEMODE, &CDatabaseExplorerView::OnIsPopulateMode)
 	ON_MESSAGE(WMU_RESTOREQUERIES, &CDatabaseExplorerView::OnRestoreQueries)
+	ON_MESSAGE(WMU_DARKMODE, &CDatabaseExplorerView::OnDarkMode)
 	// Standard printing commands
-	ON_COMMAND(ID_FILE_PRINT, &CListView::OnFilePrint)
-	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CListView::OnFilePrint)
+	ON_COMMAND(ID_FILE_PRINT, &CColorListView::OnFilePrint)
+	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CColorListView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CDatabaseExplorerView::OnFilePrintPreview)
 END_MESSAGE_MAP()
 
 // CDatabaseExplorerView construction/destruction
-
-CDatabaseExplorerView::CDatabaseExplorerView() noexcept
-{
-	// TODO: add construction code here
-}
-
-CDatabaseExplorerView::~CDatabaseExplorerView()
-{
-}
 
 BOOL CDatabaseExplorerView::PreCreateWindow(CREATESTRUCT& cs)
 {
@@ -69,7 +61,7 @@ BOOL CDatabaseExplorerView::PreCreateWindow(CREATESTRUCT& cs)
 		cs.style |= LVS_REPORT | LVS_OWNERDATA;
 	}
 
-	return CListView::PreCreateWindow(cs);
+	return CColorListView::PreCreateWindow(cs);
 }
 
 void CDatabaseExplorerView::OnDraw(CDC* pDC)
@@ -82,7 +74,7 @@ void CDatabaseExplorerView::OnDraw(CDC* pDC)
 
 void CDatabaseExplorerView::OnInitialUpdate()
 {
-	CListView::OnInitialUpdate();
+	CColorListView::OnInitialUpdate();
 
 	// TODO: You may populate your ListView with items by directly accessing
 	//  its list control through a call to GetListCtrl().
@@ -141,12 +133,12 @@ void CDatabaseExplorerView::OnContextMenu(CWnd* pWnd, CPoint point)
 #ifdef _DEBUG
 void CDatabaseExplorerView::AssertValid() const
 {
-	CListView::AssertValid();
+	CColorListView::AssertValid();
 }
 
 void CDatabaseExplorerView::Dump(CDumpContext& dc) const
 {
-	CListView::Dump(dc);
+	CColorListView::Dump(dc);
 }
 
 CDatabaseExplorerDoc* CDatabaseExplorerView::GetDocument() const // non-debug version is inline
@@ -162,6 +154,7 @@ LRESULT CDatabaseExplorerView::OnPostInit(WPARAM wParam, LPARAM lParam)
 {
 	CDatabaseExplorerDoc* pDoc = GetDocument();
 	pDoc->UpdateAllViews(NULL, CDatabaseExplorerApp::UH_POPULATEDATABASEPANEL);
+	PostMessage(WMU_DARKMODE, theApp.m_bDark, 0);
 
 	return 1;
 }
@@ -177,11 +170,12 @@ void CDatabaseExplorerView::OnTimer(UINT_PTR nIDEvent)
 		if (pDoc->GetDB()->IsOpen())
 		{
 			pDoc->GetDB()->Close();
-			pDoc->LogMessage(_T("Disconnected from the current database (due to inactivity)"), MessageType::info, static_cast<CChildFrame*>(GetParentFrame()));
+			pDoc->LogMessage(_T("Disconnected from the current database (due to inactivity)"), 
+				MessageType::info, static_cast<CChildFrame*>(GetParentFrame()));
 		}
 	}
 
-	CListView::OnTimer(nIDEvent);
+	CColorListView::OnTimer(nIDEvent);
 }
 
 void CDatabaseExplorerView::OnEditRefresh()
@@ -211,6 +205,12 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 
 	if (CDatabaseExplorerApp::UH_INITDATABASE == lHint)
 	{
+		if (pHint)
+		{
+			pDoc->SetLastSelect(_T(""));
+			pDoc->GetDatabasePane()->ResetSelectedItem();
+		}
+
 		const CString sDatabase = pDoc->InitDatabase();
 		if (! sDatabase.IsEmpty())
 		{
@@ -242,7 +242,8 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 			if (pDoc->PopulateDatabasePanel(*pChild->GetDatabasePane()->GetTreeCtrl()))
 				pDoc->SetTitle(pDoc->GetDSN().first);
 			else
-				::SendMessage(AfxGetMainWnd()->GetSafeHwnd(), WMU_SETMESSAGETEXT, 7000, reinterpret_cast<LPARAM>(pDoc->GetError().GetString()));
+				::SendMessage(AfxGetMainWnd()->GetSafeHwnd(), 
+					WMU_SETMESSAGETEXT, 7000, reinterpret_cast<LPARAM>(pDoc->GetError().GetString()));
 		}
 
 		return;
@@ -458,6 +459,29 @@ LRESULT CDatabaseExplorerView::OnRestoreQueries(WPARAM wParam, LPARAM lParam)
 	CChildFrame* pChild = static_cast<CChildFrame*>(GetParentFrame());
 	if (nullptr != pDoc && nullptr != pChild->GetSafeHwnd())
 		pDoc->RestoreQueries(pChild->GetQueryPane());
+
+	return 1;
+}
+
+LRESULT CDatabaseExplorerView::OnDarkMode(WPARAM wParam, LPARAM lParam)
+{
+	CColorHeaderCtrl* pHeader = GetHeaderCtrl();
+	if (pHeader)
+	{
+		pHeader->SetTextColorEx(wParam ? g_crColorWhite : GetSysColor(COLOR_WINDOWTEXT));
+		pHeader->SetBackgroundColor(wParam ? g_crHeaderColorDark : GetSysColor(COLOR_WINDOW));
+		pHeader->SetBackgroundColorHot(wParam ? g_crHeaderColorDarkHot : GetSysColor(COLOR_WINDOW));
+		pHeader->SetBackgroundColorPressed(wParam ? g_crHeaderColorDarkPressed : GetSysColor(COLOR_WINDOW));
+		pHeader->Invalidate();
+	}
+
+	SendMessage(LVM_SETBKCOLOR, 0, wParam ? g_crColorDark : GetSysColor(COLOR_WINDOW));
+	SetTextBkColor(wParam ? g_crColorDark : GetSysColor(COLOR_WINDOW));
+	SetTextColor(wParam ? GetSysColor(COLOR_WINDOW) : GetSysColor(COLOR_WINDOWTEXT));
+
+	Invalidate();
+
+	::PostMessage(GetParentFrame()->GetSafeHwnd(), WMU_DARKMODE, wParam, 0);
 
 	return 1;
 }

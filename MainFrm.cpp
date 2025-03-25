@@ -47,8 +47,10 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECTLINE, &CMainFrame::OnUpdateEdit)
 	ON_COMMAND(ID_VIEW_VIRTUALMODE, &CMainFrame::OnViewVirtualmode)
 	ON_COMMAND(ID_VIEW_WORDWRAP, &CMainFrame::OnViewWordwrap)
+	ON_COMMAND(ID_VIEW_DARKMODE, &CMainFrame::OnViewDarkmode)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_VIRTUALMODE, &CMainFrame::OnUpdateViewVirtualmode)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_WORDWRAP, &CMainFrame::OnUpdateViewWordwrap)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_DARKMODE, &CMainFrame::OnUpdateViewDarkmode)
 	ON_REGISTERED_MESSAGE(AFX_WM_ON_GET_TAB_TOOLTIP, &CMainFrame::OnGetTabToolTip)
 	ON_MESSAGE(WMU_SETMESSAGETEXT, &CMainFrame::OnSetMessageText)
 END_MESSAGE_MAP()
@@ -144,7 +146,10 @@ BOOL CMainFrame::PreTranslateMessage(MSG* pMsg)
 {
 	// TODO: Add your specialized code here and/or call the base class
 
-	if (WM_KEYDOWN == pMsg->message && VK_TAB == pMsg->wParam && GetAsyncKeyState(VK_CONTROL) < 0 && m_arrChild.GetSize() > 1)
+	if (WM_KEYDOWN == pMsg->message && 
+		VK_TAB == pMsg->wParam && 
+		GetAsyncKeyState(VK_CONTROL) < 0 && 
+		m_arrChild.GetSize() > 1)
 	{
 		CWindowsManagerDialog* pDlg = new CWindowsManagerDialog;
 		pDlg->Create(CWindowsManagerDialog::IDD, this);
@@ -264,14 +269,14 @@ std::vector<CString> CMainFrame::GetTabsNames()
 void CMainFrame::OnClose()
 {
 	// TODO: Add your message handler code here and/or call default
-
+#ifndef _DEBUG
 	if (theApp.m_bWordWrap)
 	{
 		OnViewWordwrap();
 		theApp.m_bWordWrap = TRUE;
 	}
 	theApp.UpdateBackupFiles();
-
+#endif // !_DEBUG
 	CMDIFrameWndEx::OnClose();
 }
 
@@ -423,12 +428,15 @@ LRESULT CMainFrame::OnGetTabToolTip(WPARAM wParam, LPARAM lParam)
 		if (tabControl->IsMDITab())
 		{
 			CWnd* tabPaneWnd = tabControl->GetTabWndNoWrapper(pInfo->m_nTabIndex);
-			if (tabPaneWnd->IsKindOf(RUNTIME_CLASS(CChildFrame)))
+			if (tabPaneWnd && tabPaneWnd->IsKindOf(RUNTIME_CLASS(CChildFrame)))
 			{
 				CChildFrame* pChild = STATIC_DOWNCAST(CChildFrame, tabPaneWnd);
-				CDatabaseExplorerDoc* pDoc = static_cast<CDatabaseExplorerDoc*>(pChild->GetActiveDocument());
-				if (! pDoc->GetDSN().second.IsEmpty())
-					pInfo->m_strText = pDoc->GetDSN().second;
+				if (pChild)
+				{
+					CDatabaseExplorerDoc* pDoc = static_cast<CDatabaseExplorerDoc*>(pChild->GetActiveDocument());
+					if (!pDoc->GetDSN().second.IsEmpty())
+						pInfo->m_strText = pDoc->GetDSN().second;
+				}
 			}
 		}
 	}
@@ -633,10 +641,26 @@ void CMainFrame::OnViewWordwrap()
 			while (posView)
 			{
 				CView* pView = pDoc->GetNextView(posView);
-				::SendMessage(pView->GetParentFrame()->GetSafeHwnd(), WMU_SETWORDWRAP, static_cast<WPARAM>(! theApp.m_bWordWrap), 0);
+				::SendMessage(pView->GetParentFrame()->GetSafeHwnd(), 
+					WMU_SETWORDWRAP, static_cast<WPARAM>(! theApp.m_bWordWrap), 0);
 			}
 		}
 	}
+}
+
+void CMainFrame::OnViewDarkmode()
+{
+	// TODO: Add your command handler code here
+
+	if (theApp.GetOpenDocumentCount() > 0)
+	{
+		if (IDYES != MessageBox(_T("In order to change this feature you need to close all documents. Are you sure you want this ?"),
+			NULL, MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2))
+			return;
+		theApp.CloseAllDocuments(FALSE);
+	}
+
+	theApp.m_bDark = !theApp.m_bDark;
 }
 
 void CMainFrame::OnUpdateViewVirtualmode(CCmdUI* pCmdUI)
@@ -651,4 +675,11 @@ void CMainFrame::OnUpdateViewWordwrap(CCmdUI* pCmdUI)
 	// TODO: Add your command update UI handler code here
 
 	pCmdUI->SetCheck(theApp.m_bWordWrap);
+}
+
+void CMainFrame::OnUpdateViewDarkmode(CCmdUI* pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
+
+	pCmdUI->SetCheck(theApp.m_bDark);
 }

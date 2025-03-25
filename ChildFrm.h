@@ -12,7 +12,7 @@ constexpr int PANEQUERYID = 22;
 constexpr int PANEMESSAGEID = 32;
 constexpr int PANEDATABASEID = 33;
 constexpr int DoInitDatabase = 1;
-constexpr int DoListTable = 2;
+constexpr WPARAM DoListTable = 2;
 constexpr int UpdateFrameText = 3;
 
 enum class Color
@@ -73,6 +73,7 @@ protected:
 	afx_msg LRESULT OnPostInit(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnIsPopulateMode(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnSetWordWrap(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnDarkMode(WPARAM wParam, LPARAM lParam);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -32,10 +32,13 @@ int CQueryPane::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	::PostMessage(m_pRichEditCtrl->GetSafeHwnd(), EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_SCROLLEVENTS | ENM_KEYEVENTS);
 
-	const DWORD dwNominator = static_cast<DWORD>(AfxGetApp()->GetProfileInt(_T("Settings"), _T("QueryPaneZoomNominator"), 0));
-	const DWORD dwDenominator = static_cast<DWORD>(AfxGetApp()->GetProfileInt(_T("Settings"), _T("QueryPaneZoomDenominator"), 0));
+	const DWORD dwNominator = static_cast<DWORD>(AfxGetApp()->GetProfileInt(_T("Settings"), 
+		_T("QueryPaneZoomNominator"), 120));
+	const DWORD dwDenominator = static_cast<DWORD>(AfxGetApp()->GetProfileInt(_T("Settings"), 
+		_T("QueryPaneZoomDenominator"), 100));
 	if (dwNominator > 0 || dwDenominator > 0)
-		::PostMessage(m_pRichEditCtrl->GetSafeHwnd(), EM_SETZOOM, static_cast<WPARAM>(dwNominator), static_cast<LPARAM>(dwDenominator));
+		::PostMessage(m_pRichEditCtrl->GetSafeHwnd(), EM_SETZOOM, 
+			static_cast<WPARAM>(dwNominator), static_cast<LPARAM>(dwDenominator));
 
 	if (theApp.m_bWordWrap)
 		m_pRichEditCtrl->SetTargetDevice(nullptr, 0);
