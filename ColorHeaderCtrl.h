@@ -35,12 +35,11 @@ protected:
 	COLORREF m_crBackground;
 	COLORREF m_crBackgroundHot;
 	COLORREF m_crBackgroundPressed;
-	COLORREF m_crBackgroundTheme;
+	COLORREF m_crBackgroundTheme{ 0 };
 	COLORREF m_crBackgroundHotTheme;
 	COLORREF m_crBackgroundPressedTheme;
 	BOOL m_bCustomDraw{ FALSE };
-	BOOL m_bPrint;	// To avoid infinite loop with WM_PRINTCLIENT
-	BOOL m_bTheme;	// TRUE when m_crBackgroundTheme was read from GetWindowTheme
+	BOOL m_bPrint{ FALSE };	// To avoid infinite loop with WM_PRINTCLIENT
 
 protected:
 	//{{AFX_MSG(CHeaderCtrlEx)

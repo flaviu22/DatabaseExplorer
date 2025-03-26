@@ -162,7 +162,7 @@ CString CDatabasePane::GetDatabaseSelection() const
 	item.hItem = m_hItemSelected;
 	item.mask = TVIF_PARAM;
 	if (::SendMessage(m_pTreeCtrl->GetSafeHwnd(), TVM_GETITEM, 0, (LPARAM)&item))
-		m_pTreeCtrl->GetItemText(m_hItemSelected);
+		return m_pTreeCtrl->GetItemText(m_hItemSelected);
 
 	return _T("");
 }
@@ -246,9 +246,4 @@ void CDatabasePane::SetDarkMode(const BOOL bSet)
 	m_pTreeCtrl->SetLineColor(bSet ? GetSysColor(COLOR_WINDOW) : m_pTreeCtrl->GetLineColor());
 	m_pTreeCtrl->SetTextColor(bSet ? GetSysColor(COLOR_WINDOW) : m_pTreeCtrl->GetTextColor());
 	m_pTreeCtrl->SetBkColor(bSet ? g_crColorDark : m_pTreeCtrl->GetBkColor());
-}
-
-void CDatabasePane::ResetSelectedItem()
-{
-	m_hItemSelected = nullptr;
 }

@@ -622,7 +622,7 @@ void CDatabaseExplorerDoc::OnEditDatasource()
 	if (IDOK == ret)
 		UpdateAllViews(NULL, CDatabaseExplorerApp::UH_POPULATEDATABASEPANEL);
 	UpdateAllViews(NULL, CDatabaseExplorerApp::UH_SELECTDATABASE, reinterpret_cast<CObject*>(&sDatabase));
-	UpdateAllViews(NULL, CDatabaseExplorerApp::UH_INITDATABASE, reinterpret_cast<CObject*>(TRUE));
+	UpdateAllViews(NULL, CDatabaseExplorerApp::UH_INITDATABASE);
 }
 
 void CDatabaseExplorerDoc::OnLogPopulateList()

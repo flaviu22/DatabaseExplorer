@@ -11,6 +11,8 @@
 #include "ChildFrm.h"
 #include "DatabaseExplorerView.h"
 
+#pragma comment(lib, "version.lib")
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -29,9 +31,11 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	CString GetAppVersion(CString sFileName, BOOL bShortVersion = TRUE) const;
 
 // Implementation
 protected:
+	virtual BOOL OnInitDialog();
 	DECLARE_MESSAGE_MAP()
 };
 
@@ -42,6 +46,61 @@ CAboutDlg::CAboutDlg() noexcept : CDialogEx(IDD_ABOUTBOX)
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+}
+
+BOOL CAboutDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	// TODO:  Add extra initialization here
+
+	CString sFileName, sText;
+	GetModuleFileName(NULL, sFileName.GetBuffer(_MAX_PATH), _MAX_PATH);
+	sFileName.ReleaseBuffer();
+	sText.Format(_T("%s, Version %s"), theApp.m_pszAppName, GetAppVersion(sFileName));
+	GetDlgItem(IDC_STATIC2)->SetWindowText(sText);
+
+	sText.Format(_T("Copyright (C) %s"), COleDateTime::GetCurrentTime().Format(_T("%Y")));
+	GetDlgItem(IDC_STATIC3)->SetWindowText(sText);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+CString CAboutDlg::GetAppVersion(CString sFileName, BOOL bShortVersion/* = TRUE*/) const
+{
+	CString sVersion;
+	DWORD dwDummy = 0;
+
+	try
+	{
+		DWORD dwSize = ::GetFileVersionInfoSize(sFileName.GetBuffer(_MAX_PATH), &dwDummy);
+		sFileName.ReleaseBuffer();
+		LPBYTE lpData = new BYTE[dwSize];
+		if (::GetFileVersionInfo(sFileName, 0, dwSize, lpData))
+		{
+			UINT nLenght = 0;
+			VS_FIXEDFILEINFO* lpFfi;
+			VerQueryValue(lpData, _T("\\"), (LPVOID*)&lpFfi, &nLenght);
+			DWORD dwFileVersionMS = lpFfi->dwFileVersionMS;
+			DWORD dwFileVersionLS = lpFfi->dwFileVersionLS;
+			DWORD dwLeftMost = HIWORD(dwFileVersionMS);
+			DWORD dwSecondLeft = LOWORD(dwFileVersionMS);
+			DWORD dwSecondRight = HIWORD(dwFileVersionLS);
+			DWORD dwRightMost = LOWORD(dwFileVersionLS);
+			if (bShortVersion)
+				sVersion.Format(_T("%d.%d"), dwLeftMost, dwSecondLeft);
+			else
+				sVersion.Format(_T("%d.%d.%d.%d"), dwLeftMost, dwSecondLeft, dwSecondRight, dwRightMost);
+		}
+		delete[] lpData;
+	}
+	catch (CException* pException)
+	{
+		pException->Delete();
+	}
+
+	return sVersion;
 }
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)

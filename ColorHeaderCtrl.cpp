@@ -15,10 +15,7 @@ static char THIS_FILE[] = __FILE__;
 IMPLEMENT_DYNAMIC(CColorHeaderCtrl, CHeaderCtrl)
 
 CColorHeaderCtrl::CColorHeaderCtrl()
-	: m_bPrint(FALSE)
-	, m_bTheme(FALSE)
-	, m_bCustomDraw(FALSE)
-	, m_crText(GetSysColor(COLOR_WINDOWTEXT))
+	: m_crText(GetSysColor(COLOR_WINDOWTEXT))
 	, m_crBackground(GetSysColor(COLOR_WINDOW))
 {
 	m_crBackgroundHot = m_crBackgroundPressed = m_crBackground;
@@ -32,6 +29,15 @@ BEGIN_MESSAGE_MAP(CColorHeaderCtrl, CHeaderCtrl)
 END_MESSAGE_MAP()
 
 // CColorHeaderCtrl message handlers
+
+void CColorHeaderCtrl::UpdateCustomDrawFlag()
+{
+	if (GetSysColor(COLOR_WINDOW) != m_crBackground ||
+		GetSysColor(COLOR_WINDOWTEXT) != m_crText)
+		m_bCustomDraw = TRUE;
+	else
+		m_bCustomDraw = FALSE;
+}
 
 void CColorHeaderCtrl::OnNMCustomdraw(NMHDR* pNMHDR, LRESULT* pResult)
 {
@@ -85,29 +91,26 @@ void CColorHeaderCtrl::OnNMCustomdraw(NMHDR* pNMHDR, LRESULT* pResult)
 				pDC->SelectObject(pOldBrush);
 				DeleteObject(&brush);
 
-				if (!m_bTheme)
+				const HTHEME hTheme = OpenThemeData(pNMCD->nmcd.hdr.hwndFrom, L"HEADER");
+				if (hTheme)
 				{
-					const HTHEME hTheme = OpenThemeData(pNMCD->nmcd.hdr.hwndFrom, L"HEADER");
-					if (hTheme)
-					{
-						CDC TestDC;
-						TestDC.CreateCompatibleDC(pDC);
-						CBitmap bitmapTest;
-						bitmapTest.CreateCompatibleBitmap(pDC, rect.Width(), rect.Height());
-						CBitmap* pOldBitmapTest = static_cast<CBitmap*>(TestDC.SelectObject(&bitmapTest));
-						DrawThemeBackground(hTheme, TestDC.GetSafeHdc(), HP_HEADERITEM, HIS_NORMAL, &rect, NULL);
-						m_crBackgroundTheme = TestDC.GetPixel(1, 1);
-						DrawThemeBackground(hTheme, TestDC.GetSafeHdc(), HP_HEADERITEM, HIS_HOT, &rect, NULL);
-						m_crBackgroundHotTheme = TestDC.GetPixel(1, 1);
-						DrawThemeBackground(hTheme, TestDC.GetSafeHdc(), HP_HEADERITEM, HIS_PRESSED, &rect, NULL);
-						m_crBackgroundPressedTheme = TestDC.GetPixel(1, 1);
-						TestDC.SelectObject(pOldBitmapTest);
-						DeleteObject(bitmapTest);
-						DeleteDC(TestDC);
-						CloseThemeData(hTheme);
+					CBitmap bmp;
+					bmp.CreateCompatibleBitmap(pDC, rect.Width(), rect.Height());
 
-						m_bTheme = TRUE;
-					}
+					CDC dc;
+					dc.CreateCompatibleDC(pDC);
+
+					CBitmap* pOldBitmapTest = static_cast<CBitmap*>(dc.SelectObject(&bmp));
+					DrawThemeBackground(hTheme, dc.GetSafeHdc(), HP_HEADERITEM, HIS_NORMAL, &rect, NULL);
+					m_crBackgroundTheme = dc.GetPixel(1, 1);
+					DrawThemeBackground(hTheme, dc.GetSafeHdc(), HP_HEADERITEM, HIS_HOT, &rect, NULL);
+					m_crBackgroundHotTheme = dc.GetPixel(1, 1);
+					DrawThemeBackground(hTheme, dc.GetSafeHdc(), HP_HEADERITEM, HIS_PRESSED, &rect, NULL);
+					m_crBackgroundPressedTheme = dc.GetPixel(1, 1);
+					dc.SelectObject(pOldBitmapTest);
+					DeleteObject(bmp);
+					DeleteDC(dc);
+					CloseThemeData(hTheme);
 				}
 
 				CDC HotDC, PressedDC;
@@ -160,13 +163,4 @@ void CColorHeaderCtrl::OnNMCustomdraw(NMHDR* pNMHDR, LRESULT* pResult)
 		DeleteDC(MemDC);
 		break;
 	}
-}
-
-void CColorHeaderCtrl::UpdateCustomDrawFlag()
-{
-	if (GetSysColor(COLOR_WINDOW) != m_crBackground ||
-		GetSysColor(COLOR_WINDOWTEXT) != m_crText)
-		m_bCustomDraw = TRUE;
-	else
-		m_bCustomDraw = FALSE;
 }

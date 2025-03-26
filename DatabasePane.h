@@ -17,7 +17,6 @@ public:
 	CString GetDatabaseSelection() const;
 	void SetItemAsDatabase(const CString& sDatabase);
 	void SetDarkMode(const BOOL bSet);
-	void ResetSelectedItem();
 
 public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);

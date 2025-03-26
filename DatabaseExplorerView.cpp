@@ -205,15 +205,10 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 
 	if (CDatabaseExplorerApp::UH_INITDATABASE == lHint)
 	{
-		if (pHint)
-		{
-			pDoc->SetLastSelect(_T(""));
-			pDoc->GetDatabasePane()->ResetSelectedItem();
-		}
-
 		const CString sDatabase = pDoc->InitDatabase();
 		if (! sDatabase.IsEmpty())
 		{
+			pDoc->SetLastSelect(_T(""));
 			if (DatabaseType::POSTGRE != pDoc->GetDatabaseType())
 				pDoc->LogMessage(sDatabase + _T(" database is selected"), MessageType::info);
 			else
@@ -472,14 +467,11 @@ LRESULT CDatabaseExplorerView::OnDarkMode(WPARAM wParam, LPARAM lParam)
 		pHeader->SetBackgroundColor(wParam ? g_crHeaderColorDark : GetSysColor(COLOR_WINDOW));
 		pHeader->SetBackgroundColorHot(wParam ? g_crHeaderColorDarkHot : GetSysColor(COLOR_WINDOW));
 		pHeader->SetBackgroundColorPressed(wParam ? g_crHeaderColorDarkPressed : GetSysColor(COLOR_WINDOW));
-		pHeader->Invalidate();
 	}
 
 	SendMessage(LVM_SETBKCOLOR, 0, wParam ? g_crColorDark : GetSysColor(COLOR_WINDOW));
 	SetTextBkColor(wParam ? g_crColorDark : GetSysColor(COLOR_WINDOW));
 	SetTextColor(wParam ? GetSysColor(COLOR_WINDOW) : GetSysColor(COLOR_WINDOWTEXT));
-
-	Invalidate();
 
 	::PostMessage(GetParentFrame()->GetSafeHwnd(), WMU_DARKMODE, wParam, 0);
 
