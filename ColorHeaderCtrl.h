@@ -31,13 +31,13 @@ public:
 	void SetBackgroundColorPressed(const COLORREF cr) { m_crBackgroundPressed = cr; }
 
 protected:
-	COLORREF m_crText;
-	COLORREF m_crBackground;
-	COLORREF m_crBackgroundHot;
-	COLORREF m_crBackgroundPressed;
+	COLORREF m_crText{ 0 };
+	COLORREF m_crBackground{ 0 };
+	COLORREF m_crBackgroundHot{ 0 };
+	COLORREF m_crBackgroundPressed{ 0 };
 	COLORREF m_crBackgroundTheme{ 0 };
-	COLORREF m_crBackgroundHotTheme;
-	COLORREF m_crBackgroundPressedTheme;
+	COLORREF m_crBackgroundHotTheme{ 0 };
+	COLORREF m_crBackgroundPressedTheme{ 0 };
 	BOOL m_bCustomDraw{ FALSE };
 	BOOL m_bPrint{ FALSE };	// To avoid infinite loop with WM_PRINTCLIENT
 
