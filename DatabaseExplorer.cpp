@@ -30,12 +30,12 @@ public:
 #endif
 
 protected:
+	virtual BOOL OnInitDialog();
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	CString GetAppVersion(CString sFileName, BOOL bShortVersion = TRUE) const;
 
 // Implementation
 protected:
-	virtual BOOL OnInitDialog();
 	DECLARE_MESSAGE_MAP()
 };
 

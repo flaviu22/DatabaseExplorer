@@ -55,20 +55,20 @@ void CColorHeaderCtrl::OnNMCustomdraw(NMHDR* pNMHDR, LRESULT* pResult)
 		*pResult = CDRF_NOTIFYITEMDRAW | CDRF_NOTIFYPOSTPAINT;
 		break;
 	case CDDS_ITEMPREPAINT:
-	{
-		static HFONT hNewFont = NULL;
-		if (!hNewFont)
 		{
-			LOGFONT lf;
-			GetFont()->GetLogFont(&lf);
-			lf.lfQuality = NONANTIALIASED_QUALITY;
-			hNewFont = ::CreateFontIndirect(&lf);
+			static HFONT hNewFont = NULL;
+			if (!hNewFont)
+			{
+				LOGFONT lf;
+				GetFont()->GetLogFont(&lf);
+				lf.lfQuality = NONANTIALIASED_QUALITY;
+				hNewFont = ::CreateFontIndirect(&lf);
+			}
+			SetTextColor(pNMCD->nmcd.hdc, m_crText);
+			SelectObject(pNMCD->nmcd.hdc, hNewFont);
+			*pResult = CDRF_NEWFONT;
 		}
-		SetTextColor(pNMCD->nmcd.hdc, m_crText);
-		SelectObject(pNMCD->nmcd.hdc, hNewFont);
-		*pResult = CDRF_NEWFONT;
-	}
-	break;
+		break;
 	case CDDS_POSTPAINT:
 		CRect rect;
 		GetClientRect(&rect);
