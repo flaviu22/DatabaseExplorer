@@ -8,19 +8,6 @@
 #include "MessagePane.h"
 #include "DatabasePane.h"
 
-constexpr int PANEQUERYID = 22;
-constexpr int PANEMESSAGEID = 32;
-constexpr int PANEDATABASEID = 33;
-constexpr int DoInitDatabase = 1;
-constexpr WPARAM DoListTable = 2;
-constexpr int UpdateFrameText = 3;
-
-enum class Color
-{
-	black = RGB(0, 0, 0),
-	red = RGB(250, 7, 7)
-};
-
 class CDatabaseExplorerView;
 
 class CChildFrame : public CMDIChildWndExt

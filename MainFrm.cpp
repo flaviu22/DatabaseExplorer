@@ -652,15 +652,27 @@ void CMainFrame::OnViewDarkmode()
 {
 	// TODO: Add your command handler code here
 
-	if (theApp.GetOpenDocumentCount() > 0)
-	{
-		if (IDYES != MessageBox(_T("In order to change this feature you need to close all documents. Are you sure you want this ?"),
-			NULL, MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2))
-			return;
-		theApp.CloseAllDocuments(FALSE);
-	}
-
 	theApp.m_bDark = !theApp.m_bDark;
+
+	POSITION posTemplate = theApp.GetFirstDocTemplatePosition();
+	while (NULL != posTemplate)
+	{
+		CDocTemplate* pDocTemplate = theApp.GetNextDocTemplate(posTemplate);
+		POSITION posDoc = pDocTemplate->GetFirstDocPosition();
+		while (NULL != posDoc)
+		{
+			CDocument* pDoc = pDocTemplate->GetNextDoc(posDoc);
+			if (NULL != pDoc)
+			{
+				auto pos = pDoc->GetFirstViewPosition();
+				while (pos)
+				{
+					CView* pView = pDoc->GetNextView(pos);
+					::SendMessage(pView->GetSafeHwnd(), WMU_DARKMODE, static_cast<WPARAM>(theApp.m_bDark), 0);
+				}
+			}
+		}
+	}
 }
 
 void CMainFrame::OnUpdateViewVirtualmode(CCmdUI* pCmdUI)

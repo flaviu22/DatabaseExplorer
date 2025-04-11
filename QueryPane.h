@@ -11,6 +11,7 @@ public:
 public:
 	CString GetSelText() const;
 	void SetText(std::vector<CString>&& text);
+	void SetDarkMode(const BOOL bSet);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

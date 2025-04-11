@@ -205,6 +205,7 @@
     <ClInclude Include="ColorListView.h" />
     <ClInclude Include="ComboBoxExt.h" />
     <ClInclude Include="ComboBoxExtList.h" />
+    <ClInclude Include="Data.h" />
     <ClInclude Include="DatabaseEx.h" />
     <ClInclude Include="DatabaseExplorer.h" />
     <ClInclude Include="DatabaseExplorerDoc.h" />

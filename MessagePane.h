@@ -5,6 +5,7 @@ class CMessagePane : public CRichEditPane
 {
 public:
 	void AppendToLogAndScroll(const CString& str, const COLORREF& color);
+	void SetDarkMode(const BOOL bSet);
 
 private:
 	int GetNumVisibleLines();

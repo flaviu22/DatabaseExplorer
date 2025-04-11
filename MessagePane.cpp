@@ -59,26 +59,23 @@ void CMessagePane::OnDestroy()
 
 void CMessagePane::AppendToLogAndScroll(const CString& str, const COLORREF& color)
 {
-	CHARFORMAT cf{};
-	long nVisible = 0;
-	long nInsertionPoint = 0;
-
 	// Initialize character format structure
-	cf.cbSize = sizeof(CHARFORMAT);
-	cf.dwMask = CFM_COLOR;
-	cf.dwEffects = 0; // To disable CFE_AUTOCOLOR
+//	CHARFORMAT cf{};
+//	cf.cbSize = sizeof(CHARFORMAT);
+//	cf.dwMask = CFM_COLOR;
+//	cf.dwEffects = 0; // To disable CFE_AUTOCOLOR
 
-	if (RGB(250, 7, 7) != color)
-		cf.crTextColor = theApp.m_bDark ? GetSysColor(COLOR_WINDOW) : GetSysColor(COLOR_WINDOWTEXT);
-	else
-		cf.crTextColor = color;
+//	if (RGB(250, 7, 7) != color)
+//		cf.crTextColor = theApp.m_bDark ? GetSysColor(COLOR_WINDOW) : GetSysColor(COLOR_WINDOWTEXT);
+//	else
+//		cf.crTextColor = color;
 
 	// Set insertion point to end of text
-	nInsertionPoint = m_pRichEditCtrl->GetWindowTextLength();
+	const long nInsertionPoint = static_cast<long>(m_pRichEditCtrl->GetWindowTextLength());
 	m_pRichEditCtrl->SetSel(nInsertionPoint, -1);
 
 	// Set the character format
-	m_pRichEditCtrl->SetSelectionCharFormat(cf);
+//	m_pRichEditCtrl->SetSelectionCharFormat(cf);
 
 	// Replace selection. Because we have nothing
 	// selected, this will simply insert
@@ -87,7 +84,7 @@ void CMessagePane::AppendToLogAndScroll(const CString& str, const COLORREF& colo
 
 	// Get number of currently visible lines or maximum number of visible lines
 	// (We must call GetNumVisibleLines() before the first call to LineScroll()!)
-	nVisible = GetNumVisibleLines();
+	const int nVisible = GetNumVisibleLines();
 
 	// Now this is the fix of CRichEditCtrl's abnormal behaviour when used
 	// in an application not based on dialogs. Checking the focus prevents
@@ -124,4 +121,16 @@ int CMessagePane::GetNumVisibleLines()
 	nLastLine = m_pRichEditCtrl->LineFromChar(nLastChar);
 
 	return nLastLine - nFirstLine;
+}
+
+void CMessagePane::SetDarkMode(const BOOL bSet)
+{
+	CHARFORMAT cf{};
+	cf.cbSize = sizeof(CHARFORMAT);
+	cf.dwMask = CFM_COLOR;  // Set color mask
+
+	m_pRichEditCtrl->SetBackgroundColor(bSet ? FALSE : TRUE, bSet ? g_crColorDark : g_crColorWhite);
+	cf.crTextColor = bSet ? GetSysColor(COLOR_WINDOW) : GetSysColor(COLOR_WINDOWTEXT); // Set desired color
+	m_pRichEditCtrl->SetSel(-1, -1);
+	m_pRichEditCtrl->SetDefaultCharFormat(cf);
 }

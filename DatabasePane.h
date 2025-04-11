@@ -1,9 +1,10 @@
 #pragma once
+
+#include "Data.h"
 #include "NonClosableDockablePane.h"
 #include "PaneTreeCtrl.h"
-#include <memory>
 
-constexpr int IDC_TREE_DATABASE = 21;
+#include <memory>
 
 class CDatabasePane : public CNonClosableDockablePane
 {
@@ -22,6 +23,12 @@ public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	void AdjustLayout();
 	void InitPropList();
+	COLORREF GetLineColor() const { return m_crLineColor; }
+	COLORREF GetTextColor() const { return m_crTextColor; }
+	COLORREF GetBkColor() const { return m_crBkColor; }
+	void SetLineColor(const COLORREF crLineColor) { m_crLineColor = crLineColor; }
+	void SetTextColor(const COLORREF crTextColor) { m_crTextColor = crTextColor; }
+	void SetBkColor(const COLORREF crBkColor) { m_crBkColor = crBkColor; }
 
 	// Attributes
 protected:
@@ -29,6 +36,9 @@ protected:
 	std::unique_ptr<CPaneTreeCtrl> m_pTreeCtrl{};
 
 private:
+	COLORREF m_crLineColor{ g_crDummy };
+	COLORREF m_crTextColor{ g_crDummy };
+	COLORREF m_crBkColor{ g_crDummy };
 	HTREEITEM m_hItemSelected{ nullptr };
 
 private:

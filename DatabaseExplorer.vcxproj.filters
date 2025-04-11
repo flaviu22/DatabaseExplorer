@@ -102,6 +102,9 @@
     <ClInclude Include="ColorListView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DatabaseExplorer.cpp">

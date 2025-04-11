@@ -1,9 +1,7 @@
 #include "pch.h"
+
 #include "DatabaseExplorer.h"
 #include "DatabasePane.h"
-
-#include "DatabaseExplorerDoc.h"
-#include "DatabaseExplorerView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -50,7 +48,7 @@ int CDatabasePane::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	// Create tree:
 	const DWORD dwViewStyle = WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS;
-	if (! m_pTreeCtrl->Create(dwViewStyle, rectDummy, this, IDC_TREE_DATABASE))
+	if (!m_pTreeCtrl->Create(dwViewStyle, rectDummy, this, IDC_TREE_DATABASE))
 	{
 		TRACE(_T("Failed to database pane view\n"));
 		return -1;      // fail to create
@@ -243,7 +241,14 @@ void CDatabasePane::OnNMDblclkTree(NMHDR* pNMHDR, LRESULT* pResult)
 
 void CDatabasePane::SetDarkMode(const BOOL bSet)
 {
-	m_pTreeCtrl->SetLineColor(bSet ? GetSysColor(COLOR_WINDOW) : m_pTreeCtrl->GetLineColor());
-	m_pTreeCtrl->SetTextColor(bSet ? GetSysColor(COLOR_WINDOW) : m_pTreeCtrl->GetTextColor());
-	m_pTreeCtrl->SetBkColor(bSet ? g_crColorDark : m_pTreeCtrl->GetBkColor());
+	if (g_crDummy == GetLineColor())
+	{
+		SetLineColor(m_pTreeCtrl->GetLineColor());
+		SetTextColor(m_pTreeCtrl->GetTextColor());
+		SetBkColor(m_pTreeCtrl->GetBkColor());
+	}
+
+	m_pTreeCtrl->SetLineColor(bSet ? GetSysColor(COLOR_WINDOW) : GetLineColor());
+	m_pTreeCtrl->SetTextColor(bSet ? GetSysColor(COLOR_WINDOW) : GetTextColor());
+	m_pTreeCtrl->SetBkColor(bSet ? g_crColorDark : GetBkColor());
 }

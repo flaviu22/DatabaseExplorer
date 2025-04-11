@@ -420,14 +420,16 @@ BOOL CDatabaseExplorerDoc::PopulateListCtrl(CListCtrl& ListCtrl, const CString& 
 		}
 		else	// not in virtual mode
 		{
-			int nRow = 0;
-			CDBVariant var;
-			while (! m_pRecordset->IsEOF())
+			int nRow{ 0 };
+			CDBVariant var{};
+			const short zero{ 0 };
+			while (!m_pRecordset->IsEOF())
 			{
 				for (int i = 0; i < m_pRecordset->GetODBCFieldCount(); ++i)
 				{
-					m_pRecordset->GetFieldValue(i, var);
-					if (0 == i)
+					var.Clear();
+					m_pRecordset->GetFieldValue(static_cast<short>(i), var);
+					if (zero == i)
 						ListCtrl.InsertItem(nRow, ConvertToCString(var));
 					else
 						ListCtrl.SetItemText(nRow, i, ConvertToCString(var));
@@ -466,23 +468,33 @@ BOOL CDatabaseExplorerDoc::PopulateDatabasePanel(CTreeCtrl& tree)
 	m_sError.Empty();
 	tree.DeleteAllItems();
 
+	BOOL bReturn{ FALSE };
+
 	switch (m_DatabaseType)
 	{
 	case DatabaseType::SQLITE:
-		return PopulateSQLite(tree);
+		bReturn = PopulateSQLite(tree);
+		break;
 	case DatabaseType::ORACLE:
-		return PopulateOracle(tree);
+		bReturn = PopulateOracle(tree);
+		break;
 	case DatabaseType::MYSQL:
 	case DatabaseType::MARIADB:
-		return PopulateMySql(tree);
+		bReturn = PopulateMySql(tree);
+		break;
 	case DatabaseType::POSTGRE:
-		return PopulatePostgre(tree);
+		bReturn = PopulatePostgre(tree);
+		break;
 	case DatabaseType::MSSQL:
 	default:
-		return PopulateMSSQL(tree);
+		bReturn = PopulateMSSQL(tree);
+		break;
 	}
 
-	return FALSE;
+	if (1 == GetRootCount(tree))
+		tree.Expand(tree.GetRootItem(), TVE_EXPAND);
+
+	return bReturn;
 }
 
 BOOL CDatabaseExplorerDoc::PopulateMSSQL(CTreeCtrl& tree)
@@ -622,7 +634,6 @@ void CDatabaseExplorerDoc::OnEditDatasource()
 	if (IDOK == ret)
 		UpdateAllViews(NULL, CDatabaseExplorerApp::UH_POPULATEDATABASEPANEL);
 	UpdateAllViews(NULL, CDatabaseExplorerApp::UH_SELECTDATABASE, reinterpret_cast<CObject*>(&sDatabase));
-	UpdateAllViews(NULL, CDatabaseExplorerApp::UH_INITDATABASE);
 }
 
 void CDatabaseExplorerDoc::OnLogPopulateList()
@@ -991,4 +1002,17 @@ BOOL CDatabaseExplorerDoc::ContainHarmfulKeyword(const CString& sSQL) const
 		-1 != sSQL.Find(_T("alter")) ||
 		-1 != sSQL.Find(_T("truncate")) ||
 		-1 != sSQL.Find(_T("table")));
+}
+
+size_t CDatabaseExplorerDoc::GetRootCount(const CTreeCtrl& tree) const
+{
+	size_t count{};
+	auto item = tree.GetRootItem();
+	while (item)
+	{
+		count++;
+		item = tree.GetNextSiblingItem(item);
+	}
+
+	return count;
 }

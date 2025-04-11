@@ -2,9 +2,6 @@
 #include "NonClosableDockablePane.h"
 #include <memory>
 
-constexpr int IDC_RICHEDIT_QUERY = 33;
-constexpr int IDC_RICHEDIT_MESSAGE = 34;
-
 // https://stackoverflow.com/questions/7184620/how-can-i-split-a-cdockablepane
 
 class CRichEditPane : public CNonClosableDockablePane
@@ -18,7 +15,6 @@ public:
 
 public:
 	CString GetText() const;
-	void SetDarkMode(const BOOL bSet);
 
 protected:
 	std::unique_ptr<CRichEditCtrl> m_pRichEditCtrl;

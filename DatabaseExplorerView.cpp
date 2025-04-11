@@ -201,14 +201,13 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 	CDatabaseExplorerDoc* pDoc = GetDocument();
 
 	if (lHint && CDatabaseExplorerApp::UH_POPULATEDATABASEPANEL != lHint)
-		SetTimer(ID_TIMER_DBDISCONNECT, 33 * TIME_ONEMINUTE, nullptr);
+		SetTimer(ID_TIMER_DBDISCONNECT, 33 * TIME_MINUTE, nullptr);
 
 	if (CDatabaseExplorerApp::UH_INITDATABASE == lHint)
 	{
 		const CString sDatabase = pDoc->InitDatabase();
-		if (! sDatabase.IsEmpty())
+		if (!sDatabase.IsEmpty())
 		{
-			pDoc->SetLastSelect(_T(""));
 			if (DatabaseType::POSTGRE != pDoc->GetDatabaseType())
 				pDoc->LogMessage(sDatabase + _T(" database is selected"), MessageType::info);
 			else
@@ -227,6 +226,8 @@ void CDatabaseExplorerView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHin
 
 	if (CDatabaseExplorerApp::UH_POPULATEDATABASEPANEL == lHint)
 	{
+		pDoc->SetLastSelect(_T(""));
+
 		m_bPopulateMode = TRUE;
 		CRaiiSupport rs(m_bPopulateMode);
 		GetListCtrl().DeleteAllItems();
@@ -359,10 +360,12 @@ void CDatabaseExplorerView::OnLvnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 	if (theApp.m_bVirtualMode)
 	{
 		LV_ITEM* pItem = &pDispInfo->item;
-		if (LVIF_TEXT & pItem->mask && pItem->iItem < static_cast<int>(m_arrRows.size()))
+		if ((LVIF_TEXT & pItem->mask) && pItem->iItem < static_cast<int>(m_arrRows.size()))
 		{
-			const CDBRecord& record = *m_arrRows.at(pItem->iItem);
-			_tcscpy_s(pItem->pszText, pItem->cchTextMax, record.m_arrValue.at(pItem->iSubItem));
+			CDBRecord& record = *m_arrRows.at(pItem->iItem);
+			pItem->pszText = const_cast<LPWSTR>(static_cast<LPCWSTR>(record.m_arrValue.at(pItem->iSubItem)));
+//			pItem->pszText = record.m_arrValue.at(pItem->iSubItem).GetBuffer();
+//			record.m_arrValue.at(pItem->iSubItem).ReleaseBuffer();
 		}
 	}
 
@@ -472,6 +475,8 @@ LRESULT CDatabaseExplorerView::OnDarkMode(WPARAM wParam, LPARAM lParam)
 	SendMessage(LVM_SETBKCOLOR, 0, wParam ? g_crColorDark : GetSysColor(COLOR_WINDOW));
 	SetTextBkColor(wParam ? g_crColorDark : GetSysColor(COLOR_WINDOW));
 	SetTextColor(wParam ? GetSysColor(COLOR_WINDOW) : GetSysColor(COLOR_WINDOWTEXT));
+
+	Invalidate();
 
 	::PostMessage(GetParentFrame()->GetSafeHwnd(), WMU_DARKMODE, wParam, 0);
 

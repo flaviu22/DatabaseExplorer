@@ -1,5 +1,6 @@
 // DatabaseExplorerDoc.h : interface of the CDatabaseExplorerDoc class
 //
+#pragma once
 
 #include "ChildFrm.h"
 #include "QueryPane.h"
@@ -10,65 +11,6 @@
 
 #include <vector>
 #include <chrono>
-
-#pragma once
-
-enum class MessageType
-{
-	info = 0,
-	error = 1
-};
-
-enum class DatabaseType
-{
-	MSSQL = 1,
-	ORACLE,
-	SQLITE,
-	MYSQL,
-	MARIADB,
-	POSTGRE,
-	UNKNOWN
-};
-
-class CRaiiSupport
-{
-public:
-	CRaiiSupport(BOOL& bFlag);
-	~CRaiiSupport();
-
-	CRaiiSupport(const CRaiiSupport& rhs) = delete;
-	CRaiiSupport& operator=(const CRaiiSupport& rhs) = delete;
-	CRaiiSupport(CRaiiSupport&& rhs) = delete;
-	CRaiiSupport* operator=(CRaiiSupport&& rhs) = delete;
-
-private:
-	BOOL& m_bFlag;
-};
-
-struct SDocData
-{
-	BOOL m_bDSNSource{ FALSE };
-	DatabaseType m_DBType{ DatabaseType::MSSQL };
-	UINT m_nRecordsetType{ AFX_DB_USE_DEFAULT_TYPE };
-	BOOL m_bMsSqlAuthenticationRequired{ FALSE };
-	std::vector<CString> m_queries{};
-
-	SDocData(BOOL bDSNSource, DatabaseType DBType, UINT nRecordsetType, BOOL bMsSqlAuthenticationRequired, std::vector<CString>&& queries)
-		:m_bDSNSource(bDSNSource)
-		,m_DBType(DBType)
-		,m_nRecordsetType(nRecordsetType)
-		,m_bMsSqlAuthenticationRequired(bMsSqlAuthenticationRequired)
-		,m_queries(std::move(queries))
-	{}
-	SDocData(const SDocData& rhs) = delete;
-	SDocData& operator=(const SDocData& rhs) = delete;
-	SDocData(SDocData&& rhs) = default;
-	SDocData& operator=(SDocData&& rhs) = default;
-	void AddQueries(std::vector<CString>&& queries)
-	{
-		m_queries.insert(m_queries.begin(), queries.begin(), queries.end());
-	}
-};
 
 class CDatabaseExplorerView;
 
@@ -121,6 +63,7 @@ public:
 	void RestoreQueries(CQueryPane* pPane) const;
 	std::vector<CString> GetDocumentQueries() const;
 	BOOL HasHarmfulQueries(const std::vector<CString>& queries) const;
+	size_t GetRootCount(const CTreeCtrl& tree) const;
 
 // Overrides
 public:
