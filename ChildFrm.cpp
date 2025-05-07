@@ -234,7 +234,6 @@ LRESULT CChildFrame::OnDarkMode(WPARAM wParam, LPARAM lParam)
 
 LRESULT CChildFrame::OnQueryChanged(WPARAM wParam, LPARAM lParam)
 {
-	TRACE(_T("CChildFrame::OnQueryChange\n"));
 	::PostMessage(GetParentFrame()->GetSafeHwnd(), WMU_QUERYCHANGED, 0, 0);
 	return 1;
 }

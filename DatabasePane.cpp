@@ -50,7 +50,7 @@ int CDatabasePane::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	const DWORD dwViewStyle = WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS;
 	if (!m_pTreeCtrl->Create(dwViewStyle, rectDummy, this, IDC_TREE_DATABASE))
 	{
-		TRACE(_T("Failed to database pane view\n"));
+		TRACE(_T("Failed to create database pane view\n"));
 		return -1;      // fail to create
 	}
 

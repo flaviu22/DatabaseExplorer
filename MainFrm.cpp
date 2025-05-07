@@ -459,9 +459,7 @@ LRESULT CMainFrame::OnTabMove(WPARAM wParam, LPARAM lParam)
 	if (static_cast<int>(wParam) 	// Index of the currently active tab
 	 != static_cast<int>(lParam))	// Index of the tab that will become active
 	{
-		// Tab has been moved
-		TRACE(_T("Tab has been dragged!\n"));
-		PostMessage(WMU_QUERYCHANGED, 0, 0);
+		PostMessage(WMU_QUERYCHANGED, 0, 0);	// Tab has been moved
 	}
 
 	return 0;
@@ -721,7 +719,6 @@ void CMainFrame::OnUpdateViewDarkmode(CCmdUI* pCmdUI)
 
 LRESULT CMainFrame::OnQueryChanged(WPARAM wParam, LPARAM lParam)
 {
-	TRACE(_T("CMainFrame::OnQueryChange\n"));
 #ifndef _DEBUG
 	theApp.m_bDirty = TRUE;
 	SetTimer(ID_TIMER_QUERYCHANGED, 7 * TIME_SECOND, nullptr);
