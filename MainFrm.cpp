@@ -52,8 +52,10 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_WORDWRAP, &CMainFrame::OnUpdateViewWordwrap)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_DARKMODE, &CMainFrame::OnUpdateViewDarkmode)
 	ON_REGISTERED_MESSAGE(AFX_WM_ON_GET_TAB_TOOLTIP, &CMainFrame::OnGetTabToolTip)
+	ON_REGISTERED_MESSAGE(AFX_WM_ON_MOVE_TAB, &CMainFrame::OnTabMove)
 	ON_MESSAGE(WMU_SETMESSAGETEXT, &CMainFrame::OnSetMessageText)
-END_MESSAGE_MAP()
+	ON_MESSAGE(WMU_QUERYCHANGED, &CMainFrame::OnQueryChanged)
+	END_MESSAGE_MAP()
 
 static UINT indicators[] =
 {
@@ -275,7 +277,8 @@ void CMainFrame::OnClose()
 		OnViewWordwrap();
 		theApp.m_bWordWrap = TRUE;
 	}
-	theApp.UpdateBackupFiles();
+	if (theApp.m_bDirty)
+		theApp.UpdateBackupFiles();
 #endif // !_DEBUG
 	CMDIFrameWndEx::OnClose();
 }
@@ -375,6 +378,13 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 		KillTimer(nIDEvent);
 		PostMessage(WM_SETMESSAGESTRING, AFX_IDS_IDLEMESSAGE, 0);
 	}
+
+	if (ID_TIMER_QUERYCHANGED == nIDEvent)
+	{
+		KillTimer(nIDEvent);
+		theApp.UpdateBackupFiles();
+		theApp.m_bDirty = FALSE;
+	}
 }
 
 void CMainFrame::OnTimeChange()
@@ -439,6 +449,19 @@ LRESULT CMainFrame::OnGetTabToolTip(WPARAM wParam, LPARAM lParam)
 				}
 			}
 		}
+	}
+
+	return 0;
+}
+
+LRESULT CMainFrame::OnTabMove(WPARAM wParam, LPARAM lParam)
+{
+	if (static_cast<int>(wParam) 	// Index of the currently active tab
+	 != static_cast<int>(lParam))	// Index of the tab that will become active
+	{
+		// Tab has been moved
+		TRACE(_T("Tab has been dragged!\n"));
+		PostMessage(WMU_QUERYCHANGED, 0, 0);
 	}
 
 	return 0;
@@ -694,4 +717,14 @@ void CMainFrame::OnUpdateViewDarkmode(CCmdUI* pCmdUI)
 	// TODO: Add your command update UI handler code here
 
 	pCmdUI->SetCheck(theApp.m_bDark);
+}
+
+LRESULT CMainFrame::OnQueryChanged(WPARAM wParam, LPARAM lParam)
+{
+	TRACE(_T("CMainFrame::OnQueryChange\n"));
+#ifndef _DEBUG
+	theApp.m_bDirty = TRUE;
+	SetTimer(ID_TIMER_QUERYCHANGED, 7 * TIME_SECOND, nullptr);
+#endif // !_DEBUG
+	return 1;
 }

@@ -10,6 +10,7 @@ BEGIN_MESSAGE_MAP(CQueryPane, CRichEditPane)
 	//{{AFX_MSG_MAP(CQueryPane)
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
+	ON_EN_CHANGE(IDC_RICHEDIT_QUERY, &CQueryPane::OnEnChangeRichEditCtrl)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -30,7 +31,8 @@ int CQueryPane::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	AdjustLayout();
 
-	::PostMessage(m_pRichEditCtrl->GetSafeHwnd(), EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_SCROLLEVENTS | ENM_KEYEVENTS);
+	::PostMessage(m_pRichEditCtrl->GetSafeHwnd(), 
+		EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_SCROLLEVENTS | ENM_KEYEVENTS | ENM_CHANGE);
 
 	const DWORD dwNominator = static_cast<DWORD>(AfxGetApp()->GetProfileInt(_T("Settings"), 
 		_T("QueryPaneZoomNominator"), 120));
@@ -80,4 +82,10 @@ void CQueryPane::SetDarkMode(const BOOL bSet)
 	cf.crTextColor = bSet ? GetSysColor(COLOR_WINDOW) : GetSysColor(COLOR_WINDOWTEXT); // Set desired color
 	m_pRichEditCtrl->SetSel(-1, -1);
 	m_pRichEditCtrl->SetDefaultCharFormat(cf);
+}
+
+void CQueryPane::OnEnChangeRichEditCtrl()
+{
+	TRACE(_T("CQueryPane::OnEnChangeRichEditCtrl\n"));
+	::PostMessage(GetOwner()->GetSafeHwnd(), WMU_QUERYCHANGED, 0, 0);
 }

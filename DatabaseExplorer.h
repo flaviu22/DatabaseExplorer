@@ -34,9 +34,10 @@ public:
 	};
 
 public:
-	BOOL m_bDark{ FALSE };
-	BOOL m_bWordWrap{ FALSE };
-	BOOL m_bHiColorIcons{ TRUE };
+	BOOL m_bDark{FALSE};
+	BOOL m_bDirty{FALSE};
+	BOOL m_bWordWrap{FALSE};
+	BOOL m_bHiColorIcons{TRUE};
 	BOOL m_bVirtualMode{ FALSE };
 	UINT m_nAppLook{ ID_VIEW_APPLOOK_OFF_2007_BLACK };
 

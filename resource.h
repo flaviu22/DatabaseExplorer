@@ -36,6 +36,7 @@
 #define ID_TIMER_RESETSTATUSBAR         310
 #define ID_TIMER_DBDISCONNECT           311
 #define IDI_DATABASE                    312
+#define ID_TIMER_QUERYCHANGED           312
 #define IDI_TABLE                       314
 #define IDI_SELECTED                    315
 #define IDD_DIALOG_PASSWORD             316
@@ -79,6 +80,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        319
 #define _APS_NEXT_COMMAND_VALUE         32797
 #define _APS_NEXT_CONTROL_VALUE         1005
-#define _APS_NEXT_SYMED_VALUE           312
+#define _APS_NEXT_SYMED_VALUE           313
 #endif
 #endif

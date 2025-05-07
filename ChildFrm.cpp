@@ -26,6 +26,7 @@ BEGIN_MESSAGE_MAP(CChildFrame, CMDIChildWndExt)
 	ON_MESSAGE(WMU_ISPOPULATEMODE, &CChildFrame::OnIsPopulateMode)
 	ON_MESSAGE(WMU_SETWORDWRAP, &CChildFrame::OnSetWordWrap)
 	ON_MESSAGE(WMU_DARKMODE, &CChildFrame::OnDarkMode)
+	ON_MESSAGE(WMU_QUERYCHANGED, &CChildFrame::OnQueryChanged)
 END_MESSAGE_MAP()
 
 // CChildFrame construction/destruction
@@ -228,5 +229,12 @@ LRESULT CChildFrame::OnDarkMode(WPARAM wParam, LPARAM lParam)
 	m_pMessagePane->SetDarkMode(static_cast<BOOL>(wParam));
 	m_pDatabasePane->SetDarkMode(static_cast<BOOL>(wParam));
 
+	return 1;
+}
+
+LRESULT CChildFrame::OnQueryChanged(WPARAM wParam, LPARAM lParam)
+{
+	TRACE(_T("CChildFrame::OnQueryChange\n"));
+	::PostMessage(GetParentFrame()->GetSafeHwnd(), WMU_QUERYCHANGED, 0, 0);
 	return 1;
 }
