@@ -54,7 +54,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_REGISTERED_MESSAGE(AFX_WM_ON_GET_TAB_TOOLTIP, &CMainFrame::OnGetTabToolTip)
 	ON_REGISTERED_MESSAGE(AFX_WM_ON_MOVE_TAB, &CMainFrame::OnTabMove)
 	ON_MESSAGE(WMU_SETMESSAGETEXT, &CMainFrame::OnSetMessageText)
-	ON_MESSAGE(WMU_QUERYCHANGED, &CMainFrame::OnQueryChanged)
+	ON_MESSAGE(WMU_STATECHANGED, &CMainFrame::OnStateChanged)
 	END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -379,7 +379,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 		PostMessage(WM_SETMESSAGESTRING, AFX_IDS_IDLEMESSAGE, 0);
 	}
 
-	if (ID_TIMER_QUERYCHANGED == nIDEvent)
+	if (ID_TIMER_STATECHANGED == nIDEvent)
 	{
 		KillTimer(nIDEvent);
 		theApp.UpdateBackupFiles();
@@ -459,7 +459,7 @@ LRESULT CMainFrame::OnTabMove(WPARAM wParam, LPARAM lParam)
 	if (static_cast<int>(wParam) 	// Index of the currently active tab
 	 != static_cast<int>(lParam))	// Index of the tab that will become active
 	{
-		PostMessage(WMU_QUERYCHANGED, 0, 0);	// Tab has been moved
+		PostMessage(WMU_STATECHANGED, 0, 0);	// Tab has been moved
 	}
 
 	return 0;
@@ -717,11 +717,11 @@ void CMainFrame::OnUpdateViewDarkmode(CCmdUI* pCmdUI)
 	pCmdUI->SetCheck(theApp.m_bDark);
 }
 
-LRESULT CMainFrame::OnQueryChanged(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnStateChanged(WPARAM wParam, LPARAM lParam)
 {
 #ifndef _DEBUG
 	theApp.m_bDirty = TRUE;
-	SetTimer(ID_TIMER_QUERYCHANGED, 7 * TIME_SECOND, nullptr);
+	SetTimer(ID_TIMER_STATECHANGED, 7 * TIME_SECOND, nullptr);
 #endif // !_DEBUG
 	return 1;
 }

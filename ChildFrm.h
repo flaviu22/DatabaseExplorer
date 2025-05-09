@@ -61,7 +61,7 @@ protected:
 	afx_msg LRESULT OnIsPopulateMode(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnSetWordWrap(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnDarkMode(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT OnQueryChanged(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnStateChanged(WPARAM wParam, LPARAM lParam);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

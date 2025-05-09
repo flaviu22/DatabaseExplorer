@@ -79,6 +79,6 @@ protected:
 	afx_msg LRESULT OnGetTabToolTip(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnTabMove(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnSetMessageText(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT OnQueryChanged(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnStateChanged(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };

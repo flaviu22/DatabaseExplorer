@@ -13,7 +13,7 @@
 #define WMU_RESTOREQUERIES					(WM_APP + 45)
 #define WMU_SETWORDWRAP						(WM_APP + 46)
 #define WMU_DARKMODE						(WM_APP + 47)
-#define WMU_QUERYCHANGED					(WM_APP + 48)
+#define WMU_STATECHANGED					(WM_APP + 48)
 #define WMU_POSTINIT						(WM_APP + 80)
 
 #define STR_DSNSOURCE						_T("DSNSource")

@@ -36,7 +36,7 @@
 #define ID_TIMER_RESETSTATUSBAR         310
 #define ID_TIMER_DBDISCONNECT           311
 #define IDI_DATABASE                    312
-#define ID_TIMER_QUERYCHANGED           312
+#define ID_TIMER_STATECHANGED           312
 #define IDI_TABLE                       314
 #define IDI_SELECTED                    315
 #define IDD_DIALOG_PASSWORD             316
