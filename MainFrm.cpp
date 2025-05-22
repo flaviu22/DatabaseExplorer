@@ -80,9 +80,20 @@ CMainFrame::~CMainFrame()
 
 BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
-	if (! CMDIFrameWndEx::PreCreateWindow(cs))
+	if (!CMDIFrameWndEx::PreCreateWindow(cs))
 		return FALSE;
 	// TODO: Modify the Window class or styles here by modifying the CREATESTRUCT cs
+
+	WNDCLASS wclass;
+	::ZeroMemory(&wclass, sizeof(WNDCLASS));
+	wclass.style = CS_DBLCLKS;
+	wclass.hCursor = ::AfxGetApp()->LoadStandardCursor(IDC_ARROW);
+	wclass.hIcon = ::AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	wclass.lpfnWndProc = ::DefWindowProc;
+	wclass.lpszClassName = g_sMutexName;
+	::AfxRegisterClass(&wclass);
+
+	cs.lpszClass = g_sMutexName;
 
 	return TRUE;
 }

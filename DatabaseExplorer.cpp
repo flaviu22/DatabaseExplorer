@@ -17,6 +17,8 @@
 #define new DEBUG_NEW
 #endif
 
+const CString g_sMutexName = _T("F2908B5A-A477-4ea8-9382-F5DCFAE04B48");
+
 // CAboutDlg dialog used for App About
 
 class CAboutDlg : public CDialogEx
@@ -154,6 +156,18 @@ CDatabaseExplorerApp theApp;
 
 BOOL CDatabaseExplorerApp::InitInstance()
 {
+	CWnd* pWnd = CWnd::FindWindow(g_sMutexName, NULL);
+
+	if (NULL != pWnd && NULL != pWnd->GetSafeHwnd())
+	{
+		// A prevous running instance already created a window with the given class name.
+		pWnd->ShowWindow(SW_SHOWNA);
+		if (pWnd->IsIconic())
+			pWnd->ShowWindow(SW_RESTORE);
+		pWnd->SetForegroundWindow();
+		return FALSE;
+	}
+
 	// InitCommonControlsEx() is required on Windows XP if an application
 	// manifest specifies use of ComCtl32.dll version 6 or later to enable
 	// visual styles.  Otherwise, any window creation will fail.

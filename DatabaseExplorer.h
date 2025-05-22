@@ -14,6 +14,8 @@
 #include <string>
 #include <unordered_map>
 
+extern const CString g_sMutexName;
+
 // CDatabaseExplorerApp:
 // See DatabaseExplorer.cpp for the implementation of this class
 //
