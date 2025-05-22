@@ -74,14 +74,14 @@ CString CAboutDlg::GetAppVersion(CString sFileName, BOOL bShortVersion/* = TRUE*
 
 	try
 	{
-		DWORD dwSize = ::GetFileVersionInfoSize(sFileName.GetBuffer(_MAX_PATH), &dwDummy);
+		const auto size = ::GetFileVersionInfoSize(sFileName.GetBuffer(_MAX_PATH), &dwDummy);
 		sFileName.ReleaseBuffer();
-		LPBYTE lpData = new BYTE[dwSize];
-		if (::GetFileVersionInfo(sFileName, 0, dwSize, lpData))
+		std::vector<LPBYTE> lpData(size);
+		if (::GetFileVersionInfo(sFileName, 0, size, lpData.data()))
 		{
 			UINT nLenght = 0;
 			VS_FIXEDFILEINFO* lpFfi;
-			VerQueryValue(lpData, _T("\\"), (LPVOID*)&lpFfi, &nLenght);
+			VerQueryValue(lpData.data(), _T("\\"), (LPVOID*)&lpFfi, &nLenght);
 			DWORD dwFileVersionMS = lpFfi->dwFileVersionMS;
 			DWORD dwFileVersionLS = lpFfi->dwFileVersionLS;
 			DWORD dwLeftMost = HIWORD(dwFileVersionMS);
@@ -93,7 +93,6 @@ CString CAboutDlg::GetAppVersion(CString sFileName, BOOL bShortVersion/* = TRUE*
 			else
 				sVersion.Format(_T("%d.%d.%d.%d"), dwLeftMost, dwSecondLeft, dwSecondRight, dwRightMost);
 		}
-		delete[] lpData;
 	}
 	catch (CException* pException)
 	{
