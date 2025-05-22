@@ -29,9 +29,6 @@ public:
 
 protected:
 	virtual void OnInitialUpdate(); // called first time after construct
-	virtual BOOL OnPreparePrinting(CPrintInfo* pInfo);
-	virtual void OnBeginPrinting(CDC* pDC, CPrintInfo* pInfo);
-	virtual void OnEndPrinting(CDC* pDC, CPrintInfo* pInfo);
 	virtual void OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint);
 
 // Implementation

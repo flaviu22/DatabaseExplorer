@@ -40,10 +40,6 @@ BEGIN_MESSAGE_MAP(CDatabaseExplorerView, CColorListView)
 	ON_MESSAGE(WMU_ISPOPULATEMODE, &CDatabaseExplorerView::OnIsPopulateMode)
 	ON_MESSAGE(WMU_RESTOREQUERIES, &CDatabaseExplorerView::OnRestoreQueries)
 	ON_MESSAGE(WMU_DARKMODE, &CDatabaseExplorerView::OnDarkMode)
-	// Standard printing commands
-	ON_COMMAND(ID_FILE_PRINT, &CColorListView::OnFilePrint)
-	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CColorListView::OnFilePrint)
-	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CDatabaseExplorerView::OnFilePrintPreview)
 END_MESSAGE_MAP()
 
 // CDatabaseExplorerView construction/destruction
@@ -88,31 +84,6 @@ void CDatabaseExplorerView::OnInitialUpdate()
 	PostMessage(WMU_POSTINIT);
 	if (! GetDocument()->GetPathName().IsEmpty())
 		PostMessage(WMU_RESTOREQUERIES);
-}
-
-// CDatabaseExplorerView printing
-
-void CDatabaseExplorerView::OnFilePrintPreview()
-{
-#ifndef SHARED_HANDLERS
-	AFXPrintPreview(this);
-#endif
-}
-
-BOOL CDatabaseExplorerView::OnPreparePrinting(CPrintInfo* pInfo)
-{
-	// default preparation
-	return DoPreparePrinting(pInfo);
-}
-
-void CDatabaseExplorerView::OnBeginPrinting(CDC* pDC, CPrintInfo* pInfo)
-{
-	// TODO: add extra initialization before printing
-}
-
-void CDatabaseExplorerView::OnEndPrinting(CDC* pDC, CPrintInfo* pInfo)
-{
-	// TODO: add cleanup after printing
 }
 
 void CDatabaseExplorerView::OnRButtonUp(UINT nFlags, CPoint point)
