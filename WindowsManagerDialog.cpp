@@ -86,8 +86,17 @@ BOOL CWindowsManagerDialog::OnInitDialog()
 	m_pIL->DeleteImageList();
 	m_pIL->Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1);
 	m_List.SetImageList(m_pIL.get(), LVSIL_SMALL);
-	m_List.SetBkColor(WMD_LISTCOLOR_BKG);
-	m_List.SetTextBkColor(WMD_LISTCOLOR_BKG);
+	if (m_bDark)
+	{
+		m_List.SetBkColor(WMD_LISTCOLOR_DARK_BKG);
+		m_List.SetTextBkColor(WMD_LISTCOLOR_DARK_BKG);
+		m_List.SetTextColor(GetSysColor(COLOR_WINDOW));
+	}
+	else
+	{
+		m_List.SetBkColor(WMD_LISTCOLOR_BKG);
+		m_List.SetTextBkColor(WMD_LISTCOLOR_BKG);
+	}
 
 	PopulateList();
 
@@ -286,7 +295,10 @@ void CWindowsManagerDialog::OnNMCustomdrawListFile(NMHDR* pNMHDR, LRESULT* pResu
 		if (CDIS_FOCUS == (pLVCD->nmcd.uItemState & CDIS_FOCUS))
 		{
 			pLVCD->nmcd.uItemState = CDIS_DEFAULT;
-			pLVCD->clrTextBk = WMD_LISTCOLOR_BKGSEL;
+			if (m_bDark)
+				pLVCD->clrTextBk = WMD_LISTCOLOR_DARK_BKGSEL;
+			else
+				pLVCD->clrTextBk = WMD_LISTCOLOR_BKGSEL;
 		}
 		*pResult = CDRF_DODEFAULT;
 		break;

@@ -11,7 +11,9 @@
 //
 
 #define WMD_LISTCOLOR_BKG					RGB(255, 255, 213)
-#define WMD_LISTCOLOR_BKGSEL				RGB(255, 165, 0)
+#define WMD_LISTCOLOR_BKGSEL				RGB(230, 235, 255)
+#define WMD_LISTCOLOR_DARK_BKG				RGB(44, 44, 44)
+#define WMD_LISTCOLOR_DARK_BKGSEL			RGB(77, 77, 77)
 
 #ifndef WMU_ISOPEN
 #define WMU_ISOPEN							(WM_APP + 33)
@@ -27,10 +29,11 @@ class CWindowsManagerDialog : public CDialog
 // Construction
 public:
 	CWindowsManagerDialog(CWnd* pParent = NULL);   // standard constructor
-	BOOL Create(UINT nID, CWnd* pWnd = NULL, BOOL bAutoCleanup = TRUE)
+	BOOL Create(UINT nID, CWnd* pWnd = NULL, BOOL bAutoCleanup = TRUE, BOOL bDark = FALSE)
 	{
 		m_bAutoCleanup = bAutoCleanup;
 		m_pFrame = DYNAMIC_DOWNCAST(CMainFrame, pWnd);
+		m_bDark = bDark;
 
 		return CDialog::Create(nID, pWnd);
 	}
@@ -52,6 +55,7 @@ protected:
 	CListCtrl m_List;
 	std::unique_ptr<CImageList> m_pIL{};
 	BOOL m_bAutoCleanup;
+	BOOL m_bDark{ FALSE }; // Dark mode flag
 	CMainFrame* m_pFrame;
 
 protected:

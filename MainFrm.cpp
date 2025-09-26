@@ -135,6 +135,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	EnablePaneMenu(TRUE, ID_VIEW_CUSTOMIZE, strCustomize, ID_VIEW_TOOLBAR);
 
 	OnInitData();
+	EnableMDITabsLastActiveActivation(TRUE);
 
 	return 0;
 }
@@ -165,7 +166,7 @@ BOOL CMainFrame::PreTranslateMessage(MSG* pMsg)
 		m_arrChild.GetSize() > 1)
 	{
 		CWindowsManagerDialog* pDlg = new CWindowsManagerDialog;
-		pDlg->Create(CWindowsManagerDialog::IDD, this);
+		pDlg->Create(CWindowsManagerDialog::IDD, this, TRUE, theApp.m_bDark);
 		pDlg->ShowWindow(SW_SHOW);
 		return TRUE;
 	}
