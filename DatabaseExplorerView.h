@@ -71,4 +71,3 @@ protected:
 inline CDatabaseExplorerDoc* CDatabaseExplorerView::GetDocument() const
    { return reinterpret_cast<CDatabaseExplorerDoc*>(m_pDocument); }
 #endif
-

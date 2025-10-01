@@ -254,6 +254,7 @@ BOOL CDatabaseExplorerApp::InitInstance()
 	pMainFrame->ShowWindow(m_nCmdShow);
 	pMainFrame->UpdateWindow();
 
+	PrepareDocsOrderPath();
 	const auto data = GetDocsOrder();
 	for (const auto& it : data)
 	{
@@ -448,7 +449,7 @@ void CDatabaseExplorerApp::RemoveOldBackup(const std::unordered_map<std::wstring
 
 void CDatabaseExplorerApp::SaveDocsOrder(std::vector<CString>&& names) const
 {
-	const CString sFileName = GetAppPathTemp() + _T("DocsOrder");
+	const CString sFileName = GetAppPath() + _T("DocsOrder\\DocsOrder");
 	if (names.empty() && FileExist(sFileName))
 	{
 		DeleteFile(sFileName);
@@ -467,7 +468,7 @@ std::vector<std::wstring> CDatabaseExplorerApp::GetDocsOrder() const
 {
 	CStdioFile file;
 	std::vector<std::wstring> data{};
-	if (file.Open(GetAppPathTemp() + _T("DocsOrder"), CFile::modeRead | CFile::typeText))
+	if (file.Open(GetAppPath() + _T("DocsOrder\\DocsOrder"), CFile::modeRead | CFile::typeText))
 	{
 		CString sLine;
 		while (file.ReadString(sLine))
@@ -530,4 +531,11 @@ void CDatabaseExplorerApp::DisconnectAllDatabases() const
 			}
 		}
 	}
+}
+
+void CDatabaseExplorerApp::PrepareDocsOrderPath() const
+{
+	const CString sDocsOrderPath = GetAppPath() + _T("DocsOrder");
+	if (!PathIsDirectory(sDocsOrderPath))
+		CreateDirectory(sDocsOrderPath, NULL);
 }

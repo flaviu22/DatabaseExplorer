@@ -76,6 +76,7 @@ private:
 	void SaveDocsOrder(std::vector<CString>&& names) const;
 	std::vector<std::wstring> GetDocsOrder() const;
 	CString GetBackupPath() const { return GetAppPath() + _T("Backup\\"); }
+	void PrepareDocsOrderPath() const;
 
 // Generated message map functions
 protected:
