@@ -47,8 +47,8 @@ public:
 	CQueryPane* GetQueryPane() const;
 	CMessagePane* GetMessagePane() const;
 	CDatabasePane* GetDatabasePane() const;
-	CString GetTimeAsString(const std::chrono::high_resolution_clock::time_point& point1,
-							const std::chrono::high_resolution_clock::time_point& point2) const;
+	CString GetTimeAsString(const std::chrono::steady_clock::time_point& point1,
+							const std::chrono::steady_clock::time_point& point2) const;
 	CString InitDatabase();
 	BOOL PopulateListCtrl(CListCtrl& ListCtrl, const CString& sSQL);
 	BOOL IsSelect(CString sQuery) const;

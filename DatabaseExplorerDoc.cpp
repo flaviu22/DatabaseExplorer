@@ -322,8 +322,8 @@ std::vector<CString> CDatabaseExplorerDoc::GetSQLStatements(const CString& sText
 	return sql;
 }
 
-CString CDatabaseExplorerDoc::GetTimeAsString(const std::chrono::high_resolution_clock::time_point& t1,
-										const std::chrono::high_resolution_clock::time_point& t2) const
+CString CDatabaseExplorerDoc::GetTimeAsString(const std::chrono::steady_clock::time_point& t1,
+										const std::chrono::steady_clock::time_point& t2) const
 {
 	const auto dur = t2 - t1;
 	std::chrono::hours h = std::chrono::duration_cast<std::chrono::hours>(dur);

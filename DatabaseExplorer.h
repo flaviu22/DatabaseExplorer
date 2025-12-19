@@ -36,14 +36,14 @@ public:
 	};
 
 public:
-	BOOL m_bDark{FALSE};
-	BOOL m_bDirty{FALSE};
-	BOOL m_bWordWrap{FALSE};
-	BOOL m_bHiColorIcons{TRUE};
+	BOOL m_bDark{ FALSE };
+	BOOL m_bDirty{ FALSE };
+	BOOL m_bWordWrap{ FALSE };
+	BOOL m_bHiColorIcons{ TRUE };
 	BOOL m_bVirtualMode{ FALSE };
 	UINT m_nAppLook{ ID_VIEW_APPLOOK_OFF_2007_BLACK };
 
-// Overrides
+	// Overrides
 public:
 	virtual BOOL InitInstance();
 	virtual int ExitInstance();
@@ -76,7 +76,7 @@ private:
 	void SaveDocsOrder(std::vector<CString>&& names) const;
 	std::vector<std::wstring> GetDocsOrder() const;
 	CString GetBackupPath() const { return GetAppPath() + _T("Backup\\"); }
-	void PrepareDocsOrderPath() const;
+	void PrepareDataPath() const;
 
 // Generated message map functions
 protected:
