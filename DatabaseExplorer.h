@@ -22,6 +22,8 @@ extern const CString g_sMutexName;
 
 class CDatabaseExplorerApp : public CWinAppEx
 {
+	friend class CMainFrame;
+
 public:
 	CDatabaseExplorerApp() noexcept;
 

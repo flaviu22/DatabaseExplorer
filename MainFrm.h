@@ -76,6 +76,7 @@ protected:
 	afx_msg void OnViewDarkmode();
 	afx_msg void OnUpdateViewDarkmode(CCmdUI* pCmdUI);
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
+	afx_msg LRESULT OnPostInit(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnGetTabToolTip(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnTabMove(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnSetMessageText(WPARAM wParam, LPARAM lParam);

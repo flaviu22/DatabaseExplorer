@@ -53,6 +53,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_DARKMODE, &CMainFrame::OnUpdateViewDarkmode)
 	ON_REGISTERED_MESSAGE(AFX_WM_ON_GET_TAB_TOOLTIP, &CMainFrame::OnGetTabToolTip)
 	ON_REGISTERED_MESSAGE(AFX_WM_ON_MOVE_TAB, &CMainFrame::OnTabMove)
+	ON_MESSAGE(WMU_POSTINIT, &CMainFrame::OnPostInit)
 	ON_MESSAGE(WMU_SETMESSAGETEXT, &CMainFrame::OnSetMessageText)
 	ON_MESSAGE(WMU_STATECHANGED, &CMainFrame::OnStateChanged)
 	END_MESSAGE_MAP()
@@ -260,6 +261,19 @@ BOOL CMainFrame::LoadFrame(UINT nIDResource, DWORD dwDefaultStyle, CWnd* pParent
 		return FALSE;
 
 	return TRUE;
+}
+
+LRESULT CMainFrame::OnPostInit(WPARAM wParam, LPARAM lParam)
+{
+	const auto data = theApp.GetDocsOrder();
+	for (const auto& it : data)
+	{
+		const CString sFile = theApp.GetBackupPath() + reinterpret_cast<LPCTSTR>(it.c_str());
+		if (theApp.FileExist(sFile))
+			theApp.OpenDocumentFile(sFile, FALSE);
+	}
+
+	return 1;
 }
 
 std::vector<CString> CMainFrame::GetTabsNames()
@@ -471,7 +485,7 @@ LRESULT CMainFrame::OnTabMove(WPARAM wParam, LPARAM lParam)
 	if (static_cast<int>(wParam) 	// Index of the currently active tab
 	 != static_cast<int>(lParam))	// Index of the tab that will become active
 	{
-		PostMessage(WMU_STATECHANGED, 0, 0);	// Tab has been moved
+		PostMessage(WMU_STATECHANGED, 3, 0);	// Tab has been moved
 	}
 
 	return 0;
@@ -728,12 +742,14 @@ void CMainFrame::OnUpdateViewDarkmode(CCmdUI* pCmdUI)
 
 	pCmdUI->SetCheck(theApp.m_bDark);
 }
-
+// wParam: number of seconds to wait before saving
+// lParam: not used
 LRESULT CMainFrame::OnStateChanged(WPARAM wParam, LPARAM lParam)
 {
+	ASSERT(wParam > 0);
 #ifndef _DEBUG
 	theApp.m_bDirty = TRUE;
-	SetTimer(ID_TIMER_STATECHANGED, 7 * TIME_SECOND, nullptr);
+	SetTimer(ID_TIMER_STATECHANGED, static_cast<UINT>(wParam) * TIME_SECOND, nullptr);
 #endif // !_DEBUG
 	return 1;
 }

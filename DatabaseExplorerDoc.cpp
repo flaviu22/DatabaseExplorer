@@ -82,6 +82,7 @@ BOOL CDatabaseExplorerDoc::OnNewDocument()
 	// (SDI documents will reuse this document)
 
 	SetConnectionString();
+	::PostMessage(theApp.m_pMainWnd->GetSafeHwnd(), WMU_STATECHANGED, 1, 0);
 
 	return TRUE;
 }
@@ -531,7 +532,7 @@ BOOL CDatabaseExplorerDoc::PopulateOracle(CTreeCtrl& tree)
 	else
 	{
 		const CString sUserID = GetOracleUserID(TRUE);
-		for (auto& it = database.begin(); it != database.end(); it += 2)
+		for (auto it = database.begin(); it != database.end(); it += 2)
 		{
 			HTREEITEM hItem = tree.InsertItem(CString((it + 1)->c_str()), 0, 0);
 			tree.SetItemData(hItem, std::atoi(it->c_str()));
@@ -561,7 +562,7 @@ BOOL CDatabaseExplorerDoc::PopulateSQLite(CTreeCtrl& tree)
 			const auto table = m_pDB->GetData(_T("SELECT tbl_name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY 1"));
 			if (! m_pDB->GetError().IsEmpty() || table.empty())
 				continue;
-			for (auto& it_table = table.begin(); it_table != table.end(); ++it_table)
+			for (auto it_table = table.begin(); it_table != table.end(); ++it_table)
 				tree.SetItemData(tree.InsertItem(CString(it_table->c_str()), 1, 1, hItem), 0);
 		}
 	}
@@ -632,7 +633,12 @@ void CDatabaseExplorerDoc::OnEditDatasource()
 	SetConnectionString();
 	CString sDatabase = pDatabasePane->GetDatabaseSelection();
 	if (IDOK == ret)
+	{
 		UpdateAllViews(NULL, CDatabaseExplorerApp::UH_POPULATEDATABASEPANEL);
+#ifndef _DEBUG
+		::PostMessage(theApp.m_pMainWnd->GetSafeHwnd(), WMU_STATECHANGED, 1, 0);
+#endif // !_DEBUG
+	}
 	UpdateAllViews(NULL, CDatabaseExplorerApp::UH_SELECTDATABASE, reinterpret_cast<CObject*>(&sDatabase));
 }
 

@@ -255,13 +255,7 @@ BOOL CDatabaseExplorerApp::InitInstance()
 	pMainFrame->UpdateWindow();
 
 	PrepareDataPath();
-	const auto data = GetDocsOrder();
-	for (const auto& it : data)
-	{
-		const CString sFile = GetBackupPath() + reinterpret_cast<LPCTSTR>(it.c_str());
-		if (FileExist(sFile))
-			OpenDocumentFile(sFile, FALSE);
-	}
+	::PostMessage(pMainFrame->GetSafeHwnd(), WMU_POSTINIT, 0, 0);
 
 	return TRUE;
 }
