@@ -502,7 +502,7 @@ void CDatabaseExplorerApp::SaveQueries(const std::wstring& filename, std::vector
 		CFile::modeCreate | CFile::modeReadWrite | CFile::typeText))
 		return;
 
-	for (const auto it : queries)
+	for (const auto& it : queries)
 		file.WriteString(it + _T("\n"));
 }
 
