@@ -27,6 +27,7 @@ BEGIN_MESSAGE_MAP(CChildFrame, CMDIChildWndExt)
 	ON_MESSAGE(WMU_SETWORDWRAP, &CChildFrame::OnSetWordWrap)
 	ON_MESSAGE(WMU_DARKMODE, &CChildFrame::OnDarkMode)
 	ON_MESSAGE(WMU_STATECHANGED, &CChildFrame::OnStateChanged)
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 // CChildFrame construction/destruction
@@ -211,6 +212,15 @@ LRESULT CChildFrame::OnPostInit(WPARAM wParam, LPARAM lParam)
 			reinterpret_cast<CObject*>(&m_pDatabasePane->GetSelection()));
 
 	return 1;
+}
+
+void CChildFrame::OnClose()
+{
+	// TODO: Add your message handler code here and/or call default
+
+	::PostMessage(theApp.m_pMainWnd->GetSafeHwnd(), WMU_STATECHANGED, 1, 0);
+
+	CMDIChildWndExt::OnClose();
 }
 
 LRESULT CChildFrame::OnIsPopulateMode(WPARAM wParam, LPARAM lParam)

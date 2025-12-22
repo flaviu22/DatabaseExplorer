@@ -57,6 +57,7 @@ protected:
 	afx_msg void OnViewQuery();
 	afx_msg void OnViewMessage();
 	afx_msg void OnViewDatabase();
+	afx_msg void OnClose();
 	afx_msg LRESULT OnPostInit(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnIsPopulateMode(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnSetWordWrap(WPARAM wParam, LPARAM lParam);
