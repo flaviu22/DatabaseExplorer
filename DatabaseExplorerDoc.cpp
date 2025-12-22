@@ -109,6 +109,8 @@ void CDatabaseExplorerDoc::OnCloseDocument()
 {
 	// TODO: Add your specialized code here and/or call the base class
 
+	::PostMessage(theApp.m_pMainWnd->GetSafeHwnd(), WMU_STATECHANGED, 1, 0);
+
 	CDocument::OnCloseDocument();
 }
 
