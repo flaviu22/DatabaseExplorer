@@ -485,7 +485,7 @@ LRESULT CMainFrame::OnTabMove(WPARAM wParam, LPARAM lParam)
 	if (static_cast<int>(wParam) 	// Index of the currently active tab
 	 != static_cast<int>(lParam))	// Index of the tab that will become active
 	{
-		PostMessage(WMU_STATECHANGED, 3, 0);	// Tab has been moved
+		PostMessage(WMU_STATECHANGED, 5, 0);	// Tab has been moved
 	}
 
 	return 0;

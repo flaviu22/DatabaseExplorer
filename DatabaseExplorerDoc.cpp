@@ -82,7 +82,7 @@ BOOL CDatabaseExplorerDoc::OnNewDocument()
 	// (SDI documents will reuse this document)
 
 	SetConnectionString();
-	::PostMessage(theApp.m_pMainWnd->GetSafeHwnd(), WMU_STATECHANGED, 1, 0);
+	::PostMessage(theApp.m_pMainWnd->GetSafeHwnd(), WMU_STATECHANGED, 7, 0);
 
 	return TRUE;
 }

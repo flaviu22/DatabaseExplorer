@@ -134,7 +134,7 @@ void CChildFrame::OnClose()
 {
 	// TODO: Add your message handler code here and/or call default
 
-	::PostMessage(theApp.m_pMainWnd->GetSafeHwnd(), WMU_STATECHANGED, 1, 0);
+	::PostMessage(theApp.m_pMainWnd->GetSafeHwnd(), WMU_STATECHANGED, 3, 0);
 
 	CMDIChildWndExt::OnClose();
 }
@@ -244,6 +244,6 @@ LRESULT CChildFrame::OnDarkMode(WPARAM wParam, LPARAM lParam)
 
 LRESULT CChildFrame::OnStateChanged(WPARAM wParam, LPARAM lParam)
 {
-	::PostMessage(GetParentFrame()->GetSafeHwnd(), WMU_STATECHANGED, 0, 0);
+	::PostMessage(GetParentFrame()->GetSafeHwnd(), WMU_STATECHANGED, 3, 0);
 	return 1;
 }
