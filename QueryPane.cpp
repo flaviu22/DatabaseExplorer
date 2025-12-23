@@ -86,5 +86,5 @@ void CQueryPane::SetDarkMode(const BOOL bSet)
 
 void CQueryPane::OnEnChangeRichEditCtrl()
 {
-	::PostMessage(GetOwner()->GetSafeHwnd(), WMU_STATECHANGED, 3, 0);
+	::PostMessage(GetOwner()->GetSafeHwnd(), WMU_STATECHANGED, 10, 0);
 }

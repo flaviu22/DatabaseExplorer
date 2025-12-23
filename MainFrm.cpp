@@ -747,6 +747,8 @@ void CMainFrame::OnUpdateViewDarkmode(CCmdUI* pCmdUI)
 LRESULT CMainFrame::OnStateChanged(WPARAM wParam, LPARAM lParam)
 {
 	ASSERT(wParam > 0);
+	if (0 == wParam)
+		return 0;
 #ifndef _DEBUG
 	theApp.m_bDirty = TRUE;
 	SetTimer(ID_TIMER_STATECHANGED, static_cast<UINT>(wParam) * TIME_SECOND, nullptr);
