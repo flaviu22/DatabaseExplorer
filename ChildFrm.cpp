@@ -244,6 +244,6 @@ LRESULT CChildFrame::OnDarkMode(WPARAM wParam, LPARAM lParam)
 
 LRESULT CChildFrame::OnStateChanged(WPARAM wParam, LPARAM lParam)
 {
-	::PostMessage(GetParentFrame()->GetSafeHwnd(), WMU_STATECHANGED, wParam, lParam);
+	::SendMessage(GetParentFrame()->GetSafeHwnd(), WMU_STATECHANGED, wParam, lParam);
 	return 1;
 }
