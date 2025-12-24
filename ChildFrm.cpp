@@ -18,7 +18,6 @@ IMPLEMENT_DYNCREATE(CChildFrame, CMDIChildWndExt)
 
 BEGIN_MESSAGE_MAP(CChildFrame, CMDIChildWndExt)
 	ON_WM_CREATE()
-	ON_WM_CLOSE()
 	ON_WM_DESTROY()
 	ON_COMMAND(ID_VIEW_QUERY, &CChildFrame::OnViewQuery)
 	ON_COMMAND(ID_VIEW_MESSAGE, &CChildFrame::OnViewMessage)
@@ -130,21 +129,14 @@ int CChildFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	return 0;
 }
 
-void CChildFrame::OnClose()
-{
-	// TODO: Add your message handler code here and/or call default
-
-	::PostMessage(theApp.m_pMainWnd->GetSafeHwnd(), WMU_STATECHANGED, 3, 0);
-
-	CMDIChildWndExt::OnClose();
-}
-
 void CChildFrame::OnDestroy()
 {
 	if ((nullptr != m_pQueryPane->GetSafeHwnd() && ! m_pQueryPane->IsFloating())
 		&& (nullptr != m_pMessagePane->GetSafeHwnd() && ! m_pMessagePane->IsFloating())
 		&& (nullptr != m_pDatabasePane->GetSafeHwnd() && ! m_pDatabasePane->IsFloating()))
 		m_dockManager.SaveState(theApp.GetRegSectionPath(_T("ChildFramePane")));
+
+	::PostMessage(theApp.m_pMainWnd->GetSafeHwnd(), WMU_STATECHANGED, 3, 0);
 
 	CMDIChildWndExt::OnDestroy();
 
