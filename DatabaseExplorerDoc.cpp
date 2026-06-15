@@ -789,12 +789,24 @@ CString CDatabaseExplorerDoc::PrepareSQLForCountAll(const CString& sSQL) const
 
 	return sSQLNew;
 }
+// remove from the header the index text
+CString CDatabaseExplorerDoc::NormalizeHeaderText(const CString& sHeader) const
+{
+	if (!sHeader.IsEmpty())
+	{
+		const auto found = sHeader.Find(_T(" "));
+		if (found > 0 && found < sHeader.GetLength() - 1)
+			return sHeader.Mid(found + 1);
+	}
 
-CString CDatabaseExplorerDoc::GetText(CHeaderCtrl& header, int nItem) const
+	return sHeader;
+}
+
+CString CDatabaseExplorerDoc::GetText(const CHeaderCtrl& header, const int nItem) const
 {
 	HD_ITEM hdi = { 0 };
 	hdi.mask = HDI_TEXT;
-	std::vector<wchar_t> text(127);
+	std::vector<wchar_t> text(_MAX_PATH);
 	hdi.pszText = text.data();
 	hdi.cchTextMax = static_cast<int>(text.size());
 	header.GetItem(nItem, &hdi);
@@ -819,13 +831,13 @@ std::vector<CString> CDatabaseExplorerDoc::GetHeaderItems(CListCtrl& ListCtrl)
 void CDatabaseExplorerDoc::WriteHeaderLine(CListCtrl& ListCtrl, CStdioFile& file, const CString& sSeparator)
 {
 	CString sLine;
-	const auto header_items = GetHeaderItems(ListCtrl);
-	for (auto& it = header_items.cbegin(); it != header_items.end(); ++it)
+	const auto items = GetHeaderItems(ListCtrl);
+	for (const auto& it : items)
 	{
-		if (it != header_items.end() - 1)
-			sLine.AppendFormat(_T("%s%s"), *it, sSeparator);
+		if (&it != &items.back())
+			sLine.AppendFormat(_T("%s%s"), NormalizeHeaderText(it), sSeparator);
 		else
-			sLine.AppendFormat(_T("%s"), *it);
+			sLine.AppendFormat(_T("%s"), NormalizeHeaderText(it));
 	}
 	sLine.AppendFormat(_T("\n"));
 	file.WriteString(sLine);
@@ -868,7 +880,8 @@ BOOL CDatabaseExplorerDoc::SaveListContentToCSV(CListCtrl& ListCtrl, const CStri
 			m_sError.ReleaseBuffer();
 			break;
 		}
-		WriteHeaderLine(ListCtrl, file, sSeparator);
+//		if (theApp.GetProfileInt(_T("Settings"), _T("IncludeCsvHeader"), 0))
+			WriteHeaderLine(ListCtrl, file, sSeparator);
 		WriteListLines(ListCtrl, file, sSeparator);
 	} while (FALSE);
 

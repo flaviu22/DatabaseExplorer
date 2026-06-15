@@ -107,7 +107,7 @@ protected:
 	std::vector<CString> GetHeaderItems(CListCtrl& ListCtrl);
 	void WriteHeaderLine(CListCtrl& ListCtrl, CStdioFile& file, const CString& sSeparator);
 	void WriteListLines(CListCtrl& ListCtrl, CStdioFile& file, const CString& sSeparator);
-	CString GetText(CHeaderCtrl& header, int nItem) const;
+	CString GetText(const CHeaderCtrl& header, const int nItem) const;
 	CString GetOracleUserID(const BOOL bMakeUpper = FALSE) const;
 	std::pair<CString, CString> GetMsSqlAuthenticationCredential() const;
 
@@ -157,6 +157,7 @@ private:
 	void GetQueries(CRichEditCtrl* pRichEdit, std::vector<CString>& queries) const;
 	std::vector<CString> GetQueries(const CString& sFile) const;
 	BOOL ContainHarmfulKeyword(const CString& sSQL) const;
+	CString NormalizeHeaderText(const CString& sHeader) const;
 
 // Generated message map functions
 protected:

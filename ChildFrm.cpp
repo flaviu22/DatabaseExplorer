@@ -208,9 +208,10 @@ LRESULT CChildFrame::OnPostInit(WPARAM wParam, LPARAM lParam)
 		GetActiveDocument()->UpdateAllViews(nullptr, CDatabaseExplorerApp::UH_INITDATABASE);
 
 	if (DoListTable == static_cast<int>(wParam))
-		GetActiveDocument()->UpdateAllViews(nullptr, 
-			CDatabaseExplorerApp::UH_LISTTABLE, 
-			reinterpret_cast<CObject*>(&m_pDatabasePane->GetSelection()));
+	{
+		auto selection = m_pDatabasePane->GetSelection();
+		GetActiveDocument()->UpdateAllViews(nullptr, CDatabaseExplorerApp::UH_LISTTABLE, reinterpret_cast<CObject*>(&selection));
+	}
 
 	return 1;
 }
