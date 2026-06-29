@@ -38,6 +38,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_COMMAND(ID_EDIT_REDO, &CMainFrame::OnEditRedo)
 	ON_COMMAND(ID_EDIT_SELECTALL, &CMainFrame::OnEditSelectall)
 	ON_COMMAND(ID_EDIT_SELECTLINE, &CMainFrame::OnEditSelectline)
+	ON_COMMAND(ID_WINDOW_NEW, &CMainFrame::OnWindowNew)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, &CMainFrame::OnUpdateCut)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, &CMainFrame::OnUpdateCopy)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, &CMainFrame::OnUpdateEdit)
@@ -741,6 +742,13 @@ void CMainFrame::OnUpdateViewDarkmode(CCmdUI* pCmdUI)
 	// TODO: Add your command update UI handler code here
 
 	pCmdUI->SetCheck(theApp.m_bDark);
+}
+
+void CMainFrame::OnWindowNew()
+{
+	// TODO: Add your command handler code here
+
+	SendMessage(WMU_SETMESSAGETEXT, 12000, reinterpret_cast<LPARAM>(_T("You can not create new window")));
 }
 // wParam: number of seconds to wait before saving
 // lParam: not used
