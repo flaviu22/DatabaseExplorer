@@ -391,7 +391,7 @@ void CDatabaseExplorerView::OnFileSave()
 
 	if (theApp.m_bVirtualMode)
 	{
-		pDoc->LogMessage(_T("Saving list data is available in non virtual mode only"), MessageType::error);
+		pDoc->LogMessage(_T("Data can be saved in non-virtual mode"), MessageType::error);
 		return;
 	}
 
